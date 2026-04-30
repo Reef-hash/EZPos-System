@@ -12,18 +12,6 @@
     <PackageReference Include="System.Data.SQLite" Version="1.0.117" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="Program.cs" />
-    <Compile Include="UI\MainForm.cs" />
-    <Compile Include="UI\SalesModeControl.cs" />
-    <Compile Include="UI\StockModeControl.cs" />
-    <Compile Include="Models\Product.cs" />
-    <Compile Include="Models\Sale.cs" />
-    <Compile Include="Models\SaleItem.cs" />
-    <Compile Include="DataAccess\Database.cs" />
-    <Compile Include="DataAccess\ProductRepository.cs" />
-    <Compile Include="DataAccess\SaleRepository.cs" />
-    <Compile Include="DataAccess\ConfigHelper.cs" />
-  </ItemGroup>
+  <!-- All .cs files are included by default -->
 
 </Project>
