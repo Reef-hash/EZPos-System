@@ -26,3 +26,18 @@ jobs:
 
     - name: Publish
       run: dotnet publish --configuration Release --output ./publish
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: EZPos-win-publish
+        path: ./publish
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ github.run_number }}
+        name: Release v${{ github.run_number }}
+        files: ./publish/**
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
