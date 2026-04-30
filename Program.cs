@@ -1,17 +1,16 @@
 using System;
-using System.Windows.Forms;
-using UI;
+using System.Windows;
 
 namespace EZPos
 {
-    static class Program
+    public partial class Program
     {
         [STAThread]
-        static void Main()
+        public static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            var app = new App();
+            app.InitializeComponent();
+            app.Run();
         }
     }
 }
