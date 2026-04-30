@@ -27,17 +27,23 @@ jobs:
     - name: Publish
       run: dotnet publish --configuration Release --output ./publish
 
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: EZPos-win-publish
-        path: ./publish
+    - name: Download Inno Setup
+      run: |
+        Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
+        Start-Process -Wait -FilePath .\is.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR="C:\innosetup"
 
-    - name: Create Release
+    - name: Add Inno Setup to PATH
+      run: echo "C:\innosetup" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+    - name: Build Inno Setup installer
+      run: |
+        "C:\innosetup\ISCC.exe" InnoSetup-EZPos.iss
+
+    - name: Upload installer to Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
-        files: ./publish/**
+        files: SetupEZPos.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
