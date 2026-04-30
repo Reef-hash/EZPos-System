@@ -37,7 +37,7 @@ jobs:
 
     - name: Build Inno Setup installer
       run: |
-        "C:\innosetup\ISCC.exe" InnoSetup-EZPos.iss
+        & "C:\innosetup\ISCC.exe" "InnoSetup-EZPos.iss"
 
     - name: Upload installer to Release
       uses: softprops/action-gh-release@v2
