@@ -11,7 +11,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="txtBarcode" Grid.Row="0" Height="32" Margin="0,0,0,10" FontSize="16" PlaceholderText="Imbas kod bar..."/>
+        <TextBox x:Name="txtBarcode" Grid.Row="0" Height="32" Margin="0,0,0,10" FontSize="16"/>
         <DataGrid x:Name="dgvCart" Grid.Row="1" Margin="0,0,0,10" AutoGenerateColumns="False" Height="200">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Kod" Binding="{Binding Code}" Width="*"/>
