@@ -30,7 +30,7 @@ jobs:
     - name: Download Inno Setup
       run: |
         Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
-        Start-Process -Wait -FilePath .\is.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR="C:\innosetup"
+        Start-Process -Wait -FilePath .\is.exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR="C:\innosetup"'
 
     - name: Add Inno Setup to PATH
       run: echo "C:\innosetup" | Out-File -Append -FilePath $env:GITHUB_PATH
