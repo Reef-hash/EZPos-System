@@ -1258,14 +1258,14 @@
         "C:\\Users\\Che Has\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
-        "net6.0-windows"
+        "net6.0-windows7.0"
       ],
       "sources": {
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net6.0-windows7.0": {
-          "targetAlias": "net6.0-windows",
+          "targetAlias": "net6.0-windows7.0",
           "projectReferences": {}
         }
       },
@@ -1283,7 +1283,7 @@
     },
     "frameworks": {
       "net6.0-windows7.0": {
-        "targetAlias": "net6.0-windows",
+        "targetAlias": "net6.0-windows7.0",
         "dependencies": {
           "FontAwesome.Sharp": {
             "target": "Package",

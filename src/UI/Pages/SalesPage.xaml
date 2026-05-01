@@ -1,345 +1,205 @@
-﻿<UserControl x:Class="EZPos.UI.Pages.SalesPage"
+<UserControl x:Class="EZPos.UI.Pages.SalesPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
-             xmlns:local="clr-namespace:EZPos.UI.Pages"
              Background="{StaticResource ContentBrush}">
-    
-    <UserControl.Resources>
-        <!-- Cart Item Row Style -->
-        <Style x:Key="CartItemStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Margin" Value="0,0,0,0" />
-        </Style>
-
-        <!-- Product Grid Item Style -->
-        <Style x:Key="ProductItemStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
-            <Setter Property="CornerRadius" Value="6" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Margin" Value="6" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-    </UserControl.Resources>
-
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <!-- Main Content -->
-            <RowDefinition Height="140"/>
-            <!-- Payment Section -->
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" MinWidth="300"/>
-            <!-- Products Area -->
-            <ColumnDefinition Width="320" MinWidth="300"/>
-            <!-- Cart Area -->
-        </Grid.ColumnDefinitions>
 
-        <!-- ============================================ -->
-        <!-- LEFT SIDE - PRODUCTS AREA                    -->
-        <!-- ============================================ -->
-        <Grid Grid.Row="0" Grid.Column="0" Margin="0,0,12,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <!-- Search/Filter -->
-                <RowDefinition Height="*"/>
-                <!-- Product List/Grid -->
-            </Grid.RowDefinitions>
+        <Border Grid.Row="0" Style="{StaticResource PosCardStyle}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <!-- Search and Filter Section -->
-            <Border Grid.Row="0" Background="{StaticResource CardBackgroundBrush}" 
-                    Padding="16" Margin="0,0,0,12" CornerRadius="6">
-                <StackPanel Orientation="Vertical" Margin="0">
-                    <!-- Search Bar -->
-                    <StackPanel Orientation="Horizontal" Margin="0">
-                        <Border Width="200" Height="36" Background="{StaticResource SidebarBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-                                <fa:IconBlock Icon="MagnifyingGlass" Foreground="{StaticResource TextMutedBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBox x:Name="ProductSearchBox" 
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Foreground="{StaticResource TextPrimaryBrush}"
-                                        FontSize="12"
-                                        Text="Search products..."
-                                        VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                        
-                        <ComboBox x:Name="CategoryCombo" 
-                                 Width="120"
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Sales" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <TextBlock Text="Create transactions and manage active cart items." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Padding="12,8" Click="ClearCart_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconBlock Icon="TrashAlt" Margin="0,0,8,0" />
+                            <TextBlock Text="Clear Cart" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Padding="14,8" Click="Checkout_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconBlock Icon="DollarSign" Foreground="{StaticResource SidebarBrush}" Margin="0,0,8,0" />
+                            <TextBlock Text="Checkout" Foreground="{StaticResource SidebarBrush}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" MinWidth="360" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" MinWidth="320" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource PosCardStyle}" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <WrapPanel Grid.Row="0" Margin="0,0,0,12" VerticalAlignment="Top">
+                        <TextBox x:Name="ProductSearchBox"
+                                 MinWidth="230"
+                                 Width="260"
                                  Height="36"
-                                 Foreground="{StaticResource TextPrimaryBrush}"
-                                 Background="{StaticResource SidebarBrush}"
-                                 BorderBrush="{StaticResource BorderBrush}"
-                                 BorderThickness="1"
-                                 Padding="12,8"
-                                 FontSize="12"
-                                 Margin="8,0,0,0">
-                            <ComboBoxItem>All Categories</ComboBoxItem>
-                            <ComboBoxItem>Electronics</ComboBoxItem>
+                                 Margin="0,0,8,8"
+                                 VerticalContentAlignment="Center"
+                                 TextChanged="ProductSearchBox_TextChanged" />
+
+                        <ComboBox x:Name="CategoryCombo"
+                                  Width="170"
+                                  Height="36"
+                                  Margin="0,0,8,8"
+                                  SelectionChanged="CategoryCombo_SelectionChanged">
+                            <ComboBoxItem IsSelected="True">All Categories</ComboBoxItem>
                             <ComboBoxItem>Beverages</ComboBoxItem>
                             <ComboBoxItem>Snacks</ComboBoxItem>
+                            <ComboBoxItem>Baked Goods</ComboBoxItem>
                         </ComboBox>
-                        
-                        <Button Content="Search" 
-                               Style="{StaticResource PrimaryButtonStyle}"
-                               Width="100"
-                               Height="36"
-                               Padding="0"
-                               FontSize="12"
-                               Margin="8,0,0,0"
-                               Click="SearchButton_Click"/>
-                    </StackPanel>
 
-                    <!-- View Options -->
-                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                        <TextBlock Text="View:" Foreground="{StaticResource TextSecondaryBrush}" 
-                                  VerticalAlignment="Center" FontSize="12"/>
-                        <RadioButton Content="Grid" IsChecked="True" Foreground="{StaticResource TextPrimaryBrush}" Margin="8,0,12,0"/>
-                        <RadioButton Content="List" Foreground="{StaticResource TextPrimaryBrush}"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
+                        <Button Width="110"
+                                Height="36"
+                                Margin="0,0,0,8"
+                                Content="Search"
+                                Click="SearchButton_Click" />
+                    </WrapPanel>
 
-            <!-- Products Grid View -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <ItemsControl x:Name="ProductsGrid">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource ProductItemStyle}" Width="140" Height="140">
-                                <Button Background="Transparent" BorderThickness="0" Cursor="Hand" Click="ProductItem_Click">
-                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="24" TextAlignment="Center" Margin="0,6,0,0">
-                                            <fa:IconBlock Icon="Box" FontSize="28"/>
-                                        </TextBlock>
-                                        <TextBlock Text="{Binding Name}" 
-                                                  Foreground="{StaticResource TextPrimaryBrush}"
-                                                  FontSize="12" FontWeight="SemiBold"
-                                                  TextAlignment="Center" TextWrapping="Wrap"
-                                                  Margin="0,6,0,0"/>
-                                        <TextBlock Text="{Binding Price, StringFormat='RM {0:F2}'}" 
-                                                  Foreground="{StaticResource PrimaryBrush}"
-                                                  FontSize="14" FontWeight="Bold"
-                                                  TextAlignment="Center"
-                                                  Margin="0,4,0,0"/>
-                                        <TextBlock Text="{Binding Stock, StringFormat='Stock: {0}'}" 
-                                                  Foreground="{StaticResource TextMutedBrush}"
-                                                  FontSize="10"
-                                                  TextAlignment="Center"
-                                                  Margin="0,2,0,0"/>
-                                    </StackPanel>
-                                </Button>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Grid>
-
-        <!-- ============================================ -->
-        <!-- RIGHT SIDE - SHOPPING CART                   -->
-        <!-- ============================================ -->
-        <Grid Grid.Row="0" Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <!-- Cart Header -->
-                <RowDefinition Height="*"/>
-                <!-- Cart Items -->
-            </Grid.RowDefinitions>
-
-            <!-- Cart Header -->
-            <Border Grid.Row="0" Background="{StaticResource CardBackgroundBrush}" 
-                    Padding="16,12" BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="ðŸ›’ Shopping Cart" 
-                              Foreground="{StaticResource PrimaryBrush}"
-                              FontSize="14" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="1" x:Name="CartItemCount" Text="0 items" 
-                              Foreground="{StaticResource TextSecondaryBrush}"
-                              FontSize="12"/>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="ProductsList">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Width="170"
+                                            MinHeight="130"
+                                            Margin="6"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="ProductItem_Click">
+                                        <StackPanel>
+                                            <fa:IconBlock Icon="BoxOpen" FontSize="24" Foreground="{StaticResource PrimaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,8" />
+                                            <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" TextAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Barcode}" Foreground="{StaticResource TextMutedBrush}" FontSize="11" TextAlignment="Center" Margin="0,4,0,0" />
+                                            <TextBlock Text="{Binding Price, StringFormat='RM {0:F2}'}" Foreground="{StaticResource PrimaryBrush}" FontWeight="Bold" TextAlignment="Center" Margin="0,6,0,0" />
+                                            <TextBlock Text="{Binding Stock, StringFormat='Stock: {0}'}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" TextAlignment="Center" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </Border>
 
-            <!-- Cart Items List -->
-            <Grid Grid.Row="1">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl x:Name="CartItemsControl">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Style="{StaticResource CartItemStyle}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="60"/>
-                                            <ColumnDefinition Width="30"/>
-                                        </Grid.ColumnDefinitions>
+            <Border Grid.Column="2" Style="{StaticResource PosCardStyle}" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-                                        <!-- Item Details -->
-                                        <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}" 
-                                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                                      FontSize="12" FontWeight="SemiBold"/>
-                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                <TextBlock Text="{Binding Price, StringFormat='RM {0:F2}'}" 
-                                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                                          FontSize="11"/>
-                                                <TextBlock Text=" Ã— " 
-                                                          Foreground="{StaticResource TextMutedBrush}"
-                                                          FontSize="10"
-                                                          Margin="4,0"/>
-                                                <TextBlock x:Name="QtyDisplay" Text="{Binding Quantity}" 
-                                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                                          FontSize="11"/>
-                                            </StackPanel>
-                                        </StackPanel>
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Shopping Cart" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Bold" FontSize="16" />
+                        <TextBlock x:Name="CartItemCount" Grid.Column="1" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                    </Grid>
 
-                                        <!-- Quantity Controls -->
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" 
-                                                   VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0">
-                                            <Button Content="-" Width="20" Height="20" 
-                                                   Padding="0" FontSize="10"
-                                                   Style="{StaticResource SecondaryButtonStyle}"
-                                                   Click="QuantityMinus_Click" Tag="{Binding Id}" Margin="0,0,4,0"/>
-                                            <TextBlock Text="{Binding Quantity}" 
-                                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                                      FontSize="11" Width="16" TextAlignment="Center"
-                                                      VerticalAlignment="Center"/>
-                                            <Button Content="+" Width="20" Height="20" 
-                                                   Padding="0" FontSize="10"
-                                                   Style="{StaticResource SecondaryButtonStyle}"
-                                                   Click="QuantityPlus_Click" Tag="{Binding Id}" Margin="4,0,0,0"/>
-                                        </StackPanel>
+                    <Grid Grid.Row="1">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="CartItemsControl">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource PosListItemStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
 
-                                        <!-- Remove Button -->
-                                        <Button Grid.Column="2" Content="âœ•" 
-                                               Width="24" Height="24" 
-                                               Padding="0" FontSize="12"
-                                               HorizontalAlignment="Right"
-                                               VerticalAlignment="Center"
-                                               Style="{StaticResource SecondaryButtonStyle}"
-                                               Click="RemoveItem_Click" Tag="{Binding Id}"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                                                <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                                    <TextBlock Text="{Binding ProductName}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding UnitPrice, StringFormat='RM {0:F2}'}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,4,0,0" />
+                                                </StackPanel>
 
-                <!-- Empty Cart Message -->
-                <TextBlock x:Name="EmptyCartMessage" Text="Cart is empty" 
-                          Foreground="{StaticResource TextSecondaryBrush}"
-                          FontSize="13"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"/>
-            </Grid>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                    <Button Content="-" Width="24" Height="24" Padding="0" Tag="{Binding ProductId}" Click="QuantityMinus_Click" />
+                                                    <TextBlock Text="{Binding Quantity}" Width="24" TextAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                    <Button Content="+" Width="24" Height="24" Padding="0" Tag="{Binding ProductId}" Click="QuantityPlus_Click" />
+                                                </StackPanel>
+
+                                                <Button Grid.Column="2"
+                                                        Content="Remove"
+                                                        Padding="8,4"
+                                                        FontSize="11"
+                                                        Style="{StaticResource SecondaryButtonStyle}"
+                                                        Tag="{Binding ProductId}"
+                                                        Click="RemoveItem_Click" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock x:Name="EmptyCartMessage"
+                                   Text="Cart is empty"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
 
-        <!-- ============================================ -->
-        <!-- PAYMENT SECTION - BOTTOM                     -->
-        <!-- ============================================ -->
-        <Border Grid.Row="1" Grid.ColumnSpan="2" 
-                Background="{StaticResource CardBackgroundBrush}"
-                BorderThickness="0,1,0,0"
-                BorderBrush="{StaticResource BorderBrush}"
-                Padding="16">
+        <Border Grid.Row="2" Style="{StaticResource PosCardStyle}" Margin="0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <!-- Order Summary -->
-                    <ColumnDefinition Width="200"/>
-                    <!-- Totals -->
-                    <ColumnDefinition Width="120"/>
-                    <!-- Payment Method -->
-                    <ColumnDefinition Width="140"/>
-                    <!-- Action Buttons -->
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Order Summary Info -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
-                        <TextBlock Text="Items:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
-                        <TextBlock x:Name="SummaryItems" Text="0" Foreground="{StaticResource TextPrimaryBrush}" 
-                                  FontSize="12" FontWeight="SemiBold" Margin="8,0,0,0"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
-                        <TextBlock Text="Subtotal:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
-                        <TextBlock x:Name="SubtotalText" Text="RM 0.00" Foreground="{StaticResource TextPrimaryBrush}" 
-                                  FontSize="12" FontWeight="SemiBold" Margin="8,0,0,0"/>
-                    </StackPanel>
-                </StackPanel>
+                <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="Items:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="SummaryItems" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,20,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Subtotal:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="SubtotalText" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,20,0" VerticalAlignment="Center" />
+                    <TextBlock Text="Tax (6%):" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TaxText" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center" />
+                </WrapPanel>
 
-                <!-- Totals -->
-                <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="0">
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Tax (6%):" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
-                        <TextBlock Grid.Column="2" x:Name="TaxText" Text="RM 0.00" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
-                    </Grid>
-                    <Border BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderBrush}" Padding="0,4,0,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="TOTAL:" Foreground="{StaticResource PrimaryBrush}" FontSize="13" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="2" x:Name="TotalText" Text="RM 0.00" Foreground="{StaticResource PrimaryBrush}" 
-                                      FontSize="13" FontWeight="Bold"/>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-
-                <!-- Payment Method -->
-                <ComboBox Grid.Column="2" 
-                         x:Name="PaymentMethodCombo"
-                         Height="32"
-                         Foreground="{StaticResource TextPrimaryBrush}"
-                         Background="{StaticResource SidebarBrush}"
-                         BorderBrush="{StaticResource BorderBrush}"
-                         BorderThickness="1"
-                         Padding="8,6"
-                         FontSize="11"
-                         VerticalAlignment="Center">
+                <ComboBox x:Name="PaymentMethodCombo" Grid.Column="1" Width="160" Height="34" Margin="10,0,10,0" VerticalAlignment="Center">
                     <ComboBoxItem>Cash</ComboBoxItem>
                     <ComboBoxItem>Card</ComboBoxItem>
                     <ComboBoxItem>QR Code</ComboBoxItem>
                     <ComboBoxItem>Cheque</ComboBoxItem>
                 </ComboBox>
 
-                <!-- Action Buttons -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0">
-                    <Button x:Name="ClearButton" Content="Clear Cart" 
-                           Style="{StaticResource SecondaryButtonStyle}"
-                           Padding="8,6"
-                           FontSize="11"
-                           Margin="0,0,8,0"
-                           Click="ClearCart_Click"/>
-                    
-                    <Button x:Name="CheckoutButton" Style="{StaticResource PrimaryButtonStyle}" Click="Checkout_Click">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <fa:IconBlock Icon="DollarSign" Foreground="#FF0F172A" Margin="0,0,8,0" FontSize="14"/>
-                            <TextBlock Text="Checkout" VerticalAlignment="Center" Foreground="#FF0F172A"/>
-                        </StackPanel>
-                    </Button>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Total:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBlock x:Name="TotalText" Foreground="{StaticResource PrimaryBrush}" FontWeight="Bold" FontSize="17" VerticalAlignment="Center" />
                 </StackPanel>
             </Grid>
         </Border>

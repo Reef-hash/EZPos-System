@@ -1,242 +1,228 @@
 using System;
-using System.Collections.ObjectModel;
-using System.Linq;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
 {
     public partial class SalesPage : UserControl
     {
-        private ObservableCollection<CartItem> cartItems;
-        private ObservableCollection<Product> allProducts;
+        private readonly PosStateStore stateStore;
+        private ICollectionView? productsView;
+        private bool isInitialized;
 
-        public class Product
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public decimal Price { get; set; }
-            public int Stock { get; set; }
-        }
-
-        public class CartItem
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public decimal Price { get; set; }
-            public int Quantity { get; set; }
-            public decimal Total => Price * Quantity;
-        }
-
-        public SalesPage()
+        public SalesPage(PosStateStore stateStore)
         {
             InitializeComponent();
-            InitializeData();
-            BindData();
-            UpdateCartSummary();
+
+            this.stateStore = stateStore;
+            // Independent view per page — never share the default view across pages
+            productsView = new ListCollectionView(this.stateStore.Products);
+            this.stateStore.PropertyChanged += StateStore_PropertyChanged;
+
+            Loaded += SalesPage_Loaded;
         }
 
-        private void InitializeData()
+        private void SalesPage_Loaded(object sender, RoutedEventArgs e)
         {
-            cartItems = new ObservableCollection<CartItem>();
-            
-            // Sample products data
-            allProducts = new ObservableCollection<Product>
+            if (isInitialized)
             {
-                new Product { Id = 1, Name = "Coffee", Price = 5.50m, Stock = 50 },
-                new Product { Id = 2, Name = "Tea", Price = 4.00m, Stock = 40 },
-                new Product { Id = 3, Name = "Juice", Price = 6.00m, Stock = 35 },
-                new Product { Id = 4, Name = "Water", Price = 2.50m, Stock = 100 },
-                new Product { Id = 5, Name = "Sandwich", Price = 8.50m, Stock = 25 },
-                new Product { Id = 6, Name = "Cake", Price = 7.00m, Stock = 20 },
-                new Product { Id = 7, Name = "Cookie", Price = 3.50m, Stock = 60 },
-                new Product { Id = 8, Name = "Donut", Price = 4.50m, Stock = 45 },
-            };
+                return;
+            }
+
+            // Apply filter here — controls are fully ready and page is in visual tree
+            productsView.Filter = ProductFilter;
+
+            ProductsList.ItemsSource = productsView;
+            CartItemsControl.ItemsSource = stateStore.CartItems;
+
+            if (PaymentMethodCombo is not null)
+            {
+                PaymentMethodCombo.SelectedIndex = 0;
+            }
+
+            RefreshSummary();
+            isInitialized = true;
         }
 
-        private void BindData()
+        private void StateStore_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            ProductsGrid.ItemsSource = allProducts;
-            CartItemsControl.ItemsSource = cartItems;
+            if (e.PropertyName == nameof(PosStateStore.CartItemCount)
+                || e.PropertyName == nameof(PosStateStore.Subtotal)
+                || e.PropertyName == nameof(PosStateStore.Tax)
+                || e.PropertyName == nameof(PosStateStore.Total))
+            {
+                RefreshSummary();
+            }
+        }
+
+        private bool ProductFilter(object obj)
+        {
+            if (obj is not ProductRecord product)
+            {
+                return false;
+            }
+
+            var search = ProductSearchBox?.Text?.Trim() ?? string.Empty;
+            var category = (CategoryCombo?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "All Categories";
+
+            var matchesSearch = string.IsNullOrWhiteSpace(search)
+                || product.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || product.Barcode.Contains(search, StringComparison.OrdinalIgnoreCase);
+
+            var matchesCategory = category == "All Categories"
+                || string.Equals(product.Category, category, StringComparison.OrdinalIgnoreCase);
+
+            return matchesSearch && matchesCategory;
         }
 
         private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            FilterProducts();
+            if (!isInitialized || productsView is null)
+            {
+                return;
+            }
+
+            productsView.Refresh();
         }
 
-        private void FilterProducts()
+        private void ProductSearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string searchText = ProductSearchBox.Text.ToLower();
-            
-            var filtered = allProducts
-                .Where(p => p.Name.ToLower().Contains(searchText))
-                .ToList();
+            if (!isInitialized || productsView is null)
+            {
+                return;
+            }
 
-            ProductsGrid.ItemsSource = new ObservableCollection<Product>(filtered);
+            productsView.Refresh();
+        }
+
+        private void CategoryCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!isInitialized || productsView is null)
+            {
+                return;
+            }
+
+            productsView.Refresh();
         }
 
         private void ProductItem_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is Product product)
+            if (sender is not Button { DataContext: ProductRecord product })
             {
-                AddToCart(product);
-            }
-        }
-
-        private void AddToCart(Product product)
-        {
-            if (product.Stock <= 0)
-            {
-                MessageBox.Show("Product out of stock!", "Stock Alert", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var existingItem = cartItems.FirstOrDefault(c => c.Id == product.Id);
-            
-            if (existingItem != null)
+            if (!stateStore.AddToCart(product.Id))
             {
-                if (existingItem.Quantity < product.Stock)
-                {
-                    existingItem.Quantity++;
-                }
-                else
-                {
-                    MessageBox.Show("Cannot add more. Stock limited!", "Stock Alert", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                MessageBox.Show("This product is unavailable or has reached stock limit in cart.", "Stock Limit", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-            else
-            {
-                cartItems.Add(new CartItem
-                {
-                    Id = product.Id,
-                    Name = product.Name,
-                    Price = product.Price,
-                    Quantity = 1
-                });
-            }
-
-            UpdateCartSummary();
         }
 
         private void QuantityPlus_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is int id)
+            if (!TryGetProductId(sender, out var productId))
             {
-                var item = cartItems.FirstOrDefault(c => c.Id == id);
-                if (item != null)
-                {
-                    var product = allProducts.FirstOrDefault(p => p.Id == id);
-                    if (product != null && item.Quantity < product.Stock)
-                    {
-                        item.Quantity++;
-                        UpdateCartSummary();
-                    }
-                }
+                return;
             }
+
+            stateStore.IncreaseQuantity(productId);
         }
 
         private void QuantityMinus_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is int id)
+            if (!TryGetProductId(sender, out var productId))
             {
-                var item = cartItems.FirstOrDefault(c => c.Id == id);
-                if (item != null)
-                {
-                    if (item.Quantity > 1)
-                    {
-                        item.Quantity--;
-                    }
-                    else
-                    {
-                        cartItems.Remove(item);
-                    }
-                    UpdateCartSummary();
-                }
+                return;
             }
+
+            stateStore.DecreaseQuantity(productId);
         }
 
         private void RemoveItem_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is int id)
+            if (!TryGetProductId(sender, out var productId))
             {
-                var item = cartItems.FirstOrDefault(c => c.Id == id);
-                if (item != null)
-                {
-                    cartItems.Remove(item);
-                    UpdateCartSummary();
-                }
+                return;
             }
+
+            stateStore.RemoveFromCart(productId);
         }
 
         private void ClearCart_Click(object sender, RoutedEventArgs e)
         {
-            if (cartItems.Count > 0)
+            if (stateStore.CartItems.Count == 0)
             {
-                MessageBoxResult result = MessageBox.Show(
-                    "Clear all items from cart?",
-                    "Confirm Clear",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                return;
+            }
 
-                if (result == MessageBoxResult.Yes)
-                {
-                    cartItems.Clear();
-                    UpdateCartSummary();
-                }
+            var result = MessageBox.Show(
+                "Clear all cart items?",
+                "Confirm Clear",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                stateStore.ClearCart();
             }
         }
 
         private void Checkout_Click(object sender, RoutedEventArgs e)
         {
-            if (cartItems.Count == 0)
+            if (stateStore.CartItems.Count == 0)
             {
-                MessageBox.Show("Cart is empty. Add items before checkout.", "Cart Empty", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Cart is empty. Add products before checkout.", "Cart Empty", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            decimal total = CalculateTotal();
-            string paymentMethod = PaymentMethodCombo.SelectedItem?.ToString() ?? "Cash";
+            var paymentMethod = (PaymentMethodCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cash";
 
-            MessageBoxResult result = MessageBox.Show(
-                $"Total: RM {total:F2}\nPayment Method: {paymentMethod}\n\nProceed with checkout?",
+            var result = MessageBox.Show(
+                $"Total: RM {stateStore.Total:F2}\nPayment Method: {paymentMethod}\n\nProceed with checkout?",
                 "Confirm Checkout",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
-                MessageBox.Show("Payment successful! Transaction completed.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                cartItems.Clear();
-                UpdateCartSummary();
+                stateStore.ClearCart();
+                MessageBox.Show("Transaction completed successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
-        private void UpdateCartSummary()
+        private void RefreshSummary()
         {
-            int itemCount = cartItems.Sum(c => c.Quantity);
-            decimal subtotal = CalculateSubtotal();
-            decimal tax = subtotal * 0.06m;
-            decimal total = subtotal + tax;
+            if (CartItemCount is null || SummaryItems is null || SubtotalText is null || TaxText is null || TotalText is null || EmptyCartMessage is null)
+            {
+                return;
+            }
 
-            CartItemCount.Text = $"{itemCount} items";
-            SummaryItems.Text = itemCount.ToString();
-            SubtotalText.Text = $"RM {subtotal:F2}";
-            TaxText.Text = $"RM {tax:F2}";
-            TotalText.Text = $"RM {total:F2}";
-
-            EmptyCartMessage.Visibility = cartItems.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            CartItemCount.Text = $"{stateStore.CartItemCount} items";
+            SummaryItems.Text = stateStore.CartItemCount.ToString();
+            SubtotalText.Text = $"RM {stateStore.Subtotal:F2}";
+            TaxText.Text = $"RM {stateStore.Tax:F2}";
+            TotalText.Text = $"RM {stateStore.Total:F2}";
+            EmptyCartMessage.Visibility = stateStore.CartItems.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private decimal CalculateSubtotal()
+        private static bool TryGetProductId(object sender, out int productId)
         {
-            return cartItems.Sum(c => c.Total);
-        }
+            productId = 0;
+            if (sender is not Button { Tag: not null } button)
+            {
+                return false;
+            }
 
-        private decimal CalculateTotal()
-        {
-            decimal subtotal = CalculateSubtotal();
-            return subtotal + (subtotal * 0.06m);
+            if (button.Tag is int id)
+            {
+                productId = id;
+                return true;
+            }
+
+            return int.TryParse(button.Tag.ToString(), out productId);
         }
     }
 }

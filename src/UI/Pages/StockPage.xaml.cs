@@ -1,135 +1,216 @@
 using System;
-using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
-using EZPos.DataAccess.Repositories;
-using EZPos.Models.Domain;
+using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
 {
+    public sealed class StockStatusBrushConverter : IValueConverter
+    {
+        public static StockStatusBrushConverter Instance { get; } = new();
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is not string status)
+            {
+                return Brushes.Gray;
+            }
+
+            return status switch
+            {
+                "Out of Stock" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEF4444")),
+                "Low Stock" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFF59E0B")),
+                _ => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF10B981"))
+            };
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public partial class StockPage : UserControl
     {
-        private ObservableCollection<StockItem> allStockItems;
-        private ObservableCollection<StockItem> filteredStockItems;
+        private readonly PosStateStore stateStore;
+        private ICollectionView? stockView;
+        private bool isInitialized;
 
-        public class StockItem
-        {
-            public int Id { get; set; }
-            public string Barcode { get; set; }
-            public string Name { get; set; }
-            public int Stock { get; set; }
-            public int ReorderLevel { get; set; }
-            public int MaxStock { get; set; }
-            public DateTime LastUpdated { get; set; }
-            
-            public int StockPercentage
-            {
-                get => MaxStock > 0 ? (int)((Stock * 100) / MaxStock) : 0;
-            }
-        }
-
-        public StockPage()
+        public StockPage(PosStateStore stateStore)
         {
             InitializeComponent();
-            InitializeData();
-            BindData();
+
+            this.stateStore = stateStore;
+            // Independent view per page — never share the default view across pages
+            stockView = new ListCollectionView(this.stateStore.Products);
+
+            Loaded += StockPage_Loaded;
         }
 
-        private void InitializeData()
+        private void StockPage_Loaded(object sender, RoutedEventArgs e)
         {
-            allStockItems = new ObservableCollection<StockItem>
+            if (isInitialized)
             {
-                new StockItem { Id = 1, Barcode = "001001", Name = "Espresso Coffee", Stock = 45, ReorderLevel = 15, MaxStock = 100, LastUpdated = DateTime.Now.AddDays(-2) },
-                new StockItem { Id = 2, Barcode = "001002", Name = "Black Tea", Stock = 8, ReorderLevel = 20, MaxStock = 50, LastUpdated = DateTime.Now.AddDays(-1) },
-                new StockItem { Id = 3, Barcode = "001003", Name = "Orange Juice", Stock = 0, ReorderLevel = 25, MaxStock = 80, LastUpdated = DateTime.Now },
-                new StockItem { Id = 4, Barcode = "001004", Name = "Mineral Water", Stock = 120, ReorderLevel = 30, MaxStock = 150, LastUpdated = DateTime.Now.AddDays(-3) },
-                new StockItem { Id = 5, Barcode = "002001", Name = "Cheese Sandwich", Stock = 22, ReorderLevel = 10, MaxStock = 50, LastUpdated = DateTime.Now },
-                new StockItem { Id = 6, Barcode = "002002", Name = "Chocolate Cake", Stock = 15, ReorderLevel = 8, MaxStock = 40, LastUpdated = DateTime.Now.AddHours(-5) },
-                new StockItem { Id = 7, Barcode = "002003", Name = "Cookie Mix", Stock = 5, ReorderLevel = 12, MaxStock = 60, LastUpdated = DateTime.Now },
-                new StockItem { Id = 8, Barcode = "002004", Name = "Donut Box", Stock = 38, ReorderLevel = 15, MaxStock = 80, LastUpdated = DateTime.Now.AddDays(-1) },
-                new StockItem { Id = 9, Barcode = "003001", Name = "Muffin Blueberry", Stock = 12, ReorderLevel = 10, MaxStock = 50, LastUpdated = DateTime.Now.AddHours(-12) },
-                new StockItem { Id = 10, Barcode = "003002", Name = "Croissant", Stock = 0, ReorderLevel = 20, MaxStock = 60, LastUpdated = DateTime.Now.AddDays(-4) },
+                return;
+            }
+
+            // Apply filter here — controls are fully ready and page is in visual tree
+            stockView.Filter = StockFilter;
+
+            InventoryGrid.ItemsSource = stockView;
+
+            if (StockFilterCombo is not null)
+            {
+                StockFilterCombo.SelectedIndex = 0;
+            }
+
+            if (CategoryFilterCombo is not null)
+            {
+                CategoryFilterCombo.SelectedIndex = 0;
+            }
+
+            UpdateSummary();
+            isInitialized = true;
+        }
+
+        private bool StockFilter(object obj)
+        {
+            if (obj is not ProductRecord product)
+            {
+                return false;
+            }
+
+            var search = StockSearchBox?.Text?.Trim() ?? string.Empty;
+            var stockStatus = (StockFilterCombo?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "All Stock Levels";
+            var category = (CategoryFilterCombo?.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "All Categories";
+
+            var matchesSearch = string.IsNullOrWhiteSpace(search)
+                || product.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || product.Barcode.Contains(search, StringComparison.OrdinalIgnoreCase);
+
+            var matchesStock = stockStatus switch
+            {
+                "In Stock" => product.StockStatus == "In Stock",
+                "Low Stock" => product.StockStatus == "Low Stock",
+                "Out of Stock" => product.StockStatus == "Out of Stock",
+                _ => true
             };
 
-            filteredStockItems = new ObservableCollection<StockItem>(allStockItems);
-        }
+            var matchesCategory = category == "All Categories"
+                || string.Equals(product.Category, category, StringComparison.OrdinalIgnoreCase);
 
-        private void BindData()
-        {
-            InventoryGrid.ItemsSource = filteredStockItems;
+            return matchesSearch && matchesStock && matchesCategory;
         }
 
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ApplyFilters();
+            if (!isInitialized || stockView is null)
+            {
+                return;
+            }
+
+            stockView.Refresh();
+            UpdateSummary();
         }
 
         private void StockFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ApplyFilters();
+            if (!isInitialized || stockView is null)
+            {
+                return;
+            }
+
+            stockView.Refresh();
+            UpdateSummary();
         }
 
-        private void ApplyFilters()
+        private void CategoryFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            string searchText = StockSearchBox.Text.ToLower();
-            string stockFilter = (StockFilterCombo.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "All Stock Levels";
-
-            var filtered = allStockItems.Where(s =>
+            if (!isInitialized || stockView is null)
             {
-                bool matchesSearch = s.Name.ToLower().Contains(searchText) || s.Barcode.ToLower().Contains(searchText);
-
-                bool matchesFilter = stockFilter switch
-                {
-                    "In Stock" => s.Stock > s.ReorderLevel,
-                    "Low Stock" => s.Stock > 0 && s.Stock <= s.ReorderLevel,
-                    "Critical" => s.Stock > 0 && s.Stock <= 10,
-                    "Out of Stock" => s.Stock <= 0,
-                    _ => true
-                };
-
-                return matchesSearch && matchesFilter;
-            }).ToList();
-
-            filteredStockItems.Clear();
-            foreach (var item in filtered)
-            {
-                filteredStockItems.Add(item);
+                return;
             }
+
+            stockView.Refresh();
+            UpdateSummary();
         }
 
         private void StockIn_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Stock-In dialog would open here to add inventory.", "Stock-In", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Stock-in flow can be connected to inventory transactions.", "Stock", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void StockOut_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Stock-Out dialog would open here to remove inventory.", "Stock-Out", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Stock-out flow can be connected to inventory transactions.", "Stock", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
+            if (stockView is null)
+            {
+                return;
+            }
+
             StockSearchBox.Clear();
             StockFilterCombo.SelectedIndex = 0;
             CategoryFilterCombo.SelectedIndex = 0;
-            MessageBox.Show("Stock inventory refreshed.", "Refresh", MessageBoxButton.OK, MessageBoxImage.Information);
+            stockView.Refresh();
+            UpdateSummary();
         }
 
         private void EditStock_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is int id)
+            if (sender is not Button { Tag: ProductRecord item })
             {
-                var item = allStockItems.FirstOrDefault(s => s.Id == id);
-                if (item != null)
+                return;
+            }
+
+            MessageBox.Show(
+                $"Edit Stock\n\nProduct: {item.Name}\nCurrent Stock: {item.Stock}\nReorder Level: {item.ReorderLevel}",
+                "Stock",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        private void UpdateSummary()
+        {
+            if (InStockValue is null || LowStockValue is null || OutOfStockValue is null || TotalUnitsValue is null)
+            {
+                return;
+            }
+
+            var inStock = 0;
+            var lowStock = 0;
+            var outOfStock = 0;
+            var totalUnits = 0;
+
+            foreach (var item in stateStore.Products)
+            {
+                totalUnits += item.Stock;
+
+                if (item.StockStatus == "Out of Stock")
                 {
-                    MessageBox.Show($"Edit Stock for: {item.Name}\n\nCurrent: {item.Stock} units\nReorder Level: {item.ReorderLevel}", 
-                        "Edit Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+                    outOfStock++;
+                }
+                else if (item.StockStatus == "Low Stock")
+                {
+                    lowStock++;
+                }
+                else
+                {
+                    inStock++;
                 }
             }
+
+            InStockValue.Text = inStock.ToString();
+            LowStockValue.Text = lowStock.ToString();
+            OutOfStockValue.Text = outOfStock.ToString();
+            TotalUnitsValue.Text = totalUnits.ToString();
         }
     }
 }

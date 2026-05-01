@@ -9,9 +9,19 @@ namespace EZPos
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            DispatcherUnhandledException += (_, args) =>
+            {
+                MessageBox.Show(
+                    $"Unhandled crash:\n\n{args.Exception.GetType().Name}: {args.Exception.Message}\n\n{args.Exception.StackTrace}",
+                    "EZPos - Unhandled Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                args.Handled = true;
+            };
+
             try
             {
-                // Ensure MainWindow is properly instantiated
                 MainWindow = new MainWindow();
                 MainWindow.Show();
             }

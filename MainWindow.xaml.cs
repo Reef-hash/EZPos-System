@@ -1,59 +1,95 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using EZPos.UI.Navigation;
+using EZPos.UI.State;
 
 namespace EZPos.UI
 {
     public partial class MainWindow : Window
     {
-        private string currentPage = "Sales";
+        private const string DefaultRoute = "Sales";
+        private readonly PosStateStore stateStore;
+        private readonly NavigationService navigationService;
+        private string currentPage = DefaultRoute;
 
         public MainWindow()
         {
             InitializeComponent();
-            NavigateToPage("Sales");
+
+            stateStore = new PosStateStore();
+            navigationService = new NavigationService();
+            RegisterRoutes();
+
+            NavigateToPage(DefaultRoute);
+        }
+
+        private void RegisterRoutes()
+        {
+            navigationService.Register("Sales", () => new UI.Pages.SalesPage(stateStore));
+            navigationService.Register("Products", () => new UI.Pages.ProductsPage(stateStore));
+            navigationService.Register("Stock", () => new UI.Pages.StockPage(stateStore));
+            navigationService.Register("Reports", () => new UI.Pages.ReportsPage());
         }
 
         private void NavButton_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as System.Windows.Controls.Button;
-            string pageName = button.Tag.ToString();
-            NavigateToPage(pageName);
+            if (sender is not Button button)
+            {
+                return;
+            }
+
+            var route = button.Tag as string;
+            if (string.IsNullOrWhiteSpace(route))
+            {
+                return;
+            }
+
+            NavigateToPage(route);
         }
 
         private void NavigateToPage(string pageName)
         {
-            currentPage = pageName;
-            System.Windows.Controls.UserControl page = null;
-
-            switch (pageName)
+            try
             {
-                case "Sales":
-                    page = new UI.Pages.SalesPage();
-                    break;
-                case "Products":
-                    page = new UI.Pages.ProductsPage();
-                    break;
-                case "Stock":
-                    page = new UI.Pages.StockPage();
-                    break;
-                case "Reports":
-                    page = new UI.Pages.ReportsPage();
-                    break;
-            }
+                if (!navigationService.TryCreatePage(pageName, out var page) || page is null)
+                {
+                    return;
+                }
 
-            if (page != null)
-            {
+                currentPage = pageName;
                 MainContent.Content = page;
                 HighlightNavButton(pageName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open {pageName} page.\n\n{ex}", "Navigation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                if (!string.Equals(pageName, DefaultRoute, StringComparison.OrdinalIgnoreCase))
+                {
+                    NavigateToPage(DefaultRoute);
+                }
             }
         }
 
         private void HighlightNavButton(string pageName)
         {
-            SalesNavBtn.Background = pageName == "Sales" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
-            ProductsNavBtn.Background = pageName == "Products" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
-            StockNavBtn.Background = pageName == "Stock" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
-            ReportsNavBtn.Background = pageName == "Reports" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
+            var activeBackground = FindResource("PrimaryBrush") as Brush;
+            var inactiveBackground = Brushes.Transparent;
+            var activeForeground = FindResource("SidebarBrush") as Brush;
+            var inactiveForeground = FindResource("TextSecondaryBrush") as Brush;
+
+            ApplyNavState(SalesNavBtn, pageName == "Sales", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(ProductsNavBtn, pageName == "Products", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(StockNavBtn, pageName == "Stock", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(ReportsNavBtn, pageName == "Reports", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+        }
+
+        private static void ApplyNavState(Button button, bool isActive, Brush? activeBackground, Brush inactiveBackground, Brush? activeForeground, Brush? inactiveForeground)
+        {
+            button.Background = isActive ? activeBackground : inactiveBackground;
+            button.Foreground = isActive ? activeForeground : inactiveForeground;
         }
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)

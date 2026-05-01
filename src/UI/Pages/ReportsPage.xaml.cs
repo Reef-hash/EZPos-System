@@ -8,9 +8,10 @@ namespace EZPos.UI.Pages
 {
     public partial class ReportsPage : UserControl
     {
-        private ObservableCollection<ChartData> salesTrendData;
-        private ObservableCollection<TopProduct> topProducts;
-        private ObservableCollection<PeakHour> peakHours;
+        private ObservableCollection<ChartData> salesTrendData = new();
+        private ObservableCollection<TopProduct> topProducts = new();
+        private ObservableCollection<PeakHour> peakHours = new();
+        private bool isInitialized;
 
         public class ChartData
         {
@@ -38,8 +39,19 @@ namespace EZPos.UI.Pages
         public ReportsPage()
         {
             InitializeComponent();
+            Loaded += ReportsPage_Loaded;
+        }
+
+        private void ReportsPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (isInitialized)
+            {
+                return;
+            }
+
             InitializeData();
             BindData();
+            isInitialized = true;
         }
 
         private void InitializeData()
@@ -87,6 +99,11 @@ namespace EZPos.UI.Pages
 
         private void PeriodCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (!isInitialized || PeriodCombo is null || DateRangeLabel is null || StartDatePicker is null || EndDatePicker is null)
+            {
+                return;
+            }
+
             string selectedPeriod = (PeriodCombo.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Today";
             DateRangeLabel.Text = selectedPeriod;
 
@@ -132,6 +149,11 @@ namespace EZPos.UI.Pages
 
         private void FilterButton_Click(object sender, RoutedEventArgs e)
         {
+            if (StartDatePicker is null || EndDatePicker is null)
+            {
+                return;
+            }
+
             DateTime startDate = StartDatePicker.SelectedDate ?? DateTime.Now;
             DateTime endDate = EndDatePicker.SelectedDate ?? DateTime.Now;
 
