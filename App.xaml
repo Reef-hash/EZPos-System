@@ -50,6 +50,7 @@
             <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}" />
             <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
             <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource DividerColor}" />
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource PrimaryColor}" />
 
             <!-- Typography -->
             <FontFamily x:Key="AppFont">Segoe UI</FontFamily>
