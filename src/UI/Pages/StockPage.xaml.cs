@@ -11,87 +11,6 @@ using EZPos.Models.Domain;
 
 namespace EZPos.UI.Pages
 {
-    // Stock Status Converter
-    public class StockStatusConverter : IValueConverter
-    {
-        public static readonly StockStatusConverter Instance = new StockStatusConverter();
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is int stock)
-            {
-                if (stock <= 0)
-                    return "Out";
-                else if (stock <= 10)
-                    return "Low";
-                else if (stock <= 20)
-                    return "Critical";
-                else
-                    return "OK";
-            }
-            return "Unknown";
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    // Stock Status Color Converter
-    public class StockStatusColorConverter : IValueConverter
-    {
-        public static readonly StockStatusColorConverter Instance = new StockStatusColorConverter();
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is int stock)
-            {
-                if (stock <= 0)
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEF4444")); // Red
-                else if (stock <= 10)
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFF59E0B")); // Amber
-                else if (stock <= 20)
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3B82F6")); // Blue
-                else
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF10B981")); // Green
-            }
-            return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF64748B")); // Gray
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    // Stock Color Converter for Progress Bar
-    public class StockColorConverter : IValueConverter
-    {
-        public static readonly StockColorConverter Instance = new StockColorConverter();
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is int stock)
-            {
-                if (stock <= 0)
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEF4444")); // Red
-                else if (stock <= 10)
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFF59E0B")); // Amber
-                else if (stock <= 20)
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF3B82F6")); // Blue
-                else
-                    return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF10B981")); // Green
-            }
-            return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00D9FF")); // Cyan
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public partial class StockPage : UserControl
     {
         private ObservableCollection<StockItem> allStockItems;
@@ -156,7 +75,7 @@ namespace EZPos.UI.Pages
 
         private void ApplyFilters()
         {
-            string searchText = SearchBox.Text.ToLower();
+            string searchText = StockSearchBox.Text.ToLower();
             string stockFilter = (StockFilterCombo.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "All Stock Levels";
 
             var filtered = allStockItems.Where(s =>
@@ -194,7 +113,7 @@ namespace EZPos.UI.Pages
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
-            SearchBox.Clear();
+            StockSearchBox.Clear();
             StockFilterCombo.SelectedIndex = 0;
             CategoryFilterCombo.SelectedIndex = 0;
             MessageBox.Show("Stock inventory refreshed.", "Refresh", MessageBoxButton.OK, MessageBoxImage.Information);

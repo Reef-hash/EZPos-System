@@ -5,12 +5,12 @@ namespace EZPos.UI
 {
     public partial class MainWindow : Window
     {
-        private string currentPage = 'Sales';
+        private string currentPage = "Sales";
 
         public MainWindow()
         {
             InitializeComponent();
-            NavigateToPage('Sales');
+            NavigateToPage("Sales");
         }
 
         private void NavButton_Click(object sender, RoutedEventArgs e)
@@ -27,16 +27,16 @@ namespace EZPos.UI
 
             switch (pageName)
             {
-                case 'Sales':
+                case "Sales":
                     page = new UI.Pages.SalesPage();
                     break;
-                case 'Products':
+                case "Products":
                     page = new UI.Pages.ProductsPage();
                     break;
-                case 'Stock':
+                case "Stock":
                     page = new UI.Pages.StockPage();
                     break;
-                case 'Reports':
+                case "Reports":
                     page = new UI.Pages.ReportsPage();
                     break;
             }
@@ -50,25 +50,25 @@ namespace EZPos.UI
 
         private void HighlightNavButton(string pageName)
         {
-            SalesNavBtn.Background = pageName == 'Sales' ? System.Windows.Application.Current.Resources['{StaticResource PrimaryBrush}'] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources['{StaticResource SidebarBrush}'] as System.Windows.Media.Brush;
-            ProductsNavBtn.Background = pageName == 'Products' ? System.Windows.Application.Current.Resources['{StaticResource PrimaryBrush}'] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources['{StaticResource SidebarBrush}'] as System.Windows.Media.Brush;
-            StockNavBtn.Background = pageName == 'Stock' ? System.Windows.Application.Current.Resources['{StaticResource PrimaryBrush}'] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources['{StaticResource SidebarBrush}'] as System.Windows.Media.Brush;
-            ReportsNavBtn.Background = pageName == 'Reports' ? System.Windows.Application.Current.Resources['{StaticResource PrimaryBrush}'] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources['{StaticResource SidebarBrush}'] as System.Windows.Media.Brush;
+            SalesNavBtn.Background = pageName == "Sales" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
+            ProductsNavBtn.Background = pageName == "Products" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
+            StockNavBtn.Background = pageName == "Stock" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
+            ReportsNavBtn.Background = pageName == "Reports" ? System.Windows.Application.Current.Resources["{StaticResource PrimaryBrush}"] as System.Windows.Media.Brush : System.Windows.Application.Current.Resources["{StaticResource SidebarBrush}"] as System.Windows.Media.Brush;
         }
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show('Logout functionality coming soon!', 'Logout', MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Logout functionality coming soon!", "Logout", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show('Settings coming soon!', 'Settings', MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Settings coming soon!", "Settings", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void AboutButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show('EZPos System v1.0\nModern Point of Sale Application', 'About', MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("EZPos System v1.0\nModern Point of Sale Application", "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
