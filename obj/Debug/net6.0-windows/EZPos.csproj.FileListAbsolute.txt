@@ -1,0 +1,8 @@
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\EZPos.csproj.AssemblyReference.cache
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\src\UI\Pages\SalesModeControl.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\App.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\MainWindow.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\src\UI\Pages\SalesModeControl.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\App.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\EZPos_MarkupCompile.cache
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows\EZPos_MarkupCompile.lref

@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace EZPos.UI
+namespace EZPos.UI.Pages
 {
     public partial class SalesModeControl : UserControl
     {

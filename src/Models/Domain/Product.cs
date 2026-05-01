@@ -1,4 +1,4 @@
-namespace Models
+namespace EZPos.Models.Domain
 {
     public class Product
     {

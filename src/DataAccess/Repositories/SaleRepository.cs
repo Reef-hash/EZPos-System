@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
-using Models;
+using EZPos.Models.Domain;
 
-namespace DataAccess
+namespace EZPos.DataAccess.Repositories
 {
     public static class SaleRepository
     {

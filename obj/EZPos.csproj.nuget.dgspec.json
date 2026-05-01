@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Github\\EZPos\\EZPos.csproj": {}
+    "D:\\#_Programming\\#_Github_Repo\\Production-Repository\\EZPos-System\\EZPos.csproj": {}
   },
   "projects": {
-    "D:\\Github\\EZPos\\EZPos.csproj": {
+    "D:\\#_Programming\\#_Github_Repo\\Production-Repository\\EZPos-System\\EZPos.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Github\\EZPos\\EZPos.csproj",
+        "projectUniqueName": "D:\\#_Programming\\#_Github_Repo\\Production-Repository\\EZPos-System\\EZPos.csproj",
         "projectName": "EZPos",
-        "projectPath": "D:\\Github\\EZPos\\EZPos.csproj",
-        "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\Github\\EZPos\\obj\\",
+        "projectPath": "D:\\#_Programming\\#_Github_Repo\\Production-Repository\\EZPos-System\\EZPos.csproj",
+        "packagesPath": "C:\\Users\\Che Has\\.nuget\\packages\\",
+        "outputPath": "D:\\#_Programming\\#_Github_Repo\\Production-Repository\\EZPos-System\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Che Has\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net6.0-windows"
@@ -44,6 +44,10 @@
         "net6.0-windows7.0": {
           "targetAlias": "net6.0-windows",
           "dependencies": {
+            "FontAwesome.Sharp": {
+              "target": "Package",
+              "version": "[6.3.0, )"
+            },
             "System.Data.SQLite": {
               "target": "Package",
               "version": "[1.0.117, )"

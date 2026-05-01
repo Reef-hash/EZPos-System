@@ -1,7 +1,7 @@
 using System.IO;
 using System.Collections.Generic;
 
-namespace DataAccess
+namespace EZPos.DataAccess.Repositories
 {
     public static class ConfigHelper
     {

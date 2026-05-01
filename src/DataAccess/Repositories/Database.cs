@@ -1,7 +1,7 @@
 using System;
 using System.Data.SQLite;
 
-namespace DataAccess
+namespace EZPos.DataAccess.Repositories
 {
     public static class Database
     {

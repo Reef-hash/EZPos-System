@@ -1,6 +1,6 @@
 using System;
 
-namespace Models
+namespace EZPos.Models.Domain
 {
     public class Sale
     {

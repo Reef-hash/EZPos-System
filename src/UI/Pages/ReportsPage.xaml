@@ -1,0 +1,358 @@
+<UserControl x:Class="EZPos.UI.ReportsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fa="http://schemas.fontawesome.com/schemas/sharp.xaml"
+             Background="{StaticResource ContentBrush}">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header with Date Range -->
+            <RowDefinition Height="Auto"/>
+            <!-- KPI Cards -->
+            <RowDefinition Height="Auto"/>
+            <!-- Charts Section -->
+            <RowDefinition Height="*"/>
+            <!-- Additional Analytics -->
+        </Grid.RowDefinitions>
+
+        <!-- ============================================ -->
+        <!-- HEADER - DATE RANGE SELECTOR                -->
+        <!-- ============================================ -->
+        <Border Grid.Row="0" Background="{StaticResource CardBackgroundBrush}" 
+                Padding="20,16" BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <!-- Title -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Date Range -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Margin="0,0,12,0" VerticalAlignment="Center">
+                        <fa:IconBlock Icon="BarChart" FontSize="20" Foreground="{StaticResource PrimaryBrush}"/>
+                    </TextBlock>
+                    <TextBlock Text="Analytics & Reports" 
+                              Foreground="{StaticResource PrimaryBrush}"
+                              FontSize="18" FontWeight="Bold" Margin="0,0,12,0"/>
+                    <TextBlock x:Name="DateRangeLabel" Text="Today" 
+                              Foreground="{StaticResource TextSecondaryBrush}"
+                              FontSize="13" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Date Range Selector -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8" Margin="0">
+                    <ComboBox x:Name="PeriodCombo" 
+                             Width="120"
+                             Height="32"
+                             Foreground="{StaticResource TextPrimaryBrush}"
+                             Background="{StaticResource SidebarBrush}"
+                             BorderBrush="{StaticResource BorderBrush}"
+                             BorderThickness="1"
+                             Padding="10,6"
+                             FontSize="11"
+                             SelectionChanged="PeriodCombo_SelectionChanged">
+                        <ComboBoxItem IsSelected="True">Today</ComboBoxItem>
+                        <ComboBoxItem>Yesterday</ComboBoxItem>
+                        <ComboBoxItem>This Week</ComboBoxItem>
+                        <ComboBoxItem>Last Week</ComboBoxItem>
+                        <ComboBoxItem>This Month</ComboBoxItem>
+                        <ComboBoxItem>Last Month</ComboBoxItem>
+                        <ComboBoxItem>Last 3 Months</ComboBoxItem>
+                        <ComboBoxItem>Custom</ComboBoxItem>
+                    </ComboBox>
+
+                    <TextBlock Text="From:" Foreground="{StaticResource TextSecondaryBrush}" 
+                              FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    <DatePicker x:Name="StartDatePicker" Width="110" Height="32" 
+                               SelectedDate="{x:Static system:DateTime.Today}"
+                               xmlns:system="clr-namespace:System;assembly=mscorlib"/>
+
+                    <TextBlock Text="To:" Foreground="{StaticResource TextSecondaryBrush}" 
+                              FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <DatePicker x:Name="EndDatePicker" Width="110" Height="32" 
+                               SelectedDate="{x:Static system:DateTime.Today}"
+                               xmlns:system="clr-namespace:System;assembly=mscorlib"/>
+
+                    <Button Content="Filter" 
+                           Style="{StaticResource SecondaryButtonStyle}"
+                           Padding="12,6"
+                           FontSize="12"
+                           Click="FilterButton_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <fa:IconBlock Icon="MagnifyingGlass" Margin="0,0,6,0" FontSize="12"/>
+                            <TextBlock Text="Filter" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                           Style="{StaticResource PrimaryButtonStyle}"
+                           Padding="12,6"
+                           FontSize="11"
+                           Click="FilterButton_Click"
+                           Margin="8,0,0,0"/>
+                    
+                    <Button Content="📥 Export" 
+                           Style="{StaticResource SecondaryButtonStyle}"
+                           Padding="12,6"
+                           FontSize="11"
+                           Click="ExportButton_Click"
+                           Margin="4,0,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================================ -->
+        <!-- KPI SUMMARY CARDS                           -->
+        <!-- ============================================ -->
+        <Border Grid.Row="1" Padding="0,12,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Total Sales Card -->
+                <Border Grid.Column="0" Background="{StaticResource CardBackgroundBrush}" 
+                       Padding="20,16" CornerRadius="6" BorderThickness="1" 
+                       BorderBrush="{StaticResource BorderBrush}" Margin="0,0,8,0">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0">
+                            <fa:IconBlock Icon="DollarSign" FontSize="16"/>
+                        </TextBlock>
+                        <TextBlock Text="Total Sales" Foreground="{StaticResource TextSecondaryBrush}" 
+                                  FontSize="12" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="TotalSalesValue" Text="RM 12,450.00" Foreground="{StaticResource PrimaryBrush}" 
+                                  FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="↑ 15% from yesterday" Foreground="{StaticResource SuccessBrush}" 
+                                  FontSize="10" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Total Orders Card -->
+                <Border Grid.Column="1" Background="{StaticResource CardBackgroundBrush}" 
+                       Padding="20,16" CornerRadius="6" BorderThickness="1" 
+                       BorderBrush="{StaticResource BorderBrush}" Margin="0,0,8,0">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="🛒 Total Orders" Foreground="{StaticResource TextSecondaryBrush}" 
+                                  FontSize="12" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="TotalOrdersValue" Text="145" Foreground="{StaticResource InfoBrush}" 
+                                  FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="↑ 8% from yesterday" Foreground="{StaticResource SuccessBrush}" 
+                                  FontSize="10" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Average Order Value Card -->
+                <Border Grid.Column="2" Background="{StaticResource CardBackgroundBrush}" 
+                       Padding="20,16" CornerRadius="6" BorderThickness="1" 
+                       BorderBrush="{StaticResource BorderBrush}" Margin="0,0,8,0">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0">
+                            <fa:IconBlock Icon="TrendingUp" FontSize="16"/>
+                        </TextBlock>
+                        <TextBlock Text="Avg Order Value" Foreground="{StaticResource TextSecondaryBrush}" 
+                                  FontSize="12" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="AvgOrderValue" Text="RM 85.86" Foreground="{StaticResource WarningBrush}" 
+                                  FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="↑ 6% from yesterday" Foreground="{StaticResource SuccessBrush}" 
+                                  FontSize="10" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Transactions Card -->
+                <Border Grid.Column="3" Background="{StaticResource CardBackgroundBrush}" 
+                       Padding="20,16" CornerRadius="6" BorderThickness="1" 
+                       BorderBrush="{StaticResource BorderBrush}">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0">
+                            <fa:IconBlock Icon="Clock" FontSize="16"/>
+                        </TextBlock>
+                        <TextBlock Text="Transactions" Foreground="{StaticResource TextSecondaryBrush}" 
+                                  FontSize="12" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="TransactionsValue" Text="287" Foreground="{StaticResource SuccessBrush}" 
+                                  FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="↑ 12% from yesterday" Foreground="{StaticResource SuccessBrush}" 
+                                  FontSize="10" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ============================================ -->
+        <!-- CHARTS SECTION                              -->
+        <!-- ============================================ -->
+        <Border Grid.Row="2" Padding="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <!-- Sales Trend Chart -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Top Products -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Sales Trend Chart Area -->
+                <Border Grid.Column="0" Background="{StaticResource CardBackgroundBrush}" 
+                       Padding="16" CornerRadius="6" BorderThickness="1" 
+                       BorderBrush="{StaticResource BorderBrush}" Margin="0,0,12,0">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0">
+                            <fa:IconBlock Icon="BarChart" FontSize="16"/>
+                        </TextBlock>
+                        <TextBlock Text="Daily Sales Trend (Last 7 Days)" Foreground="{StaticResource TextPrimaryBrush}" 
+                                  FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        
+                        <!-- Chart Simulation with Bars -->
+                        <ItemsControl x:Name="SalesTrendChart" Height="200">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="7" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Bottom" Height="200">
+                                        <Border Background="{Binding BarColor}" CornerRadius="2" 
+                                               Width="24" Height="{Binding BarHeight}" Margin="0,0,0,20"
+                                               VerticalAlignment="Bottom"/>
+                                        <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextSecondaryBrush}" 
+                                                  FontSize="9" TextAlignment="Center"/>
+                                        <TextBlock Text="{Binding Value, StringFormat='RM {0}'}" 
+                                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                                  FontSize="10" FontWeight="SemiBold" TextAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Payment Methods Breakdown -->
+                <Border Grid.Column="1" Background="{StaticResource CardBackgroundBrush}" 
+                       Padding="16" CornerRadius="6" BorderThickness="1" 
+                       BorderBrush="{StaticResource BorderBrush}">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="💳 Payment Methods" Foreground="{StaticResource TextPrimaryBrush}" 
+                                  FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        
+                        <!-- Cash -->
+                        <StackPanel Orientation="Vertical" Margin="0,0,0,12">
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Cash" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                <TextBlock Grid.Column="1" Text="48%" Foreground="{StaticResource TextPrimaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                            </Grid>
+                            <ProgressBar Height="6" Foreground="{StaticResource SuccessBrush}" Background="{StaticResource BorderBrush}"
+                                        Value="48" Maximum="100" CornerRadius="3"/>
+                        </StackPanel>
+
+                        <!-- Card -->
+                        <StackPanel Orientation="Vertical" Margin="0,0,0,12">
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Card" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                <TextBlock Grid.Column="1" Text="35%" Foreground="{StaticResource TextPrimaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                            </Grid>
+                            <ProgressBar Height="6" Foreground="{StaticResource InfoBrush}" Background="{StaticResource BorderBrush}"
+                                        Value="35" Maximum="100" CornerRadius="3"/>
+                        </StackPanel>
+
+                        <!-- QR Code -->
+                        <StackPanel Orientation="Vertical" Margin="0,0,0,12">
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="QR Code" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                <TextBlock Grid.Column="1" Text="15%" Foreground="{StaticResource TextPrimaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                            </Grid>
+                            <ProgressBar Height="6" Foreground="{StaticResource PrimaryBrush}" Background="{StaticResource BorderBrush}"
+                                        Value="15" Maximum="100" CornerRadius="3"/>
+                        </StackPanel>
+
+                        <!-- Cheque -->
+                        <StackPanel Orientation="Vertical" Margin="0,0,0,12">
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Cheque" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                                <TextBlock Grid.Column="1" Text="2%" Foreground="{StaticResource TextPrimaryBrush}" FontSize="11" FontWeight="SemiBold"/>
+                            </Grid>
+                            <ProgressBar Height="6" Foreground="{StaticResource WarningBrush}" Background="{StaticResource BorderBrush}"
+                                        Value="2" Maximum="100" CornerRadius="3"/>
+                        </StackPanel>
+
+                        <Separator Background="{StaticResource BorderBrush}" Margin="0,8,0,8"/>
+
+                        <TextBlock Text="Total Transactions" Foreground="{StaticResource TextSecondaryBrush}" FontSize="10"/>
+                        <TextBlock Text="287 transactions" Foreground="{StaticResource TextPrimaryBrush}" 
+                                  FontSize="12" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ============================================ -->
+        <!-- TOP PRODUCTS & ADDITIONAL INFO              -->
+        <!-- ============================================ -->
+        <Border Grid.Row="3" Background="{StaticResource CardBackgroundBrush}" 
+               Padding="16" CornerRadius="6" BorderThickness="1" 
+               BorderBrush="{StaticResource BorderBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Top Selling Products -->
+                <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0,0,16,0">
+                    <TextBlock Text="🏆 Top Selling Products" Foreground="{StaticResource TextPrimaryBrush}" 
+                              FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                    
+                    <DataGrid x:Name="TopProductsGrid" 
+                             AutoGenerateColumns="False"
+                             CanUserAddRows="False"
+                             CanUserDeleteRows="False"
+                             Height="200"
+                             RowHeight="40">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Product" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="60" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Revenue" Binding="{Binding Revenue, StringFormat='RM {0:F2}'}" Width="100" IsReadOnly="True"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+
+                <!-- Hourly Summary -->
+                <StackPanel Grid.Column="1" Orientation="Vertical">
+                    <TextBlock Text="⏰ Peak Hours" Foreground="{StaticResource TextPrimaryBrush}" 
+                              FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                    
+                    <DataGrid x:Name="PeakHoursGrid" 
+                             AutoGenerateColumns="False"
+                             CanUserAddRows="False"
+                             CanUserDeleteRows="False"
+                             Height="200"
+                             RowHeight="40">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Time" Binding="{Binding TimeSlot}" Width="80" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Orders" Binding="{Binding Orders}" Width="70" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Sales (RM)" Binding="{Binding Sales, StringFormat='{0:F2}'}" Width="*" IsReadOnly="True"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
