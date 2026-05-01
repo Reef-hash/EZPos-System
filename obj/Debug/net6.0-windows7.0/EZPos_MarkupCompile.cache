@@ -1,5 +1,5 @@
 ﻿EZPos
-
+1.0.0.0
 
 winexe
 C#
@@ -12,9 +12,9 @@ TRACE;DEBUG;NET;NET6_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\App.xaml
 6-1209109214
 
-171349688209
+24-1065276349
 209404774758
 MainWindow.xaml;src\UI\Pages\ProductsPage.xaml;src\UI\Pages\ReportsPage.xaml;src\UI\Pages\SalesModeControl.xaml;src\UI\Pages\SalesPage.xaml;src\UI\Pages\StockPage.xaml;
 
-False
+True
 

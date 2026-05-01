@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using EZPos.Business.Services;
 using EZPos.UI.Navigation;
 using EZPos.UI.State;
 
@@ -12,13 +13,20 @@ namespace EZPos.UI
         private const string DefaultRoute = "Sales";
         private readonly PosStateStore stateStore;
         private readonly NavigationService navigationService;
+        private readonly ProductService productService;
+        private readonly SaleService saleService;
+        private readonly StockService stockService;
         private string currentPage = DefaultRoute;
 
-        public MainWindow()
+        public MainWindow(PosStateStore stateStore, ProductService productService, SaleService saleService, StockService stockService)
         {
             InitializeComponent();
 
-            stateStore = new PosStateStore();
+            this.stateStore     = stateStore;
+            this.productService = productService;
+            this.saleService    = saleService;
+            this.stockService   = stockService;
+
             navigationService = new NavigationService();
             RegisterRoutes();
 
@@ -27,10 +35,10 @@ namespace EZPos.UI
 
         private void RegisterRoutes()
         {
-            navigationService.Register("Sales", () => new UI.Pages.SalesPage(stateStore));
+            navigationService.Register("Sales",    () => new UI.Pages.SalesPage(stateStore));
             navigationService.Register("Products", () => new UI.Pages.ProductsPage(stateStore));
-            navigationService.Register("Stock", () => new UI.Pages.StockPage(stateStore));
-            navigationService.Register("Reports", () => new UI.Pages.ReportsPage());
+            navigationService.Register("Stock",    () => new UI.Pages.StockPage(stateStore));
+            navigationService.Register("Reports",  () => new UI.Pages.ReportsPage());
         }
 
         private void NavButton_Click(object sender, RoutedEventArgs e)

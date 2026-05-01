@@ -1,6 +1,9 @@
 using System;
 using System.Windows;
+using EZPos.Business.Services;
+using EZPos.DataAccess.Repositories;
 using EZPos.UI;
+using EZPos.UI.State;
 
 namespace EZPos
 {
@@ -22,14 +25,27 @@ namespace EZPos
 
             try
             {
-                MainWindow = new MainWindow();
+                // 1. Initialize DB schema (creates tables / migrates columns if needed)
+                Database.Initialize();
+
+                // 2. Create shared state store and load products from DB
+                var stateStore = new PosStateStore();
+                var productService = new ProductService(stateStore);
+                productService.LoadAll();
+
+                // 3. Create shared services
+                var saleService  = new SaleService(stateStore);
+                var stockService = new StockService(stateStore);
+
+                // 4. Launch main window with all services injected
+                MainWindow = new MainWindow(stateStore, productService, saleService, stockService);
                 MainWindow.Show();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error starting application: {ex.Message}\n\n{ex.StackTrace}", 
+                MessageBox.Show($"Error starting application: {ex.Message}\n\n{ex.StackTrace}",
                     "EZPos - Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                this.Shutdown(1);
+                Shutdown(1);
             }
         }
     }

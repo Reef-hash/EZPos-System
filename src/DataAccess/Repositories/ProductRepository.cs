@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using EZPos.Models.Domain;
@@ -6,6 +7,40 @@ namespace EZPos.DataAccess.Repositories
 {
     public static class ProductRepository
     {
+        private static Product MapRow(SQLiteDataReader reader)
+        {
+            return new Product
+            {
+                Id           = reader.GetInt32(reader.GetOrdinal("Id")),
+                Barcode      = reader.GetString(reader.GetOrdinal("Barcode")),
+                Name         = reader.GetString(reader.GetOrdinal("Name")),
+                Price        = (decimal)reader.GetDouble(reader.GetOrdinal("Price")),
+                Stock        = reader.GetInt32(reader.GetOrdinal("Stock")),
+                Category     = reader.GetString(reader.GetOrdinal("Category")),
+                ReorderLevel = reader.GetInt32(reader.GetOrdinal("ReorderLevel")),
+                MaxStock     = reader.GetInt32(reader.GetOrdinal("MaxStock")),
+                LastUpdated  = DateTime.TryParse(reader.GetString(reader.GetOrdinal("LastUpdated")), out var dt)
+                                   ? dt : DateTime.Now
+            };
+        }
+
+        public static List<Product> GetAll()
+        {
+            var list = new List<Product>();
+            using (var conn = Database.GetConnection())
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT * FROM Products ORDER BY Name";
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                        list.Add(MapRow(reader));
+                }
+            }
+            return list;
+        }
+
         public static Product GetByBarcode(string barcode)
         {
             using (var conn = Database.GetConnection())
@@ -17,45 +52,57 @@ namespace EZPos.DataAccess.Repositories
                 using (var reader = cmd.ExecuteReader())
                 {
                     if (reader.Read())
-                    {
-                        return new Product
-                        {
-                            Id = reader.GetInt32(0),
-                            Barcode = reader.GetString(1),
-                            Name = reader.GetString(2),
-                            Price = (decimal)reader.GetDouble(3),
-                            Stock = reader.GetInt32(4)
-                        };
-                    }
+                        return MapRow(reader);
                 }
             }
             return null;
         }
 
-        public static List<Product> GetAll()
+        public static int Add(Product product)
         {
-            var list = new List<Product>();
             using (var conn = Database.GetConnection())
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT * FROM Products";
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        list.Add(new Product
-                        {
-                            Id = reader.GetInt32(0),
-                            Barcode = reader.GetString(1),
-                            Name = reader.GetString(2),
-                            Price = (decimal)reader.GetDouble(3),
-                            Stock = reader.GetInt32(4)
-                        });
-                    }
-                }
+                cmd.CommandText = @"
+                    INSERT INTO Products (Barcode, Name, Price, Stock, Category, ReorderLevel, MaxStock, LastUpdated)
+                    VALUES (@barcode, @name, @price, @stock, @category, @reorderLevel, @maxStock, @lastUpdated);
+                    SELECT last_insert_rowid();";
+                cmd.Parameters.AddWithValue("@barcode",      product.Barcode);
+                cmd.Parameters.AddWithValue("@name",         product.Name);
+                cmd.Parameters.AddWithValue("@price",        (double)product.Price);
+                cmd.Parameters.AddWithValue("@stock",        product.Stock);
+                cmd.Parameters.AddWithValue("@category",     product.Category);
+                cmd.Parameters.AddWithValue("@reorderLevel", product.ReorderLevel);
+                cmd.Parameters.AddWithValue("@maxStock",     product.MaxStock);
+                cmd.Parameters.AddWithValue("@lastUpdated",  product.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss"));
+                return Convert.ToInt32(cmd.ExecuteScalar());
             }
-            return list;
+        }
+
+        public static void Update(Product product)
+        {
+            using (var conn = Database.GetConnection())
+            {
+                conn.Open();
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    UPDATE Products
+                    SET Barcode = @barcode, Name = @name, Price = @price, Stock = @stock,
+                        Category = @category, ReorderLevel = @reorderLevel,
+                        MaxStock = @maxStock, LastUpdated = @lastUpdated
+                    WHERE Id = @id";
+                cmd.Parameters.AddWithValue("@id",           product.Id);
+                cmd.Parameters.AddWithValue("@barcode",      product.Barcode);
+                cmd.Parameters.AddWithValue("@name",         product.Name);
+                cmd.Parameters.AddWithValue("@price",        (double)product.Price);
+                cmd.Parameters.AddWithValue("@stock",        product.Stock);
+                cmd.Parameters.AddWithValue("@category",     product.Category);
+                cmd.Parameters.AddWithValue("@reorderLevel", product.ReorderLevel);
+                cmd.Parameters.AddWithValue("@maxStock",     product.MaxStock);
+                cmd.Parameters.AddWithValue("@lastUpdated",  product.LastUpdated.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.ExecuteNonQuery();
+            }
         }
 
         public static void UpdateStock(int productId, int newStock)
@@ -64,26 +111,25 @@ namespace EZPos.DataAccess.Repositories
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = "UPDATE Products SET Stock = @stock WHERE Id = @id";
+                cmd.CommandText = "UPDATE Products SET Stock = @stock, LastUpdated = @dt WHERE Id = @id";
                 cmd.Parameters.AddWithValue("@stock", newStock);
-                cmd.Parameters.AddWithValue("@id", productId);
+                cmd.Parameters.AddWithValue("@dt",    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@id",    productId);
                 cmd.ExecuteNonQuery();
             }
         }
 
-        public static void Add(Product product)
+        public static void Delete(int productId)
         {
             using (var conn = Database.GetConnection())
             {
                 conn.Open();
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = "INSERT INTO Products (Barcode, Name, Price, Stock) VALUES (@barcode, @name, @price, @stock)";
-                cmd.Parameters.AddWithValue("@barcode", product.Barcode);
-                cmd.Parameters.AddWithValue("@name", product.Name);
-                cmd.Parameters.AddWithValue("@price", product.Price);
-                cmd.Parameters.AddWithValue("@stock", product.Stock);
+                cmd.CommandText = "DELETE FROM Products WHERE Id = @id";
+                cmd.Parameters.AddWithValue("@id", productId);
                 cmd.ExecuteNonQuery();
             }
         }
     }
 }
+

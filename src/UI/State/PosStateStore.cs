@@ -17,9 +17,74 @@ namespace EZPos.UI.State
 
         public PosStateStore()
         {
-            SeedProducts();
-
             CartItems.CollectionChanged += OnCartCollectionChanged;
+            // Note: products are loaded from DB via ProductService.LoadAll() in App.xaml.cs.
+            // SeedProducts() is only called as a fallback during development if DB has no data.
+        }
+
+        /// <summary>Replaces the in-memory product list with data loaded from the DB.</summary>
+        public void LoadProducts(System.Collections.Generic.List<EZPos.Models.Domain.Product> dbProducts)
+        {
+            Products.Clear();
+            foreach (var p in dbProducts)
+            {
+                Products.Add(new ProductRecord
+                {
+                    Id           = p.Id,
+                    Barcode      = p.Barcode,
+                    Name         = p.Name,
+                    Category     = p.Category,
+                    Price        = p.Price,
+                    Stock        = p.Stock,
+                    ReorderLevel = p.ReorderLevel,
+                    MaxStock     = p.MaxStock,
+                    LastUpdated  = p.LastUpdated
+                });
+            }
+
+            // If DB is empty (first run / dev), seed with sample data so the UI is not blank
+            if (Products.Count == 0)
+                SeedProducts();
+        }
+
+        /// <summary>Adds a newly created product to the state store.</summary>
+        public void AddProduct(EZPos.Models.Domain.Product p)
+        {
+            Products.Add(new ProductRecord
+            {
+                Id           = p.Id,
+                Barcode      = p.Barcode,
+                Name         = p.Name,
+                Category     = p.Category,
+                Price        = p.Price,
+                Stock        = p.Stock,
+                ReorderLevel = p.ReorderLevel,
+                MaxStock     = p.MaxStock,
+                LastUpdated  = p.LastUpdated
+            });
+        }
+
+        /// <summary>Replaces the matching product record in the state store with updated values.</summary>
+        public void UpdateProduct(EZPos.Models.Domain.Product p)
+        {
+            var existing = System.Linq.Enumerable.FirstOrDefault(Products, r => r.Id == p.Id);
+            if (existing == null) return;
+            existing.Barcode      = p.Barcode;
+            existing.Name         = p.Name;
+            existing.Category     = p.Category;
+            existing.Price        = p.Price;
+            existing.Stock        = p.Stock;
+            existing.ReorderLevel = p.ReorderLevel;
+            existing.MaxStock     = p.MaxStock;
+            existing.LastUpdated  = p.LastUpdated;
+        }
+
+        /// <summary>Removes a product from the state store by Id.</summary>
+        public void RemoveProduct(int productId)
+        {
+            var existing = System.Linq.Enumerable.FirstOrDefault(Products, r => r.Id == productId);
+            if (existing != null)
+                Products.Remove(existing);
         }
 
         public int CartItemCount => CartItems.Sum(x => x.Quantity);
