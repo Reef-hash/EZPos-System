@@ -37,6 +37,7 @@ jobs:
 
     - name: Build Inno Setup installer
       run: |
+        New-Item -ItemType Directory -Force -Path installer
         & "C:\innosetup\ISCC.exe" "InnoSetup-EZPos.iss"
 
     - name: Upload installer to Release
@@ -44,6 +45,6 @@ jobs:
       with:
         tag_name: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
-        files: SetupEZPos.exe
+        files: installer/EZPos-Setup-v1.0.0.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
