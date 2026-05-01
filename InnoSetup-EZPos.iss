@@ -56,16 +56,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ; App binaries (build with: dotnet publish -c Release -r win-x64 --self-contained false -o publish)
 Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; Bundle the .NET 6 Desktop Runtime offline installer so the
-; setup works without internet on the target machine.
-; Download from: https://dotnet.microsoft.com/en-us/download/dotnet/6.0
-; File: windowsdesktop-runtime-6.0.xx-win-x64.exe  (~55 MB)
-; Place it next to this .iss file before building the installer.
-Source: "windowsdesktop-runtime-6.0*-win-x64.exe"; \
-  DestDir: "{tmp}"; \
-  Flags: deleteafterinstall; \
-  Check: DotNetRuntimeMissing
-
 ; ============================================================
 ;  Shortcuts
 ; ============================================================
@@ -81,12 +71,14 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 ;  Run after install
 ; ============================================================
 [Run]
-; Install .NET 6 Desktop Runtime silently if missing
-Filename: "{tmp}\windowsdesktop-runtime-6.0*-win-x64.exe"; \
-  Parameters: "/install /quiet /norestart"; \
-  StatusMsg: "Installing .NET 6 Desktop Runtime..."; \
+; Download and install .NET 6 Desktop Runtime silently if missing.
+; Uses Microsoft's permanent redirect URL — always points to latest 6.0.x.
+; Requires internet connection on the target machine.
+Filename: "powershell.exe"; \
+  Parameters: "-NoProfile -ExecutionPolicy Bypass -Command ""Invoke-WebRequest -Uri 'https://aka.ms/dotnet/6.0/windowsdesktop-runtime-win-x64.exe' -OutFile '{tmp}\dotnet6-desktop.exe'; Start-Process '{tmp}\dotnet6-desktop.exe' -ArgumentList '/install /quiet /norestart' -Wait"""; \
+  StatusMsg: "Downloading and installing .NET 6 Desktop Runtime..."; \
   Check: DotNetRuntimeMissing; \
-  Flags: waituntilterminated
+  Flags: waituntilterminated runhidden
 
 ; Launch app
 Filename: "{app}\{#AppExe}"; \
@@ -143,8 +135,8 @@ begin
   begin
     MsgBox(
       '.NET 6 Desktop Runtime was not detected on this machine.' + #13#10 +
-      'It will be installed automatically before {#AppName} is set up.' + #13#10#13#10 +
-      'An internet connection is NOT required — the runtime is bundled in this installer.',
+      'It will be downloaded and installed automatically before {#AppName} is set up.' + #13#10#13#10 +
+      'Please ensure an internet connection is available.',
       mbInformation, MB_OK);
   end;
 end;
