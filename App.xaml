@@ -56,6 +56,13 @@
             <FontFamily x:Key="MonoFont">Consolas</FontFamily>
             
             <!-- ============================================ -->
+            <!-- SHADOW EFFECTS - MODERN (DEFINED EARLY)      -->
+            <!-- ============================================ -->
+            <DropShadowEffect x:Key="SmallShadow" BlurRadius="4" ShadowDepth="2" Opacity="0.3" Color="Black" />
+            <DropShadowEffect x:Key="MediumShadow" BlurRadius="8" ShadowDepth="4" Opacity="0.4" Color="Black" />
+            <DropShadowEffect x:Key="LargeShadow" BlurRadius="16" ShadowDepth="8" Opacity="0.5" Color="Black" />
+            
+            <!-- ============================================ -->
             <!-- MODERN BUTTON STYLE                          -->
             <!-- ============================================ -->
             <Style x:Key="PrimaryButtonStyle" TargetType="Button">
@@ -217,12 +224,6 @@
                 </Setter>
             </Style>
 
-            <!-- ============================================ -->
-            <!-- SHADOW EFFECTS - MODERN                      -->
-            <!-- ============================================ -->
-            <DropShadowEffect x:Key="SmallShadow" BlurRadius="4" ShadowDepth="2" Opacity="0.3" Color="Black" />
-            <DropShadowEffect x:Key="MediumShadow" BlurRadius="8" ShadowDepth="4" Opacity="0.4" Color="Black" />
-            <DropShadowEffect x:Key="LargeShadow" BlurRadius="16" ShadowDepth="8" Opacity="0.5" Color="Black" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
