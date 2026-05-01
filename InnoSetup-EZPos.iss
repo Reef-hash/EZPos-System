@@ -38,7 +38,7 @@ SolidCompression=yes
 ; Require Windows 7 or later (matches net6.0-windows7.0)
 MinVersion=6.1
 ; Require 64-bit Windows
-ArchitecturesRequired=x64
+ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 ; Privileges
 PrivilegesRequired=admin
