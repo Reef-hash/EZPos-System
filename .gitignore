@@ -1,0 +1,39 @@
+# ==================== .NET / Visual Studio ====================
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+*.sln.user
+*.db-shm
+*.db-wal
+
+# ==================== EZPos Specific ====================
+# Kita ignore SEMUA EZPos.db yang berada di dalam bin/obj (output folder)
+# Tapi EZPos.db di root project masih akan di-track (sebagai template/seed DB)
+**/EZPos.db
+
+# ==================== Build & Publish ====================
+**/publish/
+**/Release/
+**/Debug/
+*.exe
+*.pdb
+*.dll
+
+# ==================== Installer ====================
+*.exe
+*.msi
+Setup-*.iss
+Output/
+
+# ==================== Lain-lain ====================
+*.log
+*.tmp
+*.cache
+.DS_Store
+Thumbs.db
+
+# ==================== NuGet ====================
+packages/
+*.nupkg
