@@ -48,6 +48,10 @@
               "target": "Package",
               "version": "[6.3.0, )"
             },
+            "Microsoft.VisualBasic": {
+              "target": "Package",
+              "version": "[10.3.0, )"
+            },
             "System.Data.SQLite": {
               "target": "Package",
               "version": "[1.0.117, )"

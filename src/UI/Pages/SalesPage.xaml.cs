@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using EZPos.Business.Services;
+using EZPos.UI.Dialogs;
 using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
@@ -10,14 +12,16 @@ namespace EZPos.UI.Pages
     public partial class SalesPage : UserControl
     {
         private readonly PosStateStore stateStore;
+        private readonly SaleService saleService;
         private ICollectionView? productsView;
         private bool isInitialized;
 
-        public SalesPage(PosStateStore stateStore)
+        public SalesPage(PosStateStore stateStore, SaleService saleService)
         {
             InitializeComponent();
 
-            this.stateStore = stateStore;
+            this.stateStore  = stateStore;
+            this.saleService = saleService;
             // Independent view per page — never share the default view across pages
             productsView = new ListCollectionView(this.stateStore.Products);
             this.stateStore.PropertyChanged += StateStore_PropertyChanged;
@@ -179,18 +183,40 @@ namespace EZPos.UI.Pages
             }
 
             var paymentMethod = (PaymentMethodCombo.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Cash";
+            var total = stateStore.Total;
 
-            var result = MessageBox.Show(
-                $"Total: RM {stateStore.Total:F2}\nPayment Method: {paymentMethod}\n\nProceed with checkout?",
-                "Confirm Checkout",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+            // For card/QR payments tendered = total exactly
+            decimal tendered = total;
 
-            if (result == MessageBoxResult.Yes)
+            if (paymentMethod == "Cash")
             {
-                stateStore.ClearCart();
-                MessageBox.Show("Transaction completed successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                var input = Microsoft.VisualBasic.Interaction.InputBox(
+                    $"Total: RM {total:F2}\n\nEnter cash tendered (RM):",
+                    "Cash Tendered",
+                    total.ToString("F2"));
+
+                if (string.IsNullOrWhiteSpace(input))
+                    return; // cancelled
+
+                if (!decimal.TryParse(input, out tendered) || tendered < total)
+                {
+                    MessageBox.Show($"Tendered amount must be at least RM {total:F2}.",
+                        "Invalid Amount", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
+
+            var result = saleService.ProcessSale(paymentMethod, tendered);
+
+            if (!result.Success)
+            {
+                MessageBox.Show($"Checkout failed:\n{result.ErrorMessage}",
+                    "Checkout Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var receipt = new ReceiptDialog(result) { Owner = Window.GetWindow(this) };
+            receipt.ShowDialog();
         }
 
         private void RefreshSummary()

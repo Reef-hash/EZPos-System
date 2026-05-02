@@ -1,0 +1,160 @@
+<Window x:Class="EZPos.UI.Dialogs.ProductDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+        Title="Product"
+        Width="480"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBrush}"
+        FontFamily="{StaticResource AppFont}">
+
+    <Window.Resources>
+        <!-- Label style -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground"  Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="FontSize"    Value="12" />
+            <Setter Property="FontWeight"  Value="SemiBold" />
+            <Setter Property="Margin"      Value="0,0,0,4" />
+        </Style>
+        <!-- Validation error label -->
+        <Style x:Key="ErrorLabel" TargetType="TextBlock">
+            <Setter Property="Foreground"   Value="{StaticResource ErrorBrush}" />
+            <Setter Property="FontSize"     Value="11" />
+            <Setter Property="Margin"       Value="0,3,0,0" />
+            <Setter Property="Visibility"   Value="Collapsed" />
+        </Style>
+        <!-- Input row spacing -->
+        <Style x:Key="FieldGroup" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,0,14" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="28,24,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Title -->
+            <RowDefinition Height="Auto" /> <!-- Fields -->
+            <RowDefinition Height="Auto" /> <!-- Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Title ── -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+            <fa:IconBlock x:Name="TitleIcon" Icon="BoxOpen" FontSize="18"
+                          Foreground="{StaticResource PrimaryBrush}"
+                          VerticalAlignment="Center" Margin="0,0,10,0" />
+            <TextBlock x:Name="TitleText" Text="Add Product"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- ── Fields ── -->
+        <StackPanel Grid.Row="1">
+
+            <!-- Product Name -->
+            <StackPanel Style="{StaticResource FieldGroup}">
+                <TextBlock Text="Product Name *" Style="{StaticResource FieldLabel}" />
+                <TextBox x:Name="NameBox" Height="36" />
+                <TextBlock x:Name="NameError" Text="Product name is required."
+                           Style="{StaticResource ErrorLabel}" />
+            </StackPanel>
+
+            <!-- Barcode -->
+            <StackPanel Style="{StaticResource FieldGroup}">
+                <TextBlock Text="Barcode *" Style="{StaticResource FieldLabel}" />
+                <TextBox x:Name="BarcodeBox" Height="36" FontFamily="{StaticResource MonoFont}" />
+                <TextBlock x:Name="BarcodeError" Text="Barcode is required."
+                           Style="{StaticResource ErrorLabel}" />
+            </StackPanel>
+
+            <!-- Price + Category row -->
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Selling Price -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Selling Price (RM) *" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="PriceBox" Height="36" />
+                    <TextBlock x:Name="PriceError" Text="Enter a valid price (e.g. 9.90)."
+                               Style="{StaticResource ErrorLabel}" />
+                </StackPanel>
+
+                <!-- Category -->
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Category" Style="{StaticResource FieldLabel}" />
+                    <ComboBox x:Name="CategoryCombo" Height="36" IsEditable="True"
+                              Foreground="{StaticResource TextPrimaryBrush}"
+                              Background="{StaticResource CardBackgroundBrush}"
+                              BorderBrush="{StaticResource BorderBrush}">
+                        <ComboBoxItem>General</ComboBoxItem>
+                        <ComboBoxItem>Food &amp; Beverage</ComboBoxItem>
+                        <ComboBoxItem>Electronics</ComboBoxItem>
+                        <ComboBoxItem>Household</ComboBoxItem>
+                        <ComboBoxItem>Clothing</ComboBoxItem>
+                        <ComboBoxItem>Health &amp; Beauty</ComboBoxItem>
+                        <ComboBoxItem>Other</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+
+            <!-- Stock + Reorder Level row -->
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Initial Stock -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Stock Quantity *" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="StockBox" Height="36" Text="0" />
+                    <TextBlock x:Name="StockError" Text="Enter a valid quantity (0 or more)."
+                               Style="{StaticResource ErrorLabel}" />
+                </StackPanel>
+
+                <!-- Reorder Level -->
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Reorder Level" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="ReorderBox" Height="36" Text="5" />
+                    <TextBlock x:Name="ReorderError" Text="Enter a valid reorder level (0 or more)."
+                               Style="{StaticResource ErrorLabel}" />
+                </StackPanel>
+            </Grid>
+
+        </StackPanel>
+
+        <!-- ── Buttons ── -->
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Content="Cancel"
+                    Height="38"
+                    Click="Cancel_Click" />
+
+            <Button Grid.Column="2"
+                    x:Name="SaveButton"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Height="38"
+                    MinWidth="120"
+                    Click="Save_Click">
+                <StackPanel Orientation="Horizontal">
+                    <fa:IconBlock x:Name="SaveIcon" Icon="FloppyDisk" FontSize="13"
+                                  Foreground="{StaticResource SidebarBrush}" Margin="0,0,8,0" />
+                    <TextBlock x:Name="SaveText" Text="Save Product"
+                               Foreground="{StaticResource SidebarBrush}" />
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

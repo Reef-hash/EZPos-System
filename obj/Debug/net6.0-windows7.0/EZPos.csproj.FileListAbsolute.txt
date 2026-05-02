@@ -47,3 +47,9 @@ D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\EZPos.pdb
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\EZPos.genruntimeconfig.cache
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\ref\EZPos.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\ProductDialog.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\ProductDialog.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\ReceiptDialog.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\StockAdjustDialog.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\ReceiptDialog.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\StockAdjustDialog.g.cs

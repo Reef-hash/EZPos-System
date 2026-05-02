@@ -35,9 +35,9 @@ namespace EZPos.UI
 
         private void RegisterRoutes()
         {
-            navigationService.Register("Sales",    () => new UI.Pages.SalesPage(stateStore));
-            navigationService.Register("Products", () => new UI.Pages.ProductsPage(stateStore));
-            navigationService.Register("Stock",    () => new UI.Pages.StockPage(stateStore));
+            navigationService.Register("Sales",    () => new UI.Pages.SalesPage(stateStore, saleService));
+            navigationService.Register("Products", () => new UI.Pages.ProductsPage(stateStore, productService));
+            navigationService.Register("Stock",    () => new UI.Pages.StockPage(stateStore, stockService));
             navigationService.Register("Reports",  () => new UI.Pages.ReportsPage());
         }
 

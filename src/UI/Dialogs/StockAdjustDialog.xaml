@@ -1,0 +1,160 @@
+<Window x:Class="EZPos.UI.Dialogs.StockAdjustDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+        Title="Adjust Stock"
+        Width="420"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBrush}"
+        FontFamily="{StaticResource AppFont}">
+
+    <Window.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground"  Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="FontSize"    Value="12" />
+            <Setter Property="FontWeight"  Value="SemiBold" />
+            <Setter Property="Margin"      Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="ErrorLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+            <Setter Property="FontSize"   Value="11" />
+            <Setter Property="Margin"     Value="0,3,0,0" />
+            <Setter Property="Visibility" Value="Collapsed" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="28,24,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Title -->
+            <RowDefinition Height="Auto" /> <!-- Product info -->
+            <RowDefinition Height="Auto" /> <!-- Fields -->
+            <RowDefinition Height="Auto" /> <!-- Buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- ── Title ── -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+            <fa:IconBlock x:Name="TitleIcon" Icon="Boxes" FontSize="18"
+                          Foreground="{StaticResource PrimaryBrush}"
+                          VerticalAlignment="Center" Margin="0,0,10,0" />
+            <TextBlock x:Name="TitleText" Text="Adjust Stock"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- ── Product info card ── -->
+        <Border Grid.Row="1" Background="{StaticResource CardBackgroundBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                CornerRadius="6" Padding="14,12" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock x:Name="ProductNameText" Text="Product Name"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="14" FontWeight="SemiBold" />
+                    <TextBlock x:Name="ProductBarcodeText" Text="Barcode"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="11" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                    <TextBlock Text="Current Stock"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="11" HorizontalAlignment="Right" />
+                    <TextBlock x:Name="CurrentStockText" Text="0"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               FontSize="22" FontWeight="Bold" HorizontalAlignment="Right" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── Fields ── -->
+        <StackPanel Grid.Row="2">
+
+            <!-- Adjustment Type -->
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock Text="Adjustment Type *" Style="{StaticResource FieldLabel}" />
+                <ComboBox x:Name="TypeCombo" Height="36"
+                          Foreground="{StaticResource TextPrimaryBrush}"
+                          Background="{StaticResource CardBackgroundBrush}"
+                          BorderBrush="{StaticResource BorderBrush}"
+                          SelectionChanged="TypeCombo_SelectionChanged">
+                    <ComboBoxItem Tag="IN"  IsSelected="True">Stock In  (+)</ComboBoxItem>
+                    <ComboBoxItem Tag="OUT">Stock Out  (−)</ComboBoxItem>
+                    <ComboBoxItem Tag="ADJ">Manual Adjustment</ComboBoxItem>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Quantity -->
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock x:Name="QtyLabel" Text="Quantity to Add *" Style="{StaticResource FieldLabel}" />
+                <TextBox x:Name="QuantityBox" Height="36" Text="1" />
+                <TextBlock x:Name="QuantityError"
+                           Text="Enter a valid quantity (must be greater than 0)."
+                           Style="{StaticResource ErrorLabel}" />
+            </StackPanel>
+
+            <!-- Reason -->
+            <StackPanel Margin="0,0,0,14">
+                <TextBlock Text="Reason *" Style="{StaticResource FieldLabel}" />
+                <ComboBox x:Name="ReasonCombo" Height="36" IsEditable="True"
+                          Foreground="{StaticResource TextPrimaryBrush}"
+                          Background="{StaticResource CardBackgroundBrush}"
+                          BorderBrush="{StaticResource BorderBrush}">
+                    <ComboBoxItem>Purchase / Restock</ComboBoxItem>
+                    <ComboBoxItem>Customer Return</ComboBoxItem>
+                    <ComboBoxItem>Sold / Removed</ComboBoxItem>
+                    <ComboBoxItem>Damaged / Expired</ComboBoxItem>
+                    <ComboBoxItem>Theft / Loss</ComboBoxItem>
+                    <ComboBoxItem>Stock Count Correction</ComboBoxItem>
+                    <ComboBoxItem>Other</ComboBoxItem>
+                </ComboBox>
+                <TextBlock x:Name="ReasonError" Text="Reason is required."
+                           Style="{StaticResource ErrorLabel}" />
+            </StackPanel>
+
+            <!-- New stock preview -->
+            <Border Background="{StaticResource CardBackgroundBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="6" Padding="14,10" Margin="0,0,0,14">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="New stock will be: "
+                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" />
+                    <TextBlock x:Name="NewStockPreview" Text="1"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               FontSize="13" FontWeight="Bold" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+
+        <!-- ── Buttons ── -->
+        <Grid Grid.Row="3" Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Content="Cancel" Height="38"
+                    Click="Cancel_Click" />
+
+            <Button Grid.Column="2"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Height="38" MinWidth="130"
+                    Click="Save_Click">
+                <StackPanel Orientation="Horizontal">
+                    <fa:IconBlock Icon="Check" FontSize="13"
+                                  Foreground="{StaticResource SidebarBrush}" Margin="0,0,8,0" />
+                    <TextBlock Text="Apply Adjustment"
+                               Foreground="{StaticResource SidebarBrush}" />
+                </StackPanel>
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

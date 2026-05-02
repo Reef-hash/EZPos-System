@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using EZPos.Business.Services;
+using EZPos.UI.Dialogs;
 using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
@@ -37,14 +39,16 @@ namespace EZPos.UI.Pages
     public partial class StockPage : UserControl
     {
         private readonly PosStateStore stateStore;
+        private readonly StockService stockService;
         private ICollectionView? stockView;
         private bool isInitialized;
 
-        public StockPage(PosStateStore stateStore)
+        public StockPage(PosStateStore stateStore, StockService stockService)
         {
             InitializeComponent();
 
-            this.stateStore = stateStore;
+            this.stateStore   = stateStore;
+            this.stockService = stockService;
             // Independent view per page — never share the default view across pages
             stockView = new ListCollectionView(this.stateStore.Products);
 
@@ -141,12 +145,42 @@ namespace EZPos.UI.Pages
 
         private void StockIn_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Stock-in flow can be connected to inventory transactions.", "Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (InventoryGrid.SelectedItem is not ProductRecord selected)
+            {
+                MessageBox.Show("Select a product from the list first.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new StockAdjustDialog(stockService, selected) { Owner = Window.GetWindow(this) };
+            // Pre-select Stock In type
+            if (dialog.TypeCombo.Items.Count > 0)
+                dialog.TypeCombo.SelectedIndex = 0;
+
+            if (dialog.ShowDialog() == true)
+            {
+                stockView?.Refresh();
+                UpdateSummary();
+            }
         }
 
         private void StockOut_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Stock-out flow can be connected to inventory transactions.", "Stock", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (InventoryGrid.SelectedItem is not ProductRecord selected)
+            {
+                MessageBox.Show("Select a product from the list first.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new StockAdjustDialog(stockService, selected) { Owner = Window.GetWindow(this) };
+            // Pre-select Stock Out type
+            if (dialog.TypeCombo.Items.Count > 1)
+                dialog.TypeCombo.SelectedIndex = 1;
+
+            if (dialog.ShowDialog() == true)
+            {
+                stockView?.Refresh();
+                UpdateSummary();
+            }
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)

@@ -5,6 +5,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using EZPos.Business.Services;
+using EZPos.Models.Domain;
+using EZPos.UI.Dialogs;
 using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
@@ -37,14 +40,16 @@ namespace EZPos.UI.Pages
     public partial class ProductsPage : UserControl
     {
         private readonly PosStateStore stateStore;
+        private readonly ProductService productService;
         private ICollectionView? productsView;
         private bool isInitialized;
 
-        public ProductsPage(PosStateStore stateStore)
+        public ProductsPage(PosStateStore stateStore, ProductService productService)
         {
             InitializeComponent();
 
-            this.stateStore = stateStore;
+            this.stateStore     = stateStore;
+            this.productService = productService;
             // Independent view per page — never share the default view across pages
             productsView = new ListCollectionView(this.stateStore.Products);
             this.stateStore.PropertyChanged += StateStore_PropertyChanged;
@@ -142,39 +147,71 @@ namespace EZPos.UI.Pages
 
         private void AddProduct_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Add Product flow can be connected to your repository/service layer.", "Products", MessageBoxButton.OK, MessageBoxImage.Information);
+            var dialog = new ProductDialog(productService) { Owner = Window.GetWindow(this) };
+            if (dialog.ShowDialog() == true)
+            {
+                productsView?.Refresh();
+                UpdateCounters();
+            }
         }
 
         private void EditProduct_Click(object sender, RoutedEventArgs e)
         {
             if (ProductsGrid.SelectedItem is not ProductRecord selected)
             {
-                MessageBox.Show("Select a product first.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Select a product to edit.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            MessageBox.Show($"Edit Product: {selected.Name}", "Products", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Map ProductRecord → Product domain model for the dialog
+            var domainProduct = new Product
+            {
+                Id           = selected.Id,
+                Barcode      = selected.Barcode,
+                Name         = selected.Name,
+                Category     = selected.Category,
+                Price        = selected.Price,
+                Stock        = selected.Stock,
+                ReorderLevel = selected.ReorderLevel,
+                MaxStock     = selected.MaxStock,
+                LastUpdated  = selected.LastUpdated
+            };
+
+            var dialog = new ProductDialog(productService, domainProduct) { Owner = Window.GetWindow(this) };
+            if (dialog.ShowDialog() == true)
+            {
+                productsView?.Refresh();
+                UpdateCounters();
+            }
         }
 
         private void DeleteProduct_Click(object sender, RoutedEventArgs e)
         {
             if (ProductsGrid.SelectedItem is not ProductRecord selected)
             {
-                MessageBox.Show("Select a product first.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Select a product to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             var result = MessageBox.Show(
-                $"Delete {selected.Name}?",
+                $"Delete '{selected.Name}'? This cannot be undone.",
                 "Confirm Delete",
                 MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                MessageBoxImage.Warning);
 
-            if (result == MessageBoxResult.Yes)
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
             {
-                stateStore.Products.Remove(selected);
+                productService.Delete(selected.Id);
                 productsView?.Refresh();
                 UpdateCounters();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not delete product:\n{ex.Message}",
+                    "Delete Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
