@@ -1,11 +1,13 @@
 using System;
+using System.IO;
 using System.Data.SQLite;
 
 namespace EZPos.DataAccess.Repositories
 {
     public static class Database
     {
-        public static string DbFile = "EZPos.db";
+        public static string DbFile = Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory, "EZPos.db");
 
         public static SQLiteConnection GetConnection()
         {

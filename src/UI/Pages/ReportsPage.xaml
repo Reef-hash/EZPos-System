@@ -147,7 +147,7 @@
                        BorderBrush="{StaticResource BorderBrush}" Margin="0,0,8,0">
                     <StackPanel Orientation="Vertical">
                         <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0">
-                            <fa:IconBlock Icon="TrendingUp" FontSize="16"/>
+                            <fa:IconBlock Icon="ArrowTrendUp" FontSize="16"/>
                         </TextBlock>
                         <TextBlock Text="Avg Order Value" Foreground="{StaticResource TextSecondaryBrush}" 
                                   FontSize="12" Margin="0,0,0,8"/>
