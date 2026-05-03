@@ -25,4 +25,13 @@
     <Resource Include="Resources\Icons\app.ico" />
   </ItemGroup>
 
+  <!-- Seed database: copied to output and publish folder.
+       The installer uses "onlyifdoesntexist" so it is never overwritten on reinstall. -->
+  <ItemGroup>
+    <Content Include="EZPos.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

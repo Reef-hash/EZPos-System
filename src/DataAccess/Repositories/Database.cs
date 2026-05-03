@@ -16,6 +16,15 @@ namespace EZPos.DataAccess.Repositories
 
         public static void Initialize()
         {
+            // Ensure the directory exists (safety net for any path configuration)
+            var dir = Path.GetDirectoryName(DbFile);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            // Ensure the file exists as a valid empty SQLite database before opening
+            if (!File.Exists(DbFile))
+                SQLiteConnection.CreateFile(DbFile);
+
             using (var conn = GetConnection())
             {
                 conn.Open();

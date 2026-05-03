@@ -53,8 +53,18 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ;  Files
 ; ============================================================
 [Files]
-; App binaries (build with: dotnet publish -c Release -r win-x64 --self-contained false -o publish)
-Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; App binaries (everything except the database)
+Source: "publish\*"; Excludes: "EZPos.db"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; Seed database — only installed on FIRST install, never overwritten on reinstall/upgrade
+; This preserves all user data across updates.
+Source: "publish\EZPos.db"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
+
+; ============================================================
+;  Directories — grant write permission so the app can read/write EZPos.db
+; ============================================================
+[Dirs]
+Name: "{app}"; Permissions: users-modify
 
 ; ============================================================
 ;  Shortcuts
