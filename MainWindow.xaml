@@ -40,6 +40,7 @@
                 <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,12" />
 
                 <StackPanel Grid.Row="2">
+                    <Button x:Name="DashboardNavBtn" Style="{StaticResource NavButtonStyle}" Content="Dashboard" Tag="Dashboard" Click="NavButton_Click" />
                     <Button x:Name="SalesNavBtn" Style="{StaticResource NavButtonStyle}" Content="Sales" Tag="Sales" Click="NavButton_Click" />
                     <Button x:Name="ProductsNavBtn" Style="{StaticResource NavButtonStyle}" Content="Products" Tag="Products" Click="NavButton_Click" />
                     <Button x:Name="StockNavBtn" Style="{StaticResource NavButtonStyle}" Content="Stock" Tag="Stock" Click="NavButton_Click" />

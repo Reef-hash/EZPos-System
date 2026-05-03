@@ -34,11 +34,12 @@ namespace EZPos
                 productService.LoadAll();
 
                 // 3. Create shared services
-                var saleService  = new SaleService(stateStore);
-                var stockService = new StockService(stateStore);
+                var saleService   = new SaleService(stateStore);
+                var stockService  = new StockService(stateStore);
+                var reportService = new ReportService();
 
                 // 4. Launch main window with all services injected
-                MainWindow = new MainWindow(stateStore, productService, saleService, stockService);
+                MainWindow = new MainWindow(stateStore, productService, saleService, stockService, reportService);
                 MainWindow.Show();
             }
             catch (Exception ex)

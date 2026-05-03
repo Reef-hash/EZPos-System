@@ -36,6 +36,15 @@ namespace EZPos.DataAccess.Repositories
                         stockCmd.Parameters.AddWithValue("@qty", item.Quantity);
                         stockCmd.Parameters.AddWithValue("@pid", item.ProductId);
                         stockCmd.ExecuteNonQuery();
+
+                        // Audit trail — record stock movement for the sale
+                        StockMovementRepository.InsertWithConnection(conn, new StockMovement
+                        {
+                            ProductId = item.ProductId,
+                            ChangeQty = -item.Quantity,
+                            Reason    = $"Sale #{saleId}",
+                            DateTime  = sale.DateTime
+                        });
                     }
 
                     tran.Commit();

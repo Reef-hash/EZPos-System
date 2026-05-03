@@ -565,20 +565,20 @@ src/Hardware/
 
 ---
 
-### 🟡 Phase 2 — Core Business Logic
+### 🟡 Phase 2 — Core Business Logic ✅ COMPLETE
 
 **Goal:** Users can add/edit/delete products, adjust stock, and complete a sale end-to-end. No printer or scanner dependency — checkout works fully without hardware.
 
 | # | Task | File(s) | Status |
 |---|---|---|---|
-| 2.1 | `AddProductDialog` — form: name, barcode, price, category, stock, reorder level | `UI/Dialogs/AddProductDialog.xaml` | TODO |
-| 2.2 | Wire Add/Edit buttons in ProductsPage to `AddProductDialog` + `ProductService` | `UI/Pages/ProductsPage.xaml.cs` | TODO |
-| 2.3 | Wire Delete in ProductsPage to `ProductService.Delete()` — real DB delete | `UI/Pages/ProductsPage.xaml.cs` | TODO |
-| 2.4 | `StockAdjustDialog` — input: quantity, reason dropdown | `UI/Dialogs/StockAdjustDialog.xaml` | TODO |
-| 2.5 | Wire Stock In / Stock Out buttons to `StockAdjustDialog` + `StockService` | `UI/Pages/StockPage.xaml.cs` | TODO |
-| 2.6 | Wire `SaleService.ProcessSale()` into `SalesPage` checkout button | `UI/Pages/SalesPage.xaml.cs` | TODO |
-| 2.7 | `ReceiptDialog` — show transaction summary after checkout (on-screen only) | `UI/Dialogs/ReceiptDialog.xaml` | TODO |
-| 2.8 | Wire ReceiptDialog into `SalesPage` checkout completion | `UI/Pages/SalesPage.xaml.cs` | TODO |
+| 2.1 | `ProductDialog` — Add/Edit form: name, barcode, price, category, stock, reorder level | `UI/Dialogs/ProductDialog.xaml` | ✅ Done |
+| 2.2 | Wire Add/Edit buttons in ProductsPage to `ProductDialog` + `ProductService` | `UI/Pages/ProductsPage.xaml.cs` | ✅ Done |
+| 2.3 | Wire Delete in ProductsPage to `ProductService.Delete()` — real DB delete | `UI/Pages/ProductsPage.xaml.cs` | ✅ Done |
+| 2.4 | `StockAdjustDialog` — Stock In/Out/Manual with quantity + reason + live preview | `UI/Dialogs/StockAdjustDialog.xaml` | ✅ Done |
+| 2.5 | Wire Stock In / Stock Out buttons to `StockAdjustDialog` + `StockService` | `UI/Pages/StockPage.xaml.cs` | ✅ Done |
+| 2.6 | Wire `SaleService.ProcessSale()` into `SalesPage` checkout button | `UI/Pages/SalesPage.xaml.cs` | ✅ Done |
+| 2.7 | `ReceiptDialog` — on-screen transaction summary: items, totals, payment, change | `UI/Dialogs/ReceiptDialog.xaml` | ✅ Done |
+| 2.8 | Wire ReceiptDialog into `SalesPage` checkout completion | `UI/Pages/SalesPage.xaml.cs` | ✅ Done |
 
 ---
 
@@ -762,14 +762,15 @@ iscc InnoSetup-EZPos.iss
 - ~~`Database.Initialize()` is never called on startup~~  →  wired in `App.xaml.cs`
 - ~~`SaleRepository.AddSale()` never invoked~~  →  `SaleService.ProcessSale()` calls it (Phase 2 wires it into UI)
 
-### Still TODO (Phase 2)
-- Checkout button still calls old stub — needs wiring to `SaleService.ProcessSale()`
-- Stock changes from sales not yet reflected until `SaleService` is wired to the Sales UI
-- Add/Edit/Delete product buttons are MessageBox stubs
-- Stock In/Out buttons are MessageBox stubs
+### ✅ Fixed in Phase 2
+- ~~Checkout button was a stub~~ → calls `SaleService.ProcessSale()`, saves to DB, shows `ReceiptDialog`
+- ~~Add/Edit/Delete product buttons were MessageBox stubs~~ → `ProductDialog` + `ProductService` fully wired
+- ~~Stock In/Out buttons were MessageBox stubs~~ → `StockAdjustDialog` + `StockService` fully wired
+- ~~Stock changes from sales not reflected in UI~~ → `SaleService` syncs stock back to `PosStateStore`
 
 ### Still TODO (Phase 3)
 - Reports chart data is hardcoded static arrays
+- Dashboard page not yet created
 
 ---
 
@@ -788,5 +789,5 @@ iscc InnoSetup-EZPos.iss
 ---
 
 **Last Updated**: May 2, 2026
-**Version**: 1.3 — Phase 1 complete; DB connected, services live
-**Status**: Phase 2 next — Core Business Logic (Product CRUD, Stock In/Out, Checkout wired)
+**Version**: 1.4 — Phase 2 complete; full Product CRUD, Stock Adjust, Checkout + Receipt live
+**Status**: Phase 3 next — Data Flow & Reporting (real numbers, live dashboard)
