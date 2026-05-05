@@ -5,9 +5,21 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using EZPos.DataAccess.Repositories;
 
 namespace EZPos.UI.State
 {
+    /// <summary>How tax is calculated and applied on a sale.</summary>
+    public enum TaxMode
+    {
+        /// <summary>Tax = Subtotal × rate. Charged to customer.</summary>
+        PerReceipt,
+        /// <summary>Tax = Σ(item price × qty × rate). Semantically per-item, same math for flat rate. Charged to customer.</summary>
+        PerItem,
+        /// <summary>Tax is shown on the receipt for display only. Customer pays Subtotal only (Total = Subtotal).</summary>
+        Fake
+    }
+
     public sealed class PosStateStore : INotifyPropertyChanged
     {
         public ObservableCollection<ProductRecord> Products { get; } = new();
@@ -15,11 +27,32 @@ namespace EZPos.UI.State
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        /// <summary>Tax rate as a fraction (e.g. 0.06 for 6%). Read from config on construction.</summary>
+        public decimal TaxRate { get; private set; }
+
+        /// <summary>How tax is calculated. Read from config on construction.</summary>
+        public TaxMode TaxMode { get; private set; }
+
         public PosStateStore()
         {
             CartItems.CollectionChanged += OnCartCollectionChanged;
-            // Note: products are loaded from DB via ProductService.LoadAll() in App.xaml.cs.
-            // SeedProducts() is only called as a fallback during development if DB has no data.
+            ReloadTaxConfig();
+        }
+
+        /// <summary>Re-reads TaxRate and TaxMode from config.ini. Call after settings are saved.</summary>
+        public void ReloadTaxConfig()
+        {
+            if (decimal.TryParse(ConfigHelper.Get("TaxRate", "6"), out var rate))
+                TaxRate = Math.Clamp(rate, 0, 100) / 100m;
+            else
+                TaxRate = 0.06m;
+
+            TaxMode = ConfigHelper.Get("TaxMode", "PerReceipt") switch
+            {
+                "PerItem" => TaxMode.PerItem,
+                "Fake"    => TaxMode.Fake,
+                _         => TaxMode.PerReceipt
+            };
         }
 
         /// <summary>Replaces the in-memory product list with data loaded from the DB.</summary>
@@ -89,8 +122,20 @@ namespace EZPos.UI.State
 
         public int CartItemCount => CartItems.Sum(x => x.Quantity);
         public decimal Subtotal => CartItems.Sum(x => x.LineTotal);
-        public decimal Tax => Math.Round(Subtotal * 0.06m, 2);
-        public decimal Total => Subtotal + Tax;
+
+        /// <summary>
+        /// Displayed tax amount.
+        /// PerReceipt / PerItem: Subtotal × TaxRate (for flat rate, math is identical).
+        /// Fake: same display amount but not charged (Total == Subtotal).
+        /// </summary>
+        public decimal Tax => Math.Round(Subtotal * TaxRate, 2);
+
+        /// <summary>
+        /// Amount the customer actually pays.
+        /// Fake mode: Total == Subtotal (tax is cosmetic only).
+        /// All other modes: Total == Subtotal + Tax.
+        /// </summary>
+        public decimal Total => TaxMode == TaxMode.Fake ? Subtotal : Subtotal + Tax;
 
         public bool AddToCart(int productId)
         {

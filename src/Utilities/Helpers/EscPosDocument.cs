@@ -90,6 +90,11 @@ namespace EZPos.Utilities.Helpers
         /// </summary>
         public static byte[] Build(SaleResult result, string storeName)
         {
+            var taxRate    = EZPos.DataAccess.Repositories.ConfigHelper.Get("TaxRate", "6");
+            var taxMode    = EZPos.DataAccess.Repositories.ConfigHelper.Get("TaxMode", "PerReceipt");
+            var taxLabel   = taxMode == "Fake"
+                ? $"Tax ({taxRate}%) *display"
+                : $"Tax ({taxRate}%)";
             var doc = new EscPosDocument();
             doc.Append(ESC_INIT);
             doc.NewLine();
@@ -114,8 +119,9 @@ namespace EZPos.Utilities.Helpers
 
             // Totals
             doc.Row("Subtotal", $"RM {result.Subtotal:F2}");
-            doc.Row("Tax (6%)", $"RM {result.Tax:F2}");
+            doc.Row(taxLabel, $"RM {result.Tax:F2}");
             doc.Divider();
+            // In Fake mode, Total == Subtotal; the label makes it clear tax is display-only
             doc.Row("TOTAL", $"RM {result.Total:F2}", bold: true);
             doc.Divider();
 
@@ -128,7 +134,8 @@ namespace EZPos.Utilities.Helpers
             }
 
             doc.NewLine();
-            doc.Center("Thank you, come again!");
+            var footer = EZPos.DataAccess.Repositories.ConfigHelper.Get("ReceiptFooter", "Thank you, come again!");
+            doc.Center(footer);
             doc.NewLine();
             doc.NewLine();
             doc.NewLine();

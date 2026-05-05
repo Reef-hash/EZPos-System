@@ -4,14 +4,18 @@ using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using EZPos.DataAccess.Repositories;
+using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
 {
     public partial class SettingsPage : UserControl
     {
-        public SettingsPage()
+        private readonly PosStateStore _stateStore;
+
+        public SettingsPage(PosStateStore stateStore)
         {
             InitializeComponent();
+            _stateStore = stateStore;
             Loaded += SettingsPage_Loaded;
         }
 
@@ -22,6 +26,13 @@ namespace EZPos.UI.Pages
             TaxRateBox.Text       = ConfigHelper.Get("TaxRate",        "6");
             CurrencyBox.Text      = ConfigHelper.Get("Currency",       "RM");
             ReceiptFooterBox.Text = ConfigHelper.Get("ReceiptFooter",  "Thank you, come again!");
+
+            // Select matching TaxMode item
+            var savedMode = ConfigHelper.Get("TaxMode", "PerReceipt");
+            foreach (ComboBoxItem item in TaxModeCombo.Items)
+                if (item.Tag?.ToString() == savedMode)
+                { TaxModeCombo.SelectedItem = item; break; }
+            if (TaxModeCombo.SelectedItem is null) TaxModeCombo.SelectedIndex = 0;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -48,6 +59,12 @@ namespace EZPos.UI.Pages
             ConfigHelper.Set("TaxRate",       tax.ToString());
             ConfigHelper.Set("Currency",      CurrencyBox.Text.Trim());
             ConfigHelper.Set("ReceiptFooter", ReceiptFooterBox.Text.Trim());
+
+            var taxMode = (TaxModeCombo.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "PerReceipt";
+            ConfigHelper.Set("TaxMode", taxMode);
+
+            // Apply new tax config to the live state store immediately
+            _stateStore.ReloadTaxConfig();
 
             MessageBox.Show("Settings saved successfully.", "Saved",
                 MessageBoxButton.OK, MessageBoxImage.Information);

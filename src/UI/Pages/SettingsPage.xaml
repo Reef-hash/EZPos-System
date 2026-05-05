@@ -131,9 +131,11 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="220" />
-                            <ColumnDefinition Width="*" MaxWidth="200" />
+                            <ColumnDefinition Width="*" MaxWidth="300" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
@@ -147,11 +149,23 @@
                                  x:Name="TaxRateBox"
                                  Height="36" VerticalContentAlignment="Center" />
 
-                        <!-- Currency Symbol -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Currency Symbol"
+                        <!-- Tax Mode -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tax Mode"
                                    Foreground="{StaticResource TextSecondaryBrush}"
                                    FontSize="13" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="2" Grid.Column="1"
+                        <ComboBox Grid.Row="2" Grid.Column="1"
+                                  x:Name="TaxModeCombo"
+                                  Height="36">
+                            <ComboBoxItem Tag="PerReceipt">Per Receipt — tax on total (default)</ComboBoxItem>
+                            <ComboBoxItem Tag="PerItem">Per Item — tax per line item</ComboBoxItem>
+                            <ComboBoxItem Tag="Fake">Display Only — shown on receipt, not charged</ComboBoxItem>
+                        </ComboBox>
+
+                        <!-- Currency Symbol -->
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Currency Symbol"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="4" Grid.Column="1"
                                  x:Name="CurrencyBox"
                                  Height="36" VerticalContentAlignment="Center" />
                     </Grid>

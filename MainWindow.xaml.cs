@@ -42,7 +42,7 @@ namespace EZPos.UI
             navigationService.Register("Products",  () => new UI.Pages.ProductsPage(stateStore, productService));
             navigationService.Register("Stock",     () => new UI.Pages.StockPage(stateStore, stockService));
             navigationService.Register("Reports",   () => new UI.Pages.ReportsPage());
-            navigationService.Register("Settings",  () => new UI.Pages.SettingsPage());
+            navigationService.Register("Settings",  () => new UI.Pages.SettingsPage(stateStore));
         }
 
         private void NavButton_Click(object sender, RoutedEventArgs e)
