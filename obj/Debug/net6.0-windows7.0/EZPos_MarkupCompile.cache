@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET6_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\App.xaml
-162129680405
+17-1234405045
 1-659042472
-45-891865817
-2151982813412
-MainWindow.xaml;src\UI\Dialogs\CategoryManagementDialog.xaml;src\UI\Dialogs\PaymentDialog.xaml;src\UI\Dialogs\ProductDialog.xaml;src\UI\Dialogs\ReceiptDialog.xaml;src\UI\Dialogs\RenameDialog.xaml;src\UI\Dialogs\StockAdjustDialog.xaml;src\UI\Dialogs\WeightInputDialog.xaml;src\UI\Licensing\LicenseRequiredWindow.xaml;src\UI\Pages\DashboardPage.xaml;src\UI\Pages\ProductsPage.xaml;src\UI\Pages\ReportsPage.xaml;src\UI\Pages\SalesModeControl.xaml;src\UI\Pages\SalesPage.xaml;src\UI\Pages\SettingsPage.xaml;src\UI\Pages\StockPage.xaml;
+48-1220140503
+218-931546877
+MainWindow.xaml;src\UI\Dialogs\CategoryManagementDialog.xaml;src\UI\Dialogs\PaymentDialog.xaml;src\UI\Dialogs\ProductDialog.xaml;src\UI\Dialogs\ReceiptDialog.xaml;src\UI\Dialogs\RenameDialog.xaml;src\UI\Dialogs\StockAdjustDialog.xaml;src\UI\Dialogs\UpdateAvailableDialog.xaml;src\UI\Dialogs\WeightInputDialog.xaml;src\UI\Licensing\LicenseRequiredWindow.xaml;src\UI\Pages\DashboardPage.xaml;src\UI\Pages\ProductsPage.xaml;src\UI\Pages\ReportsPage.xaml;src\UI\Pages\SalesModeControl.xaml;src\UI\Pages\SalesPage.xaml;src\UI\Pages\SettingsPage.xaml;src\UI\Pages\StockPage.xaml;
 
 False
 

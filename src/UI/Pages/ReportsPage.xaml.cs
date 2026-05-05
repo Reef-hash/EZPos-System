@@ -8,6 +8,9 @@ using System.Windows.Media;
 using ClosedXML.Excel;
 using EZPos.Business.Services;
 using Microsoft.Win32;
+using PdfSharpCore;
+using PdfSharpCore.Drawing;
+using PdfSharpCore.Pdf;
 
 namespace EZPos.UI.Pages
 {
@@ -189,9 +192,11 @@ namespace EZPos.UI.Pages
             var dialog = new SaveFileDialog
             {
                 Title      = "Export Report",
-                Filter     = "Excel Workbook (*.xlsx)|*.xlsx",
-                FileName   = $"EZPos_Report_{from:yyyyMMdd}_{to:yyyyMMdd}.xlsx",
-                DefaultExt = ".xlsx"
+                Filter     = "Excel Workbook (*.xlsx)|*.xlsx|PDF Document (*.pdf)|*.pdf",
+                FilterIndex = 1,
+                FileName   = $"EZPos_Report_{from:yyyyMMdd}_{to:yyyyMMdd}",
+                DefaultExt = ".xlsx",
+                AddExtension = true
             };
 
             if (dialog.ShowDialog() != true)
@@ -199,7 +204,11 @@ namespace EZPos.UI.Pages
 
             try
             {
-                ExportToExcel(dialog.FileName, from, to);
+                if (string.Equals(Path.GetExtension(dialog.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+                    ExportToPdf(dialog.FileName, from, to);
+                else
+                    ExportToExcel(dialog.FileName, from, to);
+
                 var result = MessageBox.Show(
                     $"Report exported successfully.\n\nOpen the file now?",
                     "Export Complete", MessageBoxButton.YesNo, MessageBoxImage.Information);
@@ -525,6 +534,135 @@ namespace EZPos.UI.Pages
             ws6.SheetView.FreezeRows(1);
 
             workbook.SaveAs(filePath);
+        }
+
+        private void ExportToPdf(string filePath, DateTime from, DateTime to)
+        {
+            var summary = _reportService.GetSummary(from, to);
+            var payments = _reportService.GetPaymentBreakdown(from, to);
+            var top = _reportService.GetTopProducts(from, to, 10);
+            var daily = _reportService.GetDailyBreakdown(from, to);
+            var stock = _reportService.GetStockSnapshot().Take(10).ToList();
+            var storeName = EZPos.DataAccess.Repositories.ConfigHelper.Get("StoreName", "EZPos");
+
+            using var document = new PdfDocument();
+            document.Info.Title = $"EZPos Report {from:yyyy-MM-dd} to {to:yyyy-MM-dd}";
+
+            var titleFont = new XFont("Arial", 18, XFontStyle.Bold);
+            var headingFont = new XFont("Arial", 11, XFontStyle.Bold);
+            var bodyFont = new XFont("Arial", 10, XFontStyle.Regular);
+            var monoFont = new XFont("Courier New", 9, XFontStyle.Regular);
+            var accentBrush = new XSolidBrush(XColor.FromArgb(0, 217, 255));
+            var textBrush = new XSolidBrush(XColor.FromArgb(30, 41, 59));
+            var mutedBrush = new XSolidBrush(XColor.FromArgb(100, 116, 139));
+            var linePen = new XPen(XColor.FromArgb(203, 213, 225), 0.8);
+
+            PdfPage page = document.AddPage();
+            page.Size = PageSize.A4;
+            XGraphics gfx = XGraphics.FromPdfPage(page);
+            double margin = 40;
+            double y = margin;
+            double contentWidth = page.Width - (margin * 2);
+
+            void EnsureSpace(double needed)
+            {
+                if (y + needed <= page.Height - margin)
+                    return;
+
+                page = document.AddPage();
+                page.Size = PageSize.A4;
+                gfx = XGraphics.FromPdfPage(page);
+                y = margin;
+            }
+
+            void DrawLine(string text, XFont font, XBrush brush, double indent = 0)
+            {
+                EnsureSpace(18);
+                var rect = new XRect(margin + indent, y, contentWidth - indent, 16);
+                gfx.DrawString(text, font, brush, rect, XStringFormats.TopLeft);
+                y += 16;
+            }
+
+            void DrawSection(string title)
+            {
+                EnsureSpace(30);
+                if (y > margin)
+                    y += 6;
+
+                gfx.DrawLine(linePen, margin, y, page.Width - margin, y);
+                y += 8;
+                DrawLine(title, headingFont, textBrush);
+            }
+
+            string Currency(decimal value) => $"RM {value:N2}";
+
+            DrawLine(storeName, titleFont, accentBrush);
+            DrawLine("Analytics & Reports", headingFont, textBrush);
+            DrawLine($"Period: {from:dd MMM yyyy} - {to:dd MMM yyyy}", bodyFont, mutedBrush);
+            DrawLine($"Generated: {DateTime.Now:dd MMM yyyy hh:mm tt}", bodyFont, mutedBrush);
+
+            DrawSection("Summary");
+            DrawLine($"Total Revenue      {Currency(summary.TotalRevenue)}", monoFont, textBrush);
+            DrawLine($"Total Orders       {summary.TotalOrders:N0}", monoFont, textBrush);
+            DrawLine($"Average Order      {Currency(summary.AverageOrder)}", monoFont, textBrush);
+            DrawLine($"Total Items Sold   {summary.TotalItemsSold:N0}", monoFont, textBrush);
+
+            DrawSection("Payment Methods");
+            if (payments.Count == 0)
+            {
+                DrawLine("No payment data for the selected period.", bodyFont, mutedBrush);
+            }
+            else
+            {
+                foreach (var payment in payments)
+                {
+                    var percentage = summary.TotalRevenue > 0
+                        ? payment.Revenue / summary.TotalRevenue * 100
+                        : 0;
+                    DrawLine($"{payment.Method,-12} {payment.Orders,4} orders   {Currency(payment.Revenue),12}   {percentage,5:F1}%", monoFont, textBrush);
+                }
+            }
+
+            DrawSection("Top Products");
+            if (top.Count == 0)
+            {
+                DrawLine("No product sales in the selected period.", bodyFont, mutedBrush);
+            }
+            else
+            {
+                foreach (var product in top)
+                {
+                    DrawLine($"#{product.Rank,-2} {product.Name}", bodyFont, textBrush);
+                    DrawLine($"Qty {product.Quantity:N0}   Revenue {Currency(product.Revenue)}", monoFont, mutedBrush, 14);
+                }
+            }
+
+            DrawSection("Daily Breakdown");
+            if (daily.Count == 0)
+            {
+                DrawLine("No daily breakdown available.", bodyFont, mutedBrush);
+            }
+            else
+            {
+                foreach (var day in daily)
+                    DrawLine($"{day.Label,-12} {Currency(day.Revenue)}", monoFont, textBrush);
+            }
+
+            DrawSection("Stock Snapshot");
+            if (stock.Count == 0)
+            {
+                DrawLine("No stock data available.", bodyFont, mutedBrush);
+            }
+            else
+            {
+                foreach (var item in stock)
+                {
+                    DrawLine($"{item.Name} [{item.Category}]", bodyFont, textBrush);
+                    DrawLine($"Barcode {item.Barcode}   Stock {item.Stock}   Reorder {item.ReorderLevel}   Status {item.Status}", monoFont, mutedBrush, 14);
+                }
+            }
+
+            document.Save(filePath);
         }
 
         private static IXLWorksheet SetupSheet(XLWorkbook wb, string name)

@@ -75,3 +75,9 @@ D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\CategoryManagementDialog.g.cs
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\RenameDialog.g.cs
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Licensing\LicenseRequiredWindow.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\PdfSharpCore.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\ICSharpCode.SharpZipLib.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\SixLabors.ImageSharp.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\de\PdfSharpCore.resources.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\UpdateAvailableDialog.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\UpdateAvailableDialog.g.cs
