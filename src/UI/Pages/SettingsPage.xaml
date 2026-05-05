@@ -242,6 +242,60 @@
                 </StackPanel>
             </Border>
 
+            <!-- ── Database Maintenance ── -->
+            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <fa:IconBlock Icon="Database" FontSize="16"
+                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Database Maintenance" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Active Database"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="13" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DatabasePathText"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="12" TextWrapping="Wrap" />
+
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Height="36" Padding="12,8" Margin="0,0,8,0"
+                                    Click="BackupDatabase_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:IconBlock Icon="Download" Margin="0,0,6,0" />
+                                    <TextBlock Text="Backup Database" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Height="36" Padding="12,8"
+                                    Click="RestoreDatabase_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:IconBlock Icon="Upload" Margin="0,0,6,0" />
+                                    <TextBlock Text="Restore Backup" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="220,8,0,0"
+                               Text="Restore replaces the live database. EZPos will close after a successful restore so the restored data loads cleanly on next launch." />
+                </StackPanel>
+            </Border>
+
             <!-- ── About ── -->
             <Border Style="{StaticResource PosCardStyle}">
                 <StackPanel>
@@ -251,11 +305,22 @@
                         <TextBlock Text="About" FontSize="15" FontWeight="SemiBold"
                                    Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="13">
+                    
+                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" Margin="0,0,0,12">
                         <Run Text="EZPos Point of Sale System" FontWeight="SemiBold" />
                         <LineBreak />
                         <Run Text="Version 1.0  •  Built with .NET 6 + WPF" />
                     </TextBlock>
+                    
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Height="36" Padding="12,8" MaxWidth="200" HorizontalAlignment="Left"
+                            Click="CheckForUpdates_Click"
+                            x:Name="CheckForUpdatesButton">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconBlock Icon="Download" Margin="0,0,6,0" />
+                            <TextBlock Text="Check for Updates" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
 

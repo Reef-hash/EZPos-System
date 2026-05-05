@@ -1,10 +1,14 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Data.SQLite;
+using EZPos.Business.Services;
 using EZPos.DataAccess.Repositories;
+using EZPos.UI.Dialogs;
 using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
@@ -27,6 +31,7 @@ namespace EZPos.UI.Pages
             TaxRateBox.Text       = ConfigHelper.Get("TaxRate",        "6");
             CurrencyBox.Text      = ConfigHelper.Get("Currency",       "RM");
             ReceiptFooterBox.Text = ConfigHelper.Get("ReceiptFooter",  "Thank you, come again!");
+            DatabasePathText.Text = Database.DbFile;
 
             PaymentCashHotkeyBox.Text    = ConfigHelper.Get("PaymentHotkeyCash", "F1");
             PaymentQrHotkeyBox.Text      = ConfigHelper.Get("PaymentHotkeyQr", "F2");
@@ -242,6 +247,287 @@ namespace EZPos.UI.Pages
             {
                 MessageBox.Show($"Could not list printers:\n{ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BackupDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!File.Exists(Database.DbFile))
+                {
+                    MessageBox.Show("The active database file could not be found.", "Backup Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Backup Database",
+                    Filter = "SQLite Database (*.db)|*.db|All Files (*.*)|*.*",
+                    DefaultExt = ".db",
+                    AddExtension = true,
+                    FileName = $"EZPos_Backup_{DateTime.Now:yyyyMMdd_HHmmss}.db"
+                };
+
+                if (dialog.ShowDialog() != true)
+                    return;
+
+                File.Copy(Database.DbFile, dialog.FileName, overwrite: false);
+
+                var result = MessageBox.Show(
+                    $"Database backup created successfully.\n\nOpen the backup folder now?",
+                    "Backup Complete",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = Path.GetDirectoryName(dialog.FileName),
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show($"Could not create backup:\n{ex.Message}", "Backup Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected backup error:\n{ex.Message}", "Backup Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RestoreDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Restore Database Backup",
+                    Filter = "SQLite Database (*.db)|*.db|All Files (*.*)|*.*",
+                    CheckFileExists = true,
+                    Multiselect = false
+                };
+
+                if (dialog.ShowDialog() != true)
+                    return;
+
+                if (string.Equals(Path.GetFullPath(dialog.FileName), Path.GetFullPath(Database.DbFile), StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Please choose a backup file, not the active live database.", "Restore Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!IsReadableSQLiteFile(dialog.FileName))
+                {
+                    MessageBox.Show("The selected file is not a readable SQLite database.", "Restore Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var confirm = MessageBox.Show(
+                    "Restore will replace the current live database.\n\nA safety backup of the current database will be created automatically before restore.\n\nContinue?",
+                    "Confirm Restore",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (confirm != MessageBoxResult.Yes)
+                    return;
+
+                var dbDirectory = Path.GetDirectoryName(Database.DbFile) ?? AppDomain.CurrentDomain.BaseDirectory;
+                var safetyBackupPath = Path.Combine(dbDirectory, $"EZPos_PreRestore_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+                File.Copy(Database.DbFile, safetyBackupPath, overwrite: true);
+
+                var stagedRestorePath = Path.Combine(dbDirectory, $"EZPos_Restore_{Guid.NewGuid():N}.db");
+                File.Copy(dialog.FileName, stagedRestorePath, overwrite: true);
+
+                try
+                {
+                    File.Copy(stagedRestorePath, Database.DbFile, overwrite: true);
+                }
+                finally
+                {
+                    if (File.Exists(stagedRestorePath))
+                        File.Delete(stagedRestorePath);
+                }
+
+                MessageBox.Show(
+                    $"Database restored successfully.\n\nSafety backup saved to:\n{safetyBackupPath}\n\nEZPos will now close. Reopen it to load the restored data.",
+                    "Restore Complete",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                Application.Current.Shutdown();
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show($"Could not restore backup:\n{ex.Message}", "Restore Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected restore error:\n{ex.Message}", "Restore Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private static bool IsReadableSQLiteFile(string filePath)
+        {
+            try
+            {
+                using var connection = new SQLiteConnection($"Data Source={filePath};Version=3;Read Only=True;");
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "PRAGMA schema_version;";
+                _ = command.ExecuteScalar();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            // Disable button during check
+            CheckForUpdatesButton.IsEnabled = false;
+            CheckForUpdatesButton.Content = "Checking...";
+
+            try
+            {
+                // Get manifest URL from config (disable if not set)
+                var manifestUrl = ConfigHelper.Get("App:UpdateManifestUrl", "");
+                if (string.IsNullOrWhiteSpace(manifestUrl))
+                {
+                    MessageBox.Show(
+                        "Update checking is not configured for this installation.",
+                        "Updates Disabled",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                // Create updater service with current app version
+                var currentVersion = "1.0.0";  // TODO: read from assembly version
+                var updater = new EZPos.Business.Services.UpdaterService(currentVersion, manifestUrl);
+
+                // Check for available updates
+                var manifest = await updater.CheckForUpdatesAsync();
+
+                if (manifest == null)
+                {
+                    MessageBox.Show(
+                        "You are on the latest version.",
+                        "No Updates Available",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                // Show update dialog
+                var dialog = new EZPos.UI.Dialogs.UpdateAvailableDialog(manifest, currentVersion)
+                {
+                    Owner = Window.GetWindow(this)
+                };
+
+                if (dialog.ShowDialog() != true || !dialog.UserClickedUpdate)
+                {
+                    return;  // User skipped
+                }
+
+                // User wants to update; download installer
+                MessageBox.Show(
+                    "Starting update download...",
+                    "Update",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                // Download installer to temp
+                var installerPath = Path.Combine(Path.GetTempPath(), $"EZPos-Setup-v{manifest.Version}.exe");
+                var downloadSuccess = await updater.DownloadInstallerAsync(
+                    manifest.DownloadUrl ?? "",
+                    manifest.Checksum?.Algorithm,
+                    manifest.Checksum?.Value,
+                    installerPath);
+
+                if (!downloadSuccess)
+                {
+                    MessageBox.Show(
+                        "Failed to download update. Please try again later.",
+                        "Download Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                // Backup current database before exit
+                try
+                {
+                    var dbDir = Path.GetDirectoryName(Database.DbFile) ?? AppDomain.CurrentDomain.BaseDirectory;
+                    var backupPath = Path.Combine(dbDir, $"EZPos_PreUpdate_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+                    File.Copy(Database.DbFile, backupPath, overwrite: false);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to create pre-update backup: {ex.Message}");
+                }
+
+                // Show confirmation and launch installer
+                var confirm = MessageBox.Show(
+                    $"Update ready to install (v{manifest.Version}).\n\nThe app will exit so the installer can run.\n\nContinue?",
+                    "Ready to Install",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (confirm != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                // Launch installer silently
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = installerPath,
+                        Arguments = "/SILENT /NORESTART",
+                        UseShellExecute = false
+                    });
+
+                    // Give installer a moment to start, then close app
+                    await System.Threading.Tasks.Task.Delay(1000);
+                    Application.Current.Shutdown();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Failed to launch installer:\n{ex.Message}",
+                        "Installation Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Update check failed:\n{ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Re-enable button
+                CheckForUpdatesButton.IsEnabled = true;
+                // Note: button content is set in XAML, so we just need to re-enable it
             }
         }
     }
