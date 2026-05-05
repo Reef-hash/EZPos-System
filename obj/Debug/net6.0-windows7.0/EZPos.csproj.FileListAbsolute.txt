@@ -65,3 +65,5 @@ D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\XLParser.dll
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Pages\SettingsPage.baml
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Pages\SettingsPage.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\PaymentDialog.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\PaymentDialog.g.cs

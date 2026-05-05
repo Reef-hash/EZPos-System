@@ -1,0 +1,123 @@
+<Window x:Class="EZPos.UI.Dialogs.PaymentDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+        Title="Payment"
+        Width="520"
+        ResizeMode="NoResize"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBrush}"
+        FontFamily="{StaticResource AppFont}">
+
+    <Border Margin="18" Padding="18" Background="{StaticResource ContentBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,14">
+                <fa:IconBlock Icon="CreditCard" Foreground="{StaticResource PrimaryBrush}" FontSize="22" Margin="0,0,10,0" />
+                <TextBlock Text="Payment" Foreground="{StaticResource TextPrimaryBrush}" FontSize="26" FontWeight="Bold" />
+            </StackPanel>
+
+            <Border Grid.Row="1" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,5">
+                        <TextBlock Text="Subtotal" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" />
+                        <TextBlock x:Name="SubtotalText" HorizontalAlignment="Right" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                    </Grid>
+                    <Grid Grid.Row="1" Margin="0,0,0,5">
+                        <TextBlock x:Name="TaxLabel" Text="Tax" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" />
+                        <TextBlock x:Name="TaxText" HorizontalAlignment="Right" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" />
+                    </Grid>
+                    <Grid Grid.Row="2" Margin="0,0,0,6">
+                        <TextBlock x:Name="RoundingLabel" Text="Rounding" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" Visibility="Collapsed" />
+                        <TextBlock x:Name="RoundingText" HorizontalAlignment="Right" Foreground="{StaticResource TextPrimaryBrush}" FontSize="14" Visibility="Collapsed" />
+                    </Grid>
+                    <Grid Grid.Row="3">
+                        <TextBlock Text="Total" Foreground="{StaticResource PrimaryBrush}" FontSize="21" FontWeight="Bold" />
+                        <TextBlock x:Name="TotalText" HorizontalAlignment="Right" Foreground="{StaticResource PrimaryBrush}" FontSize="21" FontWeight="Bold" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <TextBlock Grid.Row="2" Text="Payment Method" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" Margin="0,0,0,8" />
+
+            <UniformGrid Grid.Row="3" Columns="2" Margin="0,0,0,14">
+                <Button x:Name="CashBtn" Margin="0,0,8,8" Height="46" Click="CashBtn_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:IconBlock Icon="MoneyBillWave" Margin="0,0,8,0" />
+                        <TextBlock Text="Cash" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="CardBtn" Margin="8,0,0,8" Height="46" Click="CardBtn_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:IconBlock Icon="CreditCard" Margin="0,0,8,0" />
+                        <TextBlock Text="Card" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="QrBtn" Margin="0,0,8,0" Height="46" Click="QrBtn_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:IconBlock Icon="Qrcode" Margin="0,0,8,0" />
+                        <TextBlock Text="QR / Online" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="ChequeBtn" Margin="8,0,0,0" Height="46" Click="ChequeBtn_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <fa:IconBlock Icon="FileInvoiceDollar" Margin="0,0,8,0" />
+                        <TextBlock Text="Cheque" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+            </UniformGrid>
+
+            <StackPanel Grid.Row="4" Margin="0,0,0,10">
+                <TextBlock x:Name="AmountPaidLabel" Text="Amount Paid (RM)" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" Margin="0,0,0,6" />
+                <TextBox x:Name="AmountPaidBox" Height="40" FontSize="18" VerticalContentAlignment="Center" TextChanged="AmountPaidBox_TextChanged" />
+            </StackPanel>
+
+            <Border Grid.Row="5" x:Name="ChangeCard" Visibility="Collapsed"
+                    Background="{StaticResource CardBackgroundBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock x:Name="ChangeLabel" Text="Change"
+                               Foreground="{StaticResource PrimaryBrush}" FontSize="28" FontWeight="SemiBold" />
+                    <TextBlock x:Name="ChangeValueText" Grid.Column="1" Text="RM 0.00"
+                               Foreground="{StaticResource PrimaryBrush}" FontSize="30" FontWeight="Bold" />
+                </Grid>
+            </Border>
+
+            <WrapPanel Grid.Row="6" x:Name="QuickAmountsPanel" Margin="0,0,0,12" />
+
+            <Grid Grid.Row="7">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="Cancel" Padding="18,9" Margin="0,0,8,0" Click="CancelBtn_Click" />
+                <Button Grid.Column="1" x:Name="ConfirmBtn" Padding="20,9" Click="ConfirmBtn_Click" Style="{StaticResource PrimaryButtonStyle}" Foreground="{StaticResource SidebarBrush}" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

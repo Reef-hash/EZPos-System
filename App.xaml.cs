@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Windows;
 using EZPos.Business.Services;
 using EZPos.DataAccess.Repositories;
@@ -12,6 +13,9 @@ namespace EZPos
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            // Required for Code Page 437 (PC437/ESC-POS) on .NET 6+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             DispatcherUnhandledException += (_, args) =>
             {

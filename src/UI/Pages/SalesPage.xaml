@@ -29,10 +29,10 @@
                             <TextBlock Text="Clear Cart" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource PrimaryButtonStyle}" Padding="14,8" Click="Checkout_Click">
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Click="HoldCurrentTab_Click">
                         <StackPanel Orientation="Horizontal">
-                            <fa:IconBlock Icon="DollarSign" Foreground="{StaticResource SidebarBrush}" Margin="0,0,8,0" />
-                            <TextBlock Text="Checkout" Foreground="{StaticResource SidebarBrush}" />
+                            <fa:IconBlock Icon="PauseCircle" Margin="0,0,8,0" />
+                            <TextBlock Text="Hold" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -115,16 +115,25 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Shopping Cart" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Bold" FontSize="16" />
-                        <TextBlock x:Name="CartItemCount" Grid.Column="1" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
-                    </Grid>
+                    <!-- Tab strip + cart header -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                        <!-- Scrollable tab strip -->
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,8">
+                            <StackPanel x:Name="TabStrip" Orientation="Horizontal" />
+                        </ScrollViewer>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Shopping Cart" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Bold" FontSize="16" />
+                            <TextBlock x:Name="CartItemCount" Grid.Column="1" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                        </Grid>
+                    </StackPanel>
 
                     <Grid Grid.Row="1">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -139,21 +148,21 @@
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
 
-                                                <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                                    <TextBlock Text="{Binding ProductName}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                                    <TextBlock Text="{Binding UnitPrice, StringFormat='RM {0:F2}'}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,4,0,0" />
+                                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding ProductName}" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding UnitPrice, StringFormat='RM {0:F2}'}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" Margin="0,5,0,0" />
                                                 </StackPanel>
 
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                                                    <Button Content="-" Width="24" Height="24" Padding="0" Tag="{Binding ProductId}" Click="QuantityMinus_Click" />
-                                                    <TextBlock Text="{Binding Quantity}" Width="24" TextAlignment="Center" VerticalAlignment="Center" Foreground="{StaticResource TextPrimaryBrush}" />
-                                                    <Button Content="+" Width="24" Height="24" Padding="0" Tag="{Binding ProductId}" Click="QuantityPlus_Click" />
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                                    <Button Content="-" Width="34" Height="34" Padding="0" FontSize="16" Tag="{Binding ProductId}" Click="QuantityMinus_Click" />
+                                                    <TextBlock Text="{Binding Quantity}" Width="34" TextAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                    <Button Content="+" Width="34" Height="34" Padding="0" FontSize="16" Tag="{Binding ProductId}" Click="QuantityPlus_Click" />
                                                 </StackPanel>
 
                                                 <Button Grid.Column="2"
                                                         Content="Remove"
-                                                        Padding="8,4"
-                                                        FontSize="11"
+                                                        Padding="12,8"
+                                                        FontSize="13"
                                                         Style="{StaticResource SecondaryButtonStyle}"
                                                         Tag="{Binding ProductId}"
                                                         Click="RemoveItem_Click" />
@@ -170,6 +179,47 @@
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
                     </Grid>
+
+                    <Border Grid.Row="2" Margin="0,10,0,0" Padding="10,10,10,0"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Total" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBlock x:Name="CartFooterTotalText" Grid.Column="1" Foreground="{StaticResource PrimaryBrush}" FontWeight="Bold" FontSize="20" />
+                            </Grid>
+
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button Grid.Column="0" Style="{StaticResource SecondaryButtonStyle}" Padding="14,10" Click="HoldCurrentTab_Click">
+                                    <StackPanel Orientation="Horizontal">
+                                        <fa:IconBlock Icon="PauseCircle" Margin="0,0,8,0" />
+                                        <TextBlock Text="Hold" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Grid.Column="2" Style="{StaticResource PrimaryButtonStyle}" Padding="18,10" Click="Checkout_Click">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <fa:IconBlock Icon="CashRegister" Foreground="{StaticResource SidebarBrush}" Margin="0,0,8,0" />
+                                        <TextBlock x:Name="CartFooterCheckoutText" Text="Checkout" Foreground="{StaticResource SidebarBrush}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
         </Grid>
@@ -179,7 +229,6 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <WrapPanel Grid.Column="0" VerticalAlignment="Center">
@@ -187,18 +236,16 @@
                     <TextBlock x:Name="SummaryItems" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,20,0" VerticalAlignment="Center" />
                     <TextBlock Text="Subtotal:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                     <TextBlock x:Name="SubtotalText" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,20,0" VerticalAlignment="Center" />
-                    <TextBlock Text="Tax (6%):" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
-                    <TextBlock x:Name="TaxText" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TaxLabel" Text="Tax:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TaxText" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,16,0" VerticalAlignment="Center" />
+                    <!-- Rounding adjustment — shown only for Cash, hidden otherwise -->
+                    <StackPanel x:Name="RoundingRow" Orientation="Horizontal" Visibility="Collapsed">
+                        <TextBlock Text="Rounding:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="RoundingAdjText" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
                 </WrapPanel>
 
-                <ComboBox x:Name="PaymentMethodCombo" Grid.Column="1" Width="160" Height="34" Margin="10,0,10,0" VerticalAlignment="Center">
-                    <ComboBoxItem>Cash</ComboBoxItem>
-                    <ComboBoxItem>Card</ComboBoxItem>
-                    <ComboBoxItem>QR Code</ComboBoxItem>
-                    <ComboBoxItem>Cheque</ComboBoxItem>
-                </ComboBox>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Total:" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" />
                     <TextBlock x:Name="TotalText" Foreground="{StaticResource PrimaryBrush}" FontWeight="Bold" FontSize="17" VerticalAlignment="Center" />
                 </StackPanel>

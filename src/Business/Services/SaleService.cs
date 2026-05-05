@@ -14,6 +14,8 @@ namespace EZPos.Business.Services
         public decimal Subtotal { get; set; }
         public decimal Tax { get; set; }
         public decimal Total { get; set; }
+        /// <summary>Cash rounding adjustment applied at checkout (e.g. +0.01, -0.02). Zero for non-cash.</summary>
+        public decimal RoundingAdj { get; set; }
         public string PaymentMethod { get; set; }
         public decimal Tendered { get; set; }
         public decimal Change { get; set; }
@@ -35,14 +37,21 @@ namespace EZPos.Business.Services
         /// Processes the current cart as a completed sale.
         /// Writes Sale + SaleItems to DB, decrements stock in DB and state store, clears cart.
         /// </summary>
-        public SaleResult ProcessSale(string paymentMethod, decimal tendered)
+        /// <param name="paymentMethod">Cash / Card / QR Code / Cheque</param>
+        /// <param name="tendered">Amount physically handed over by the customer.</param>
+        /// <param name="roundingAdj">
+        /// Cash rounding adjustment added to the pre-tax total (e.g. +0.01 or -0.02).
+        /// Pass 0 for non-cash payments.
+        /// </param>
+        public SaleResult ProcessSale(string paymentMethod, decimal tendered, decimal roundingAdj = 0m)
         {
             if (_store.CartItems.Count == 0)
                 return new SaleResult { Success = false, ErrorMessage = "Cart is empty." };
 
-            var subtotal = _store.Subtotal;
-            var tax      = _store.Tax;
-            var total    = _store.Total;
+            var subtotal    = _store.Subtotal;
+            var tax         = _store.Tax;
+            var baseTotal   = _store.Total;
+            var total       = baseTotal + roundingAdj;   // actual amount charged (rounded for cash)
 
             if (tendered < total)
                 return new SaleResult { Success = false, ErrorMessage = "Tendered amount is less than total." };
@@ -97,6 +106,7 @@ namespace EZPos.Business.Services
                 Subtotal      = subtotal,
                 Tax           = tax,
                 Total         = total,
+                RoundingAdj   = roundingAdj,
                 PaymentMethod = paymentMethod,
                 Tendered      = tendered,
                 Change        = tendered - total,

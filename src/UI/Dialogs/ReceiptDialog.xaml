@@ -10,7 +10,7 @@
         Background="{StaticResource ContentBrush}"
         FontFamily="{StaticResource AppFont}">
 
-    <Grid Margin="28,24,28,20">
+    <Grid x:Name="ReceiptContentPanel" Margin="28,24,28,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /> <!-- Header -->
             <RowDefinition Height="Auto" /> <!-- Sale info -->
@@ -79,8 +79,15 @@
                            FontSize="13" HorizontalAlignment="Right" />
             </Grid>
             <Grid Margin="0,3">
-                <TextBlock Text="Tax (6%)" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" />
+                <TextBlock x:Name="TaxLabel" Text="Tax" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" />
                 <TextBlock x:Name="TaxText" Text="RM 0.00"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="13" HorizontalAlignment="Right" />
+            </Grid>
+            <!-- Rounding adjustment row — hidden when zero -->
+            <Grid x:Name="RoundingRow" Margin="0,3" Visibility="Collapsed">
+                <TextBlock Text="Rounding" Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" />
+                <TextBlock x:Name="RoundingAdjText" Text="+RM 0.00"
                            Foreground="{StaticResource TextPrimaryBrush}"
                            FontSize="13" HorizontalAlignment="Right" />
             </Grid>

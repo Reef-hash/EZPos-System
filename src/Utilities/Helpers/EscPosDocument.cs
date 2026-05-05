@@ -120,6 +120,8 @@ namespace EZPos.Utilities.Helpers
             // Totals
             doc.Row("Subtotal", $"RM {result.Subtotal:F2}");
             doc.Row(taxLabel, $"RM {result.Tax:F2}");
+            if (result.RoundingAdj != 0)
+                doc.Row("Rounding", $"{(result.RoundingAdj > 0 ? "+" : "")}RM {result.RoundingAdj:F2}");
             doc.Divider();
             // In Fake mode, Total == Subtotal; the label makes it clear tax is display-only
             doc.Row("TOTAL", $"RM {result.Total:F2}", bold: true);

@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET6_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\App.xaml
-11-1027953651
+121063507618
 1-659042472
-30-51818886
+31-665027934
 2151982813412
-MainWindow.xaml;src\UI\Dialogs\ProductDialog.xaml;src\UI\Dialogs\ReceiptDialog.xaml;src\UI\Dialogs\StockAdjustDialog.xaml;src\UI\Pages\DashboardPage.xaml;src\UI\Pages\ProductsPage.xaml;src\UI\Pages\ReportsPage.xaml;src\UI\Pages\SalesModeControl.xaml;src\UI\Pages\SalesPage.xaml;src\UI\Pages\SettingsPage.xaml;src\UI\Pages\StockPage.xaml;
+MainWindow.xaml;src\UI\Dialogs\PaymentDialog.xaml;src\UI\Dialogs\ProductDialog.xaml;src\UI\Dialogs\ReceiptDialog.xaml;src\UI\Dialogs\StockAdjustDialog.xaml;src\UI\Pages\DashboardPage.xaml;src\UI\Pages\ProductsPage.xaml;src\UI\Pages\ReportsPage.xaml;src\UI\Pages\SalesModeControl.xaml;src\UI\Pages\SalesPage.xaml;src\UI\Pages\SettingsPage.xaml;src\UI\Pages\StockPage.xaml;
 
 False
 
