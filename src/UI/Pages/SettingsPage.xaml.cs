@@ -3,6 +3,7 @@ using System.Linq;
 using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using EZPos.DataAccess.Repositories;
 using EZPos.UI.State;
 
@@ -26,6 +27,13 @@ namespace EZPos.UI.Pages
             TaxRateBox.Text       = ConfigHelper.Get("TaxRate",        "6");
             CurrencyBox.Text      = ConfigHelper.Get("Currency",       "RM");
             ReceiptFooterBox.Text = ConfigHelper.Get("ReceiptFooter",  "Thank you, come again!");
+
+            PaymentCashHotkeyBox.Text    = ConfigHelper.Get("PaymentHotkeyCash", "F1");
+            PaymentQrHotkeyBox.Text      = ConfigHelper.Get("PaymentHotkeyQr", "F2");
+            PaymentCardHotkeyBox.Text    = ConfigHelper.Get("PaymentHotkeyCard", "F3");
+            PaymentChequeHotkeyBox.Text  = ConfigHelper.Get("PaymentHotkeyCheque", "F4");
+            ReceiptNewSaleHotkeyBox.Text = ConfigHelper.Get("ReceiptHotkeyNewSale", "PageUp");
+            ReceiptPrintHotkeyBox.Text   = ConfigHelper.Get("ReceiptHotkeyPrint", "PageDown");
 
             // Select matching TaxMode item
             var savedMode = ConfigHelper.Get("TaxMode", "PerReceipt");
@@ -54,11 +62,44 @@ namespace EZPos.UI.Pages
                 return;
             }
 
+            if (!TryGetValidatedHotkey(PaymentCashHotkeyBox, "Payment: Cash", out var paymentCashKey)) return;
+            if (!TryGetValidatedHotkey(PaymentQrHotkeyBox, "Payment: QR", out var paymentQrKey)) return;
+            if (!TryGetValidatedHotkey(PaymentCardHotkeyBox, "Payment: Card", out var paymentCardKey)) return;
+            if (!TryGetValidatedHotkey(PaymentChequeHotkeyBox, "Payment: Cheque", out var paymentChequeKey)) return;
+            if (!TryGetValidatedHotkey(ReceiptNewSaleHotkeyBox, "Receipt: New Sale", out var receiptNewSaleKey)) return;
+            if (!TryGetValidatedHotkey(ReceiptPrintHotkeyBox, "Receipt: Print", out var receiptPrintKey)) return;
+
+            var duplicate = new[]
+            {
+                (Name: "Payment: Cash", Key: paymentCashKey),
+                (Name: "Payment: QR", Key: paymentQrKey),
+                (Name: "Payment: Card", Key: paymentCardKey),
+                (Name: "Payment: Cheque", Key: paymentChequeKey),
+                (Name: "Receipt: New Sale", Key: receiptNewSaleKey),
+                (Name: "Receipt: Print", Key: receiptPrintKey)
+            }
+            .GroupBy(x => x.Key)
+            .FirstOrDefault(g => g.Count() > 1);
+
+            if (duplicate is not null)
+            {
+                var labels = string.Join(", ", duplicate.Select(x => x.Name));
+                MessageBox.Show($"Duplicate hotkey detected ({duplicate.Key}): {labels}\n\nPlease use unique keys.",
+                    "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             ConfigHelper.Set("StoreName",     StoreNameBox.Text.Trim());
             ConfigHelper.Set("PrinterName",   PrinterNameBox.Text.Trim());
             ConfigHelper.Set("TaxRate",       tax.ToString());
             ConfigHelper.Set("Currency",      CurrencyBox.Text.Trim());
             ConfigHelper.Set("ReceiptFooter", ReceiptFooterBox.Text.Trim());
+            ConfigHelper.SetKey("PaymentHotkeyCash", paymentCashKey);
+            ConfigHelper.SetKey("PaymentHotkeyQr", paymentQrKey);
+            ConfigHelper.SetKey("PaymentHotkeyCard", paymentCardKey);
+            ConfigHelper.SetKey("PaymentHotkeyCheque", paymentChequeKey);
+            ConfigHelper.SetKey("ReceiptHotkeyNewSale", receiptNewSaleKey);
+            ConfigHelper.SetKey("ReceiptHotkeyPrint", receiptPrintKey);
 
             var taxMode = (TaxModeCombo.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "PerReceipt";
             ConfigHelper.Set("TaxMode", taxMode);
@@ -68,6 +109,66 @@ namespace EZPos.UI.Pages
 
             MessageBox.Show("Settings saved successfully.", "Saved",
                 MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private static bool TryGetValidatedHotkey(TextBox input, string label, out Key key)
+        {
+            key = Key.None;
+            var raw = input.Text.Trim();
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                MessageBox.Show($"{label} hotkey cannot be empty.", "Validation Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                input.Focus();
+                return false;
+            }
+
+            if (!TryParseHotkey(raw, out key) || key == Key.None)
+            {
+                MessageBox.Show($"Invalid key for {label}: '{raw}'.\n\nExample values: F1, F2, F3, F4, PageUp, PageDown, Insert, Home",
+                    "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                input.Focus();
+                input.SelectAll();
+                return false;
+            }
+
+            input.Text = key.ToString();
+            return true;
+        }
+
+        private static bool TryParseHotkey(string raw, out Key key)
+        {
+            key = Key.None;
+            var normalized = raw.Trim();
+
+            if (normalized.Equals("PgUp", StringComparison.OrdinalIgnoreCase))
+            {
+                key = Key.PageUp;
+                return true;
+            }
+
+            if (normalized.Equals("PgDn", StringComparison.OrdinalIgnoreCase)
+                || normalized.Equals("PgDown", StringComparison.OrdinalIgnoreCase))
+            {
+                key = Key.PageDown;
+                return true;
+            }
+
+            if (Enum.TryParse<Key>(normalized, true, out var parsed))
+            {
+                key = parsed;
+                return true;
+            }
+
+            var converter = new KeyConverter();
+            var converted = converter.ConvertFromString(normalized);
+            if (converted is Key typed)
+            {
+                key = typed;
+                return true;
+            }
+
+            return false;
         }
 
         private void DetectPrinters_Click(object sender, RoutedEventArgs e)

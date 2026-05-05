@@ -53,18 +53,24 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ;  Files
 ; ============================================================
 [Files]
-; App binaries (everything except the database)
-Source: "publish\*"; Excludes: "EZPos.db"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; App binaries (everything except the database and config)
+Source: "publish\*"; Excludes: "EZPos.db,Config\config.ini,license.dat"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; Seed database — only installed on FIRST install, never overwritten on reinstall/upgrade
-; This preserves all user data across updates.
-Source: "publish\EZPos.db"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
+; Seed database — only installed on FIRST install in %ProgramData%\EZPos\
+; This preserves all user data across updates and follows Windows app data conventions.
+Source: "publish\EZPos.db"; DestDir: "{commonappdata}\EZPos"; Flags: onlyifdoesntexist uninsneveruninstall
 
 ; ============================================================
-;  Directories — grant write permission so the app can read/write EZPos.db
+;  Directories — grant write permission so the app can read/write data files
 ; ============================================================
 [Dirs]
+; App folder: binaries only (read-only)
 Name: "{app}"; Permissions: users-modify
+
+; Data folder: read-write for database, config, license, backups
+Name: "{commonappdata}\EZPos"; Permissions: users-modify
+Name: "{commonappdata}\EZPos\Backups"; Permissions: users-modify
+Name: "{commonappdata}\EZPos\Logs"; Permissions: users-modify
 
 ; ============================================================
 ;  Shortcuts

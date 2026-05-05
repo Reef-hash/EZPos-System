@@ -10,6 +10,7 @@ using System.Windows.Media;
 using EZPos.Business.Services;
 using EZPos.DataAccess.Repositories;
 using EZPos.UI.Dialogs;
+using EZPos.UI.Input;
 using EZPos.UI.State;
 
 namespace EZPos.UI.Pages
@@ -33,30 +34,35 @@ namespace EZPos.UI.Pages
     {
         private readonly PosStateStore stateStore;
         private readonly SaleService   saleService;
+        private readonly CategoryService categoryService;
+        private readonly SalesKeyboardInputService keyboardInput;
         private ICollectionView?       productsView;
         private bool                   isInitialized;
+        private bool                   isWindowInputAttached;
+        private bool                   isCheckoutInProgress;
 
         // ── Tabs ─────────────────────────────────────────────────────────────
         private readonly List<CartTab> _tabs          = new();
         private int                    _activeTabIndex = 0;
         private int                    _nextTabNumber  = 1;
 
-        // ── Barcode scanner detection ─────────────────────────────────────────
-        // Scanners fire all chars + Enter within ≈ 50 ms; humans are slower.
-        private DateTime _firstKeyTime  = DateTime.MinValue;
-        private bool     _scanInProgress;
-
-        public SalesPage(PosStateStore stateStore, SaleService saleService)
+        public SalesPage(PosStateStore stateStore, SaleService saleService, CategoryService categoryService)
         {
             InitializeComponent();
 
-            this.stateStore  = stateStore;
-            this.saleService = saleService;
+            this.stateStore      = stateStore;
+            this.saleService     = saleService;
+            this.categoryService = categoryService;
+
+            keyboardInput = new SalesKeyboardInputService();
+            keyboardInput.BarcodeCompleted += HandleBarcodeCompleted;
+            keyboardInput.CheckoutRequested += () => BeginCheckout(showEmptyCartMessage: false);
 
             productsView = new ListCollectionView(this.stateStore.Products);
             this.stateStore.PropertyChanged += StateStore_PropertyChanged;
 
             Loaded += SalesPage_Loaded;
+            Unloaded += SalesPage_Unloaded;
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -65,11 +71,16 @@ namespace EZPos.UI.Pages
 
         private void SalesPage_Loaded(object sender, RoutedEventArgs e)
         {
+            AttachWindowInputHandlers();
+
             if (isInitialized) return;
 
             productsView!.Filter = ProductFilter;
             ProductsList.ItemsSource      = productsView;
             CartItemsControl.ItemsSource  = stateStore.CartItems;
+
+            // Load categories into filter ComboBox
+            LoadCategoryFilter();
 
             // Create the first tab without switching (cart is already empty & bound)
             _tabs.Add(CreateTab());
@@ -77,6 +88,68 @@ namespace EZPos.UI.Pages
 
             RefreshSummary();
             isInitialized = true;
+        }
+
+        private void SalesPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            DetachWindowInputHandlers();
+            keyboardInput.Reset();
+        }
+
+        private void AttachWindowInputHandlers()
+        {
+            if (isWindowInputAttached)
+                return;
+
+            if (Window.GetWindow(this) is not Window hostWindow)
+                return;
+
+            hostWindow.PreviewTextInput += HostWindow_PreviewTextInput;
+            hostWindow.PreviewKeyDown += HostWindow_PreviewKeyDown;
+            isWindowInputAttached = true;
+        }
+
+        private void DetachWindowInputHandlers()
+        {
+            if (!isWindowInputAttached)
+                return;
+
+            if (Window.GetWindow(this) is Window hostWindow)
+            {
+                hostWindow.PreviewTextInput -= HostWindow_PreviewTextInput;
+                hostWindow.PreviewKeyDown -= HostWindow_PreviewKeyDown;
+            }
+
+            isWindowInputAttached = false;
+        }
+
+        private void HostWindow_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!IsKeyboardShortcutScopeActive())
+                return;
+
+            keyboardInput.RegisterTextInput(e.Text);
+        }
+
+        private void HostWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!IsKeyboardShortcutScopeActive())
+                return;
+
+            if (keyboardInput.TryHandleKeyDown(e.Key))
+                e.Handled = true;
+        }
+
+        private bool IsKeyboardShortcutScopeActive()
+        {
+            if (!IsLoaded || !IsVisible)
+                return false;
+
+            if (Window.GetWindow(this) is not Window hostWindow)
+                return false;
+
+            // Ignore page-level shortcuts while any modal owned dialog is open.
+            return !hostWindow.OwnedWindows.OfType<Window>().Any(w => w.IsVisible);
         }
 
         // ══════════════════════════════════════════════════════════════════════
@@ -301,48 +374,13 @@ namespace EZPos.UI.Pages
         {
             if (!isInitialized || productsView is null) return;
 
-            if (_firstKeyTime == DateTime.MinValue)
-                _firstKeyTime = DateTime.Now;
-
             productsView.Refresh();
         }
 
         private void ProductSearchBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Enter || !isInitialized) return;
-
-            var input = ProductSearchBox.Text.Trim();
-            if (string.IsNullOrWhiteSpace(input)) return;
-
-            bool isScan = _firstKeyTime != DateTime.MinValue
-                          && (DateTime.Now - _firstKeyTime).TotalMilliseconds < 150;
-
-            _firstKeyTime = DateTime.MinValue;
-
-            if (isScan)
-            {
-                var match = stateStore.Products
-                    .FirstOrDefault(p => string.Equals(p.Barcode, input, StringComparison.OrdinalIgnoreCase));
-
-                if (match is not null)
-                {
-                    if (!stateStore.AddToCart(match.Id))
-                        MessageBox.Show("Product has reached stock limit.", "Stock Limit", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    else
-                        ProductSearchBox.Text = string.Empty;
-                }
-                else
-                {
-                    MessageBox.Show($"Barcode '{input}' not found in product list.", "Not Found",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    ProductSearchBox.SelectAll();
-                }
-
-                e.Handled = true;
-                return;
-            }
-
-            productsView?.Refresh();
+            if (!isInitialized || e.Key != Key.Enter) return;
+            // Enter is centrally handled by the keyboard input service.
             e.Handled = true;
         }
 
@@ -352,6 +390,27 @@ namespace EZPos.UI.Pages
             productsView.Refresh();
         }
 
+        private void LoadCategoryFilter()
+        {
+            // Remember current selection
+            var currentSelection = (CategoryCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+            CategoryCombo.Items.Clear();
+            var allItem = new ComboBoxItem { Content = "All Categories", IsSelected = true };
+            CategoryCombo.Items.Add(allItem);
+
+            foreach (var cat in categoryService.GetAll())
+                CategoryCombo.Items.Add(new ComboBoxItem { Content = cat });
+
+            // Restore selection or default to "All Categories"
+            if (currentSelection != null && currentSelection != "All Categories")
+            {
+                foreach (ComboBoxItem item in CategoryCombo.Items)
+                    if (item.Content?.ToString() == currentSelection) { CategoryCombo.SelectedItem = item; return; }
+            }
+            CategoryCombo.SelectedIndex = 0;
+        }
+
         // ══════════════════════════════════════════════════════════════════════
         // Cart operations
         // ══════════════════════════════════════════════════════════════════════
@@ -359,10 +418,7 @@ namespace EZPos.UI.Pages
         private void ProductItem_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button { DataContext: ProductRecord product }) return;
-
-            if (!stateStore.AddToCart(product.Id))
-                MessageBox.Show("This product is unavailable or has reached stock limit in cart.",
-                    "Stock Limit", MessageBoxButton.OK, MessageBoxImage.Warning);
+            AddProductToCart(product);
         }
 
         private void QuantityPlus_Click(object sender, RoutedEventArgs e)
@@ -373,6 +429,92 @@ namespace EZPos.UI.Pages
         private void QuantityMinus_Click(object sender, RoutedEventArgs e)
         {
             if (TryGetProductId(sender, out var id)) stateStore.DecreaseQuantity(id);
+        }
+
+        private void QuantityInput_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            if (sender is not TextBox box) return;
+            box.Tag = box.Text;
+            box.SelectAll();
+        }
+
+        private void QuantityInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (sender is not TextBox box) return;
+
+            if (e.Key == Key.Enter)
+            {
+                ApplyEditedQuantity(box, showValidationMessage: true);
+                Keyboard.ClearFocus();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                if (box.Tag is string original)
+                    box.Text = original;
+                Keyboard.ClearFocus();
+                e.Handled = true;
+            }
+        }
+
+        private void QuantityInput_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            if (sender is not TextBox box) return;
+            ApplyEditedQuantity(box, showValidationMessage: true);
+        }
+
+        private void ApplyEditedQuantity(TextBox box, bool showValidationMessage)
+        {
+            if (box.DataContext is not CartLine line) return;
+
+            var raw = (box.Text ?? string.Empty).Trim();
+            if (!decimal.TryParse(raw, out var qty))
+            {
+                RevertQuantityInput(box, line, "Please enter a valid quantity.", showValidationMessage);
+                return;
+            }
+
+            if (qty <= 0)
+            {
+                RevertQuantityInput(box, line, "Quantity must be greater than zero.", showValidationMessage);
+                return;
+            }
+
+            var product = stateStore.Products.FirstOrDefault(p => p.Id == line.ProductId);
+            if (product is null)
+            {
+                RevertQuantityInput(box, line, "Product not found.", showValidationMessage);
+                return;
+            }
+
+            if (product.UnitType != EZPos.Models.Domain.UnitType.Weight && qty != decimal.Truncate(qty))
+            {
+                RevertQuantityInput(box, line, "Only whole-number quantity is allowed for Unit/Pack products.", showValidationMessage);
+                return;
+            }
+
+            if (qty > product.Stock)
+            {
+                RevertQuantityInput(box, line, $"Quantity exceeds stock. Available: {product.Stock:0.###}", showValidationMessage);
+                return;
+            }
+
+            line.Quantity = qty;
+            box.Text = qty.ToString("0.###");
+            box.Tag = box.Text;
+        }
+
+        private static void RevertQuantityInput(TextBox box, CartLine line, string message, bool showValidationMessage)
+        {
+            box.Text = line.Quantity.ToString("0.###");
+            box.Tag = box.Text;
+
+            if (showValidationMessage)
+            {
+                MessageBox.Show(message, "Invalid Quantity", MessageBoxButton.OK, MessageBoxImage.Warning);
+                box.Focus();
+                box.SelectAll();
+            }
         }
 
         private void RemoveItem_Click(object sender, RoutedEventArgs e)
@@ -398,42 +540,116 @@ namespace EZPos.UI.Pages
         // Checkout
         // ══════════════════════════════════════════════════════════════════════
 
+        /// <summary>
+        /// Central method for adding a product to the cart, handling all UnitTypes:
+        /// Unit/Pack → add directly; Weight → prompt for weight first.
+        /// Returns true if an item was successfully added.
+        /// </summary>
+        private bool AddProductToCart(ProductRecord product)
+        {
+            if (product.UnitType == EZPos.Models.Domain.UnitType.Weight)
+            {
+                var dialog = new EZPos.UI.Dialogs.WeightInputDialog(product.Name, product.Price)
+                {
+                    Owner = Window.GetWindow(this)
+                };
+
+                if (dialog.ShowDialog() != true)
+                    return false;
+
+                if (!stateStore.AddWeightToCart(product.Id, dialog.WeightKg))
+                {
+                    MessageBox.Show("Insufficient stock for the entered weight.",
+                        "Stock Limit", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
+                }
+
+                return true;
+            }
+
+            // Unit or Pack — standard add
+            if (!stateStore.AddToCart(product.Id))
+            {
+                MessageBox.Show("This product is unavailable or has reached stock limit in cart.",
+                    "Stock Limit", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
         private void Checkout_Click(object sender, RoutedEventArgs e)
         {
+            BeginCheckout(showEmptyCartMessage: true);
+        }
+
+        private void BeginCheckout(bool showEmptyCartMessage)
+        {
+            if (isCheckoutInProgress)
+                return;
+
             if (stateStore.CartItems.Count == 0)
             {
-                MessageBox.Show("Cart is empty. Add products before checkout.",
-                    "Cart Empty", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (showEmptyCartMessage)
+                {
+                    MessageBox.Show("Cart is empty. Add products before checkout.",
+                        "Cart Empty", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+
                 return;
             }
 
-            var payDialog = new PaymentDialog(stateStore.Subtotal, stateStore.Tax, stateStore.Total)
+            isCheckoutInProgress = true;
+            try
             {
-                Owner = Window.GetWindow(this)
-            };
+                var payDialog = new PaymentDialog(stateStore.Subtotal, stateStore.Tax, stateStore.Total)
+                {
+                    Owner = Window.GetWindow(this)
+                };
 
-            if (payDialog.ShowDialog() != true)
-                return;
+                if (payDialog.ShowDialog() != true)
+                    return;
 
-            var result = saleService.ProcessSale(
-                payDialog.SelectedPaymentMethod,
-                payDialog.TenderedAmount,
-                payDialog.RoundingAdjustment);
+                var result = saleService.ProcessSale(
+                    payDialog.SelectedPaymentMethod,
+                    payDialog.TenderedAmount,
+                    payDialog.RoundingAdjustment);
 
-            if (!result.Success)
+                if (!result.Success)
+                {
+                    MessageBox.Show($"Checkout failed:\n{result.ErrorMessage}",
+                        "Checkout Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                var receipt = new ReceiptDialog(result) { Owner = Window.GetWindow(this) };
+                receipt.ShowDialog();
+
+                // After a successful sale: close this tab if others exist, otherwise just reset
+                if (_tabs.Count > 1)
+                    CloseTab(_activeTabIndex);
+                // else: cart was already cleared by SaleService, single tab stays open
+            }
+            finally
             {
-                MessageBox.Show($"Checkout failed:\n{result.ErrorMessage}",
-                    "Checkout Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                isCheckoutInProgress = false;
+                keyboardInput.Reset();
+            }
+        }
+
+        private void HandleBarcodeCompleted(string barcode)
+        {
+            var match = stateStore.Products
+                .FirstOrDefault(p => string.Equals(p.Barcode, barcode, StringComparison.OrdinalIgnoreCase));
+
+            if (match is null)
+            {
+                MessageBox.Show($"Barcode '{barcode}' not found in product list.",
+                    "Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var receipt = new ReceiptDialog(result) { Owner = Window.GetWindow(this) };
-            receipt.ShowDialog();
-
-            // After a successful sale: close this tab if others exist, otherwise just reset
-            if (_tabs.Count > 1)
-                CloseTab(_activeTabIndex);
-            // else: cart was already cleared by SaleService, single tab stays open
+            AddProductToCart(match);
         }
 
         // ══════════════════════════════════════════════════════════════════════

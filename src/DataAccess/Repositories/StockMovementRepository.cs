@@ -17,7 +17,7 @@ namespace EZPos.DataAccess.Repositories
                     INSERT INTO StockMovements (ProductId, ChangeQty, Reason, DateTime)
                     VALUES (@productId, @changeQty, @reason, @dateTime)";
                 cmd.Parameters.AddWithValue("@productId", movement.ProductId);
-                cmd.Parameters.AddWithValue("@changeQty", movement.ChangeQty);
+                cmd.Parameters.AddWithValue("@changeQty", (double)movement.ChangeQty);
                 cmd.Parameters.AddWithValue("@reason",    movement.Reason);
                 cmd.Parameters.AddWithValue("@dateTime",  movement.DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.ExecuteNonQuery();
@@ -31,7 +31,7 @@ namespace EZPos.DataAccess.Repositories
                 INSERT INTO StockMovements (ProductId, ChangeQty, Reason, DateTime)
                 VALUES (@productId, @changeQty, @reason, @dateTime)";
             cmd.Parameters.AddWithValue("@productId", movement.ProductId);
-            cmd.Parameters.AddWithValue("@changeQty", movement.ChangeQty);
+            cmd.Parameters.AddWithValue("@changeQty", (double)movement.ChangeQty);
             cmd.Parameters.AddWithValue("@reason",    movement.Reason);
             cmd.Parameters.AddWithValue("@dateTime",  movement.DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.ExecuteNonQuery();
@@ -53,11 +53,11 @@ namespace EZPos.DataAccess.Repositories
                 {
                     while (reader.Read())
                     {
-                        list.Add(new StockMovement
+                list.Add(new StockMovement
                         {
                             Id        = reader.GetInt32(0),
                             ProductId = reader.GetInt32(1),
-                            ChangeQty = reader.GetInt32(2),
+                            ChangeQty = (decimal)reader.GetDouble(2),
                             Reason    = reader.GetString(3),
                             DateTime  = DateTime.TryParse(reader.GetString(4), out var dt) ? dt : DateTime.Now
                         });

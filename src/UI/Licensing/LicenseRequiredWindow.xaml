@@ -1,0 +1,87 @@
+<Window x:Class="EZPos.UI.Licensing.LicenseRequiredWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+        Title="EZPos — Activate License"
+        Width="480" Height="380"
+        MinWidth="420" MinHeight="340"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        Background="{StaticResource ContentBrush}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome ResizeBorderThickness="0" CaptionHeight="0"
+                      GlassFrameThickness="0" NonClientFrameEdges="None" />
+    </WindowChrome.WindowChrome>
+
+    <Border BorderBrush="{StaticResource PrimaryBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />   <!-- custom title bar -->
+                <RowDefinition Height="*"    />   <!-- content -->
+            </Grid.RowDefinitions>
+
+            <!-- ── Custom title bar ── -->
+            <Grid Grid.Row="0" Background="{StaticResource SidebarBrush}"
+                  Height="44" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
+                    <fa:IconBlock Icon="Key" FontSize="14" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,8,0" />
+                    <TextBlock Text="EZPos — License Activation"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
+
+            <!-- ── Content ── -->
+            <StackPanel Grid.Row="1" Margin="36,28,36,28" VerticalAlignment="Top">
+
+                <!-- Icon + heading -->
+                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <fa:IconBlock Icon="ShieldHalved" FontSize="42"
+                                  Foreground="{StaticResource PrimaryBrush}"
+                                  HorizontalAlignment="Center" Margin="0,0,0,10" />
+                    <TextBlock Text="Activate Your License"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="18" FontWeight="Bold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock x:Name="SubtitleText"
+                               Text="Enter your license key to continue."
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                </StackPanel>
+
+                <!-- Key input -->
+                <TextBlock Text="License Key" Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="12" Margin="0,0,0,6" />
+                <TextBox x:Name="LicenseKeyBox"
+                         Height="40"
+                         FontSize="14"
+                         VerticalContentAlignment="Center"
+                         CharacterCasing="Upper"
+                         KeyDown="LicenseKeyBox_KeyDown" />
+
+                <!-- Status message -->
+                <TextBlock x:Name="StatusText"
+                           Foreground="{StaticResource ErrorBrush}"
+                           FontSize="12" Margin="0,8,0,0"
+                           TextWrapping="Wrap"
+                           Visibility="Collapsed" />
+
+                <!-- Activate button -->
+                <Button x:Name="ActivateBtn"
+                        Content="Activate"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Height="42" Margin="0,16,0,0"
+                        FontSize="14"
+                        Click="ActivateBtn_Click" />
+
+                <!-- Footer -->
+                <TextBlock Foreground="{StaticResource TextMutedBrush}"
+                           FontSize="11" TextAlignment="Center" Margin="0,16,0,0"
+                           TextWrapping="Wrap"
+                           Text="Need a license? Contact support or visit ezpos.io" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

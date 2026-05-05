@@ -87,14 +87,29 @@ namespace EZPos.Business.Services
                 return new SaleResult { Success = false, ErrorMessage = $"Database error: {ex.Message}" };
             }
 
-            // Sync stock reductions back to PosStateStore so UI reflects new stock levels
+            // Sync stock reductions back to PosStateStore so UI reflects new stock levels.
+            // For Pack products, also deduct from the parent unit product's stock.
             foreach (var line in cartSnapshot)
             {
-                var product = _store.Products.IndexOf(
-                    System.Linq.Enumerable.FirstOrDefault(_store.Products, p => p.Id == line.ProductId));
                 var record = System.Linq.Enumerable.FirstOrDefault(_store.Products, p => p.Id == line.ProductId);
                 if (record != null)
+                {
                     record.Stock -= line.Quantity;
+
+                    // Pack: deduct ConversionRate × qty from the parent product's stock in state + DB
+                    if (record.UnitType == EZPos.Models.Domain.UnitType.Pack
+                        && record.ParentProductId.HasValue
+                        && record.ConversionRate > 0)
+                    {
+                        var parentRecord = System.Linq.Enumerable.FirstOrDefault(
+                            _store.Products, p => p.Id == record.ParentProductId.Value);
+                        if (parentRecord != null)
+                        {
+                            var parentDeduction = line.Quantity * record.ConversionRate;
+                            parentRecord.Stock -= parentDeduction;
+                        }
+                    }
+                }
             }
 
             _store.ClearCart();

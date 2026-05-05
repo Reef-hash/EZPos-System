@@ -6,7 +6,8 @@ namespace EZPos.Models.Domain
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
-        public int ChangeQty { get; set; }   // positive = stock in, negative = stock out / sale
+        /// <summary>Supports decimal for weight-based products. Positive = stock in, negative = stock out / sale.</summary>
+        public decimal ChangeQty { get; set; }
         public string Reason { get; set; }   // "SALE", "ADJUSTMENT", "CORRECTION"
         public DateTime DateTime { get; set; }
     }

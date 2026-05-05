@@ -89,15 +89,8 @@
                     <ComboBox x:Name="CategoryCombo" Height="36"
                               Foreground="{StaticResource TextPrimaryBrush}"
                               Background="{StaticResource CardBackgroundBrush}"
-                              BorderBrush="{StaticResource BorderBrush}">
-                        <ComboBoxItem>General</ComboBoxItem>
-                        <ComboBoxItem>Food &amp; Beverage</ComboBoxItem>
-                        <ComboBoxItem>Electronics</ComboBoxItem>
-                        <ComboBoxItem>Household</ComboBoxItem>
-                        <ComboBoxItem>Clothing</ComboBoxItem>
-                        <ComboBoxItem>Health &amp; Beauty</ComboBoxItem>
-                        <ComboBoxItem>Other</ComboBoxItem>
-                    </ComboBox>
+                              BorderBrush="{StaticResource BorderBrush}" />
+                    <!-- Items populated dynamically from CategoryService -->
                 </StackPanel>
             </Grid>
 
@@ -125,6 +118,50 @@
                                Style="{StaticResource ErrorLabel}" />
                 </StackPanel>
             </Grid>
+
+            <!-- Unit Type -->
+            <StackPanel Style="{StaticResource FieldGroup}">
+                <TextBlock Text="Selling Type" Style="{StaticResource FieldLabel}" />
+                <ComboBox x:Name="UnitTypeCombo" Height="36"
+                          Foreground="{StaticResource TextPrimaryBrush}"
+                          Background="{StaticResource CardBackgroundBrush}"
+                          BorderBrush="{StaticResource BorderBrush}"
+                          SelectionChanged="UnitTypeCombo_SelectionChanged">
+                    <ComboBoxItem Tag="Unit"   Content="Unit — sold per piece" />
+                    <ComboBoxItem Tag="Pack"   Content="Pack — bundle of units" />
+                    <ComboBoxItem Tag="Weight" Content="Weight — sold by kg" />
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Pack options (visible only when Pack is selected) -->
+            <StackPanel x:Name="PackPanel" Visibility="Collapsed">
+                <!-- Conversion Rate + Parent Product row -->
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Units per Pack *" Style="{StaticResource FieldLabel}" />
+                        <TextBox x:Name="ConversionRateBox" Height="36" Text="1"
+                                 ToolTip="How many base units are in one pack (e.g. 5)" />
+                        <TextBlock x:Name="ConversionRateError" Text="Enter a valid conversion rate (e.g. 5)."
+                                   Style="{StaticResource ErrorLabel}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Parent Unit Product" Style="{StaticResource FieldLabel}" />
+                        <ComboBox x:Name="ParentProductCombo" Height="36"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  Background="{StaticResource CardBackgroundBrush}"
+                                  BorderBrush="{StaticResource BorderBrush}"
+                                  DisplayMemberPath="Name"
+                                  ToolTip="Base unit product whose stock is deducted when this pack is sold" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
 
         </StackPanel>
 

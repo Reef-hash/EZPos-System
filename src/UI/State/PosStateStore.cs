@@ -63,15 +63,18 @@ namespace EZPos.UI.State
             {
                 Products.Add(new ProductRecord
                 {
-                    Id           = p.Id,
-                    Barcode      = p.Barcode,
-                    Name         = p.Name,
-                    Category     = p.Category,
-                    Price        = p.Price,
-                    Stock        = p.Stock,
-                    ReorderLevel = p.ReorderLevel,
-                    MaxStock     = p.MaxStock,
-                    LastUpdated  = p.LastUpdated
+                    Id              = p.Id,
+                    Barcode         = p.Barcode,
+                    Name            = p.Name,
+                    Category        = p.Category,
+                    Price           = p.Price,
+                    Stock           = p.Stock,
+                    ReorderLevel    = p.ReorderLevel,
+                    MaxStock        = p.MaxStock,
+                    LastUpdated     = p.LastUpdated,
+                    UnitType        = p.UnitType,
+                    ConversionRate  = p.ConversionRate,
+                    ParentProductId = p.ParentProductId
                 });
             }
 
@@ -85,15 +88,18 @@ namespace EZPos.UI.State
         {
             Products.Add(new ProductRecord
             {
-                Id           = p.Id,
-                Barcode      = p.Barcode,
-                Name         = p.Name,
-                Category     = p.Category,
-                Price        = p.Price,
-                Stock        = p.Stock,
-                ReorderLevel = p.ReorderLevel,
-                MaxStock     = p.MaxStock,
-                LastUpdated  = p.LastUpdated
+                Id              = p.Id,
+                Barcode         = p.Barcode,
+                Name            = p.Name,
+                Category        = p.Category,
+                Price           = p.Price,
+                Stock           = p.Stock,
+                ReorderLevel    = p.ReorderLevel,
+                MaxStock        = p.MaxStock,
+                LastUpdated     = p.LastUpdated,
+                UnitType        = p.UnitType,
+                ConversionRate  = p.ConversionRate,
+                ParentProductId = p.ParentProductId
             });
         }
 
@@ -102,14 +108,17 @@ namespace EZPos.UI.State
         {
             var existing = System.Linq.Enumerable.FirstOrDefault(Products, r => r.Id == p.Id);
             if (existing == null) return;
-            existing.Barcode      = p.Barcode;
-            existing.Name         = p.Name;
-            existing.Category     = p.Category;
-            existing.Price        = p.Price;
-            existing.Stock        = p.Stock;
-            existing.ReorderLevel = p.ReorderLevel;
-            existing.MaxStock     = p.MaxStock;
-            existing.LastUpdated  = p.LastUpdated;
+            existing.Barcode         = p.Barcode;
+            existing.Name            = p.Name;
+            existing.Category        = p.Category;
+            existing.Price           = p.Price;
+            existing.Stock           = p.Stock;
+            existing.ReorderLevel    = p.ReorderLevel;
+            existing.MaxStock        = p.MaxStock;
+            existing.LastUpdated     = p.LastUpdated;
+            existing.UnitType        = p.UnitType;
+            existing.ConversionRate  = p.ConversionRate;
+            existing.ParentProductId = p.ParentProductId;
         }
 
         /// <summary>Removes a product from the state store by Id.</summary>
@@ -120,7 +129,8 @@ namespace EZPos.UI.State
                 Products.Remove(existing);
         }
 
-        public int CartItemCount => CartItems.Sum(x => x.Quantity);
+        /// <summary>Number of distinct product lines in the cart.</summary>
+        public int CartItemCount => CartItems.Count;
         public decimal Subtotal => CartItems.Sum(x => x.LineTotal);
 
         /// <summary>
@@ -137,6 +147,11 @@ namespace EZPos.UI.State
         /// </summary>
         public decimal Total => TaxMode == TaxMode.Fake ? Subtotal : Subtotal + Tax;
 
+        /// <summary>
+        /// Adds one unit of a Unit or Pack product to the cart.
+        /// Returns false if the product is out of stock or the cart quantity would exceed stock.
+        /// Do NOT call this for Weight products — use <see cref="AddWeightToCart"/> instead.
+        /// </summary>
         public bool AddToCart(int productId)
         {
             var product = Products.FirstOrDefault(x => x.Id == productId);
@@ -150,19 +165,54 @@ namespace EZPos.UI.State
             {
                 CartItems.Add(new CartLine
                 {
-                    ProductId = product.Id,
+                    ProductId   = product.Id,
                     ProductName = product.Name,
-                    UnitPrice = product.Price,
-                    Quantity = 1
+                    UnitPrice   = product.Price,
+                    Quantity    = 1m
                 });
             }
             else if (existing.Quantity < product.Stock)
             {
-                existing.Quantity++;
+                existing.Quantity += 1m;
             }
             else
             {
                 return false;
+            }
+
+            NotifyCartSummaryChanged();
+            return true;
+        }
+
+        /// <summary>
+        /// Adds a weight-based product to the cart with the specified weight in kg.
+        /// If the product is already in the cart, the weights are summed.
+        /// Returns false if weight is not positive or exceeds available stock.
+        /// </summary>
+        public bool AddWeightToCart(int productId, decimal weightKg)
+        {
+            if (weightKg <= 0m) return false;
+
+            var product = Products.FirstOrDefault(x => x.Id == productId);
+            if (product is null || product.Stock <= 0)
+                return false;
+
+            var existing = CartItems.FirstOrDefault(x => x.ProductId == productId);
+            if (existing is null)
+            {
+                if (weightKg > product.Stock) return false;
+                CartItems.Add(new CartLine
+                {
+                    ProductId   = product.Id,
+                    ProductName = product.Name,
+                    UnitPrice   = product.Price,
+                    Quantity    = weightKg
+                });
+            }
+            else
+            {
+                if (existing.Quantity + weightKg > product.Stock) return false;
+                existing.Quantity += weightKg;
             }
 
             NotifyCartSummaryChanged();
@@ -180,7 +230,7 @@ namespace EZPos.UI.State
 
             if (line.Quantity < product.Stock)
             {
-                line.Quantity++;
+                line.Quantity += 1m;
                 NotifyCartSummaryChanged();
             }
         }
@@ -193,13 +243,13 @@ namespace EZPos.UI.State
                 return;
             }
 
-            if (line.Quantity <= 1)
+            if (line.Quantity <= 1m)
             {
                 CartItems.Remove(line);
             }
             else
             {
-                line.Quantity--;
+                line.Quantity -= 1m;
             }
 
             NotifyCartSummaryChanged();
@@ -305,10 +355,13 @@ namespace EZPos.UI.State
         private string name = string.Empty;
         private string category = string.Empty;
         private decimal price;
-        private int stock;
+        private decimal stock;
         private int reorderLevel;
         private int maxStock;
         private DateTime lastUpdated;
+        private EZPos.Models.Domain.UnitType unitType;
+        private decimal conversionRate = 1m;
+        private int? parentProductId;
 
         public int Id { get; set; }
 
@@ -336,7 +389,7 @@ namespace EZPos.UI.State
             set => SetProperty(ref price, value);
         }
 
-        public int Stock
+        public decimal Stock
         {
             get => stock;
             set
@@ -379,6 +432,26 @@ namespace EZPos.UI.State
             set => SetProperty(ref lastUpdated, value);
         }
 
+        public EZPos.Models.Domain.UnitType UnitType
+        {
+            get => unitType;
+            set => SetProperty(ref unitType, value);
+        }
+
+        /// <summary>For Pack products: how many base units are in one pack.</summary>
+        public decimal ConversionRate
+        {
+            get => conversionRate;
+            set => SetProperty(ref conversionRate, value);
+        }
+
+        /// <summary>For Pack products: Id of the base Unit product whose stock is deducted on sale.</summary>
+        public int? ParentProductId
+        {
+            get => parentProductId;
+            set => SetProperty(ref parentProductId, value);
+        }
+
         public string StockStatus => Stock <= 0 ? "Out of Stock" : Stock <= ReorderLevel ? "Low Stock" : "In Stock";
 
         public int StockPercentage
@@ -400,7 +473,7 @@ namespace EZPos.UI.State
     {
         private string productName = string.Empty;
         private decimal unitPrice;
-        private int quantity;
+        private decimal quantity;
 
         public int ProductId { get; set; }
 
@@ -422,7 +495,10 @@ namespace EZPos.UI.State
             }
         }
 
-        public int Quantity
+        /// <summary>
+        /// Quantity sold. Whole numbers for Unit/Pack products; decimal for Weight products (kg).
+        /// </summary>
+        public decimal Quantity
         {
             get => quantity;
             set

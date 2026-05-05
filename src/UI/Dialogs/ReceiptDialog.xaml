@@ -138,11 +138,11 @@
                 <ColumnDefinition Width="8" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0"
+            <Button x:Name="PrintBtn" Grid.Column="0"
                     Style="{StaticResource SecondaryButtonStyle}"
                     Content="Print Receipt" Height="40"
                     Click="Print_Click" />
-            <Button Grid.Column="2"
+            <Button x:Name="NewSaleBtn" Grid.Column="2"
                     Style="{StaticResource PrimaryButtonStyle}"
                     Content="New Sale" Height="40"
                     Click="Close_Click" />

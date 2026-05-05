@@ -41,7 +41,7 @@ namespace EZPos.UI.Dialogs
 
             int qty = int.TryParse(QuantityBox?.Text?.Trim(), out var q) ? q : 0;
             int change = GetSignedChange(qty);
-            int newStock = Math.Max(0, _product.Stock + change);
+            decimal newStock = Math.Max(0, _product.Stock + change);
             NewStockPreview.Text = newStock.ToString();
 
             if (QtyLabel != null)
@@ -62,7 +62,7 @@ namespace EZPos.UI.Dialogs
             return tag switch
             {
                 "OUT" => -qty,
-                "ADJ" => qty - _product.Stock, // absolute → relative change
+                "ADJ" => qty - (int)_product.Stock, // absolute → relative change
                 _     => qty                    // IN
             };
         }

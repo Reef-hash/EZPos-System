@@ -68,10 +68,7 @@
                                   Height="36"
                                   Margin="0,0,8,8"
                                   SelectionChanged="CategoryCombo_SelectionChanged">
-                            <ComboBoxItem IsSelected="True">All Categories</ComboBoxItem>
-                            <ComboBoxItem>Beverages</ComboBoxItem>
-                            <ComboBoxItem>Snacks</ComboBoxItem>
-                            <ComboBoxItem>Baked Goods</ComboBoxItem>
+                            <!-- Items populated dynamically from CategoryService in SalesPage_Loaded -->
                         </ComboBox>
 
                         <Button Width="110"
@@ -155,7 +152,18 @@
 
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
                                                     <Button Content="-" Width="34" Height="34" Padding="0" FontSize="16" Tag="{Binding ProductId}" Click="QuantityMinus_Click" />
-                                                    <TextBlock Text="{Binding Quantity}" Width="34" TextAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                                                    <TextBox Width="52"
+                                                             Height="34"
+                                                             Margin="4,0"
+                                                             Text="{Binding Quantity, Mode=OneWay, StringFormat={}{0:0.###}}"
+                                                             HorizontalContentAlignment="Center"
+                                                             VerticalContentAlignment="Center"
+                                                             TextAlignment="Center"
+                                                             FontSize="14"
+                                                             FontWeight="SemiBold"
+                                                             GotKeyboardFocus="QuantityInput_GotKeyboardFocus"
+                                                             LostKeyboardFocus="QuantityInput_LostKeyboardFocus"
+                                                             KeyDown="QuantityInput_KeyDown" />
                                                     <Button Content="+" Width="34" Height="34" Padding="0" FontSize="16" Tag="{Binding ProductId}" Click="QuantityPlus_Click" />
                                                 </StackPanel>
 

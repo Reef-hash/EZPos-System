@@ -17,17 +17,19 @@ namespace EZPos.UI
         private readonly SaleService saleService;
         private readonly StockService stockService;
         private readonly ReportService reportService;
+        private readonly CategoryService categoryService;
         private string currentPage = DefaultRoute;
 
-        public MainWindow(PosStateStore stateStore, ProductService productService, SaleService saleService, StockService stockService, ReportService reportService)
+        public MainWindow(PosStateStore stateStore, ProductService productService, SaleService saleService, StockService stockService, ReportService reportService, CategoryService categoryService)
         {
             InitializeComponent();
 
-            this.stateStore     = stateStore;
-            this.productService = productService;
-            this.saleService    = saleService;
-            this.stockService   = stockService;
-            this.reportService  = reportService;
+            this.stateStore      = stateStore;
+            this.productService  = productService;
+            this.saleService     = saleService;
+            this.stockService    = stockService;
+            this.reportService   = reportService;
+            this.categoryService = categoryService;
 
             navigationService = new NavigationService();
             RegisterRoutes();
@@ -38,9 +40,9 @@ namespace EZPos.UI
         private void RegisterRoutes()
         {
             navigationService.Register("Dashboard", () => new UI.Pages.DashboardPage(reportService));
-            navigationService.Register("Sales",     () => new UI.Pages.SalesPage(stateStore, saleService));
-            navigationService.Register("Products",  () => new UI.Pages.ProductsPage(stateStore, productService));
-            navigationService.Register("Stock",     () => new UI.Pages.StockPage(stateStore, stockService));
+            navigationService.Register("Sales",     () => new UI.Pages.SalesPage(stateStore, saleService, categoryService));
+            navigationService.Register("Products",  () => new UI.Pages.ProductsPage(stateStore, productService, categoryService));
+            navigationService.Register("Stock",     () => new UI.Pages.StockPage(stateStore, stockService, categoryService));
             navigationService.Register("Reports",   () => new UI.Pages.ReportsPage());
             navigationService.Register("Settings",  () => new UI.Pages.SettingsPage(stateStore));
         }
@@ -119,6 +121,44 @@ namespace EZPos.UI
         private void AboutButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("EZPos System v1.0\nModern Point of Sale Application", "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // ── Custom title bar ──────────────────────────────────────────────
+        private void TitleBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+                ToggleMaximize();
+            else
+                DragMove();
+        }
+
+        private void MinimizeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void MaximizeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleMaximize();
+        }
+
+        private void CloseBtn_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void ToggleMaximize()
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Normal;
+                MaximizeIcon.Icon = FontAwesome.Sharp.IconChar.Expand;
+            }
+            else
+            {
+                WindowState = WindowState.Maximized;
+                MaximizeIcon.Icon = FontAwesome.Sharp.IconChar.Compress;
+            }
         }
     }
 }

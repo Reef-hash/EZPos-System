@@ -1,0 +1,94 @@
+<Window x:Class="EZPos.UI.Dialogs.WeightInputDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+        Title="Enter Weight"
+        Width="360"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource ContentBrush}"
+        FontFamily="{StaticResource AppFont}">
+
+    <Window.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground"  Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="FontSize"    Value="12" />
+            <Setter Property="FontWeight"  Value="SemiBold" />
+            <Setter Property="Margin"      Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="ErrorLabel" TargetType="TextBlock">
+            <Setter Property="Foreground"  Value="{StaticResource ErrorBrush}" />
+            <Setter Property="FontSize"    Value="11" />
+            <Setter Property="Margin"      Value="0,3,0,0" />
+            <Setter Property="Visibility"  Value="Collapsed" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="28,24,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <fa:IconBlock Icon="WeightHanging" FontSize="18"
+                          Foreground="{StaticResource PrimaryBrush}"
+                          VerticalAlignment="Center" Margin="0,0,10,0" />
+            <TextBlock Text="Enter Weight" FontSize="18" FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- Product name -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,16">
+            <TextBlock x:Name="ProductNameText"
+                       FontSize="14" FontWeight="SemiBold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       TextWrapping="Wrap" />
+            <TextBlock x:Name="PricePerKgText"
+                       FontSize="12"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- Weight input -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,16">
+            <TextBlock Text="Weight (kg) *" Style="{StaticResource FieldLabel}" />
+            <TextBox x:Name="WeightBox" Height="40" FontSize="16"
+                     TextAlignment="Right"
+                     KeyDown="WeightBox_KeyDown" />
+            <TextBlock x:Name="WeightError"
+                       Text="Enter a valid weight greater than 0."
+                       Style="{StaticResource ErrorLabel}" />
+            <TextBlock x:Name="TotalPreviewText"
+                       FontSize="13" FontWeight="SemiBold"
+                       Foreground="{StaticResource PrimaryBrush}"
+                       Margin="0,6,0,0" />
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Content="Cancel"
+                    Height="38"
+                    Click="Cancel_Click" />
+
+            <Button Grid.Column="2"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Content="Add to Cart"
+                    Height="38" MinWidth="120"
+                    Click="AddToCart_Click" />
+        </Grid>
+    </Grid>
+</Window>

@@ -5,7 +5,7 @@
              Background="{StaticResource ContentBrush}">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="0,0,24,24">
+        <StackPanel Margin="0">
 
             <!-- ── Page header ── -->
             <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
@@ -173,6 +173,72 @@
                     <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11"
                                Margin="220,6,0,0"
                                Text="Tax rate change takes effect on the next sale." />
+                </StackPanel>
+            </Border>
+
+            <!-- ── Keyboard Shortcuts ── -->
+            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <fa:IconBlock Icon="Keyboard" FontSize="16"
+                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Keyboard Shortcuts" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="18" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Payment: Cash"
+                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="PaymentCashHotkeyBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Payment: QR"
+                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="PaymentQrHotkeyBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Payment: Card"
+                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="PaymentCardHotkeyBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Payment: Cheque"
+                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="6" Grid.Column="1" x:Name="PaymentChequeHotkeyBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Receipt: New Sale"
+                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="8" Grid.Column="1" x:Name="ReceiptNewSaleHotkeyBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+
+                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Receipt: Print"
+                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="10" Grid.Column="1" x:Name="ReceiptPrintHotkeyBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="220,8,0,0"
+                               Text="Use key names like F1, F2, F3, F4, PageUp, PageDown, Insert, Home." />
                 </StackPanel>
             </Border>
 

@@ -15,47 +15,46 @@ EZPos-System/
 ├── src/
 │   ├── Models/
 │   │   └── Domain/
-│   │       ├── Product.cs               [EXISTS]  — add Category, MaxStock, ReorderLevel
-│   │       ├── Sale.cs                  [EXISTS]  — add PaymentMethod, CashierId
+│   │       ├── Product.cs               [EXISTS]  — Category, MaxStock, ReorderLevel, UnitType added
+│   │       ├── Sale.cs                  [EXISTS]  — PaymentMethod added
 │   │       ├── SaleItem.cs              [EXISTS]
-│   │       └── StockMovement.cs         [PLANNED] — audit trail for stock changes
+│   │       └── StockMovement.cs         [EXISTS]  — audit trail for stock changes
 │   │
 │   ├── DataAccess/
 │   │   └── Repositories/
-│   │       ├── Database.cs              [EXISTS]  — add StockMovements table to schema
-│   │       ├── ConfigHelper.cs          [EXISTS]
-│   │       ├── ProductRepository.cs     [EXISTS]  — GetAll(), Add(), Update(), Delete()
-│   │       ├── SaleRepository.cs        [EXISTS]  — fully implemented, never called yet
-│   │       └── StockMovementRepository  [PLANNED] — Insert(), GetByProduct()
+│   │       ├── Database.cs              [EXISTS]  — StockMovements table + barcode index in schema
+│   │       ├── ConfigHelper.cs          [EXISTS]  — Get/Set/GetKey/SetKey helpers
+│   │       ├── ProductRepository.cs     [EXISTS]  — GetAll(), GetByBarcode(), Add(), Update(), Delete()
+│   │       ├── SaleRepository.cs        [EXISTS]  — AddSale() called by SaleService, writes audit trail
+│   │       └── StockMovementRepository  [EXISTS]  — Insert(), InsertWithConnection(), GetByProduct()
 │   │
 │   ├── Business/
 │   │   └── Services/
-│   │       ├── ProductService.cs        [PLANNED] — Add, Edit, Delete, GetAll
-│   │       ├── SaleService.cs           [PLANNED] — ProcessSale → DB write + state sync
-│   │       ├── StockService.cs          [PLANNED] — AdjustStock, GetLowStockItems
-│   │       └── ReportService.cs         [PLANNED] — GetSalesByPeriod, GetTopProducts
+│   │       ├── ProductService.cs        [EXISTS]  — Add, Edit, Delete, GetAll, GetByBarcode
+│   │       ├── SaleService.cs           [EXISTS]  — ProcessSale → DB write + state sync
+│   │       ├── StockService.cs          [EXISTS]  — AdjustStock, GetLowStockItems
+│   │       └── ReportService.cs         [EXISTS]  — GetSummary, GetDailyBreakdown, GetTopProducts, GetTodaySummary, GetLowStockAlerts, GetPaymentBreakdown, GetTransactions, GetStockSnapshot
 │   │
 │   ├── UI/
 │   │   ├── State/
-│   │   │   └── PosStateStore.cs         [EXISTS]  — add Load() from DB on startup
+│   │   │   └── PosStateStore.cs         [EXISTS]  — Load() from DB on startup, ReloadTaxConfig()
 │   │   ├── Navigation/
 │   │   │   └── NavigationService.cs     [EXISTS]
-│   │   ├── ViewModels/                  [PLANNED folder]
-│   │   │   ├── DashboardViewModel.cs    [PLANNED]
-│   │   │   ├── SalesViewModel.cs        [PLANNED]
-│   │   │   ├── ProductsViewModel.cs     [PLANNED]
-│   │   │   ├── StockViewModel.cs        [PLANNED]
-│   │   │   └── ReportsViewModel.cs      [PLANNED]
-│   │   ├── Dialogs/                     [PLANNED folder]
-│   │   │   ├── AddProductDialog.xaml    [PLANNED]
-│   │   │   ├── StockAdjustDialog.xaml   [PLANNED]
-│   │   │   └── ReceiptDialog.xaml       [PLANNED]
+│   │   ├── Input/
+│   │   │   └── SalesKeyboardInputService.cs  [EXISTS]  — barcode vs Enter disambiguation
+│   │   ├── ViewModels/                  [PLANNED — Phase 5 wiring only]
+│   │   ├── Dialogs/                     [EXISTS]
+│   │   │   ├── ProductDialog.xaml       [EXISTS]  — Add/Edit product form
+│   │   │   ├── StockAdjustDialog.xaml   [EXISTS]  — Stock In/Out/Manual adjust
+│   │   │   ├── PaymentDialog.xaml       [EXISTS]  — payment method + amount + change
+│   │   │   └── ReceiptDialog.xaml       [EXISTS]  — on-screen receipt summary
 │   │   ├── Pages/
-│   │   │   ├── DashboardPage.xaml       [PLANNED] — first tab, live KPIs
+│   │   │   ├── DashboardPage.xaml       [EXISTS]  — live KPI cards + low stock alerts
 │   │   │   ├── SalesPage.xaml           [EXISTS]
 │   │   │   ├── ProductsPage.xaml        [EXISTS]
 │   │   │   ├── StockPage.xaml           [EXISTS]
-│   │   │   └── ReportsPage.xaml         [EXISTS]
+│   │   │   ├── ReportsPage.xaml         [EXISTS]  — live data + PDF/Excel export
+│   │   │   └── SettingsPage.xaml        [EXISTS]  — store info, tax, printer, hotkeys, DB backup/restore
 │   │   ├── Resources/
 │   │   └── Styles/
 │   │
@@ -63,7 +62,7 @@ EZPos-System/
 │   │   ├── Authentication/              [PLANNED — Phase 4]
 │   │   └── Authorization/               [PLANNED — Phase 4]
 │   │
-│   ├── Hardware/                        [PLANNED folder] — all hardware I/O
+│   ├── Hardware/                        [PLANNED — Phase 5 only]
 │   │   ├── Barcode/
 │   │   │   ├── BarcodeService.cs        [PLANNED] — lookup product by scanned barcode
 │   │   │   └── BarcodeInputBuffer.cs    [PLANNED] — debounce + timing buffer for HID input
@@ -74,7 +73,8 @@ EZPos-System/
 │   │
 │   └── Utilities/
 │       └── Helpers/
-│           └── CurrencyFormatter.cs     [PLANNED]
+│           ├── EscPosDocument.cs        [EXISTS]  — ESC/POS byte builder (80 mm receipt)
+│           └── RawPrinterHelper.cs      [EXISTS]  — Win32 P/Invoke raw spooler wrapper
 │
 ├── Resources/
 │   ├── Icons/
@@ -222,19 +222,17 @@ App Startup
 
 ---
 
-## ⚠️ Critical Gap — Current State vs Required State
-
-The app currently has **two disconnected data layers running in parallel:**
+## ✅ Data Layer — Connected & Working
 
 | | Layer A — SQLite (DataAccess/) | Layer B — PosStateStore (in-memory) |
 |---|---|---|
-| Status | EXISTS but never called by UI | Used by all UI pages |
-| Data | Empty on first run | 10 hardcoded seed products |
-| Persistence | ✓ Survives app restarts | ✗ Resets every run |
-| Checkout | `SaleRepository.AddSale()` implemented but never invoked | Only calls `ClearCart()` |
-| Stock changes | Never updated | Never saved |
+| Status | Fully connected — all CRUD operations live | Drives all UI bindings |
+| Data | Loaded from DB on startup | Populated by `PosStateStore.Load()` |
+| Persistence | ✓ Survives app restarts | ✓ Reloaded from DB on startup |
+| Checkout | `SaleRepository.AddSale()` called by `SaleService.ProcessSale()` | Stock synced back on every sale |
+| Stock changes | Written to DB + StockMovements audit table | Updated in-memory on every change |
 
-**Impact: Every restart loses all transactions and stock changes. The app is not production-usable until Phase 1 is complete.**
+**Phase 1 and Phase 2 are complete. The app is production-ready for sales, product management, and stock adjustment.**
 
 ---
 
@@ -582,18 +580,18 @@ src/Hardware/
 
 ---
 
-### 🟢 Phase 3 — Data Flow & Reporting
+### 🟢 Phase 3 — Data Flow & Reporting ✅ COMPLETE
 
 **Goal:** Real numbers everywhere. Dashboard shows live data. No hardcoded arrays.
 
 | # | Task | File(s) | Status |
 |---|---|---|---|
-| 3.1 | `ReportService` — GetSalesByPeriod, GetTopProducts, GetDailySummary | `Business/Services/ReportService.cs` | TODO |
-| 3.2 | Wire `ReportService` into `ReportsPage` — replace all hardcoded chart arrays | `UI/Pages/ReportsPage.xaml.cs` | TODO |
-| 3.3 | `DashboardPage` — today's total, transaction count, low stock alerts | `UI/Pages/DashboardPage.xaml` | TODO |
-| 3.4 | Register DashboardPage in `NavigationService` + add nav button in MainWindow | `UI/Navigation/NavigationService.cs`, `MainWindow.xaml` | TODO |
-| 3.5 | Verify stock deduction from sales is accurate in DB and PosStateStore | `Business/Services/SaleService.cs` | TODO |
-| 3.6 | Verify StockMovement audit trail written on every adjustment and sale | `DataAccess/Repositories/StockMovementRepository.cs` | TODO |
+| 3.1 | `ReportService` — GetSummary, GetDailyBreakdown, GetTopProducts, GetTodaySummary, GetHourlySales, GetLowStockAlerts, GetPaymentBreakdown, GetTransactions, GetStockSnapshot | `Business/Services/ReportService.cs` | ✅ Done |
+| 3.2 | Wire `ReportService` into `ReportsPage` — real DB data, date range filter, Excel export | `UI/Pages/ReportsPage.xaml.cs` | ✅ Done |
+| 3.3 | `DashboardPage` — today's revenue, order count, avg order, low stock alerts grid | `UI/Pages/DashboardPage.xaml` | ✅ Done |
+| 3.4 | Register DashboardPage in `NavigationService` + nav button in MainWindow (default route) | `UI/Navigation/NavigationService.cs`, `MainWindow.xaml` | ✅ Done |
+| 3.5 | Stock deduction from sales accurate in DB (`SaleRepository`) and `PosStateStore` (`SaleService`) | `Business/Services/SaleService.cs` | ✅ Done |
+| 3.6 | `StockMovement` audit trail written on every sale (`SaleRepository`) and every manual adjustment (`StockService`) | `DataAccess/Repositories/SaleRepository.cs` | ✅ Done |
 
 ---
 
@@ -603,17 +601,255 @@ src/Hardware/
 
 | # | Task | File(s) | Status |
 |---|---|---|---|
-| 4.1 | Settings page — business name, tax rate, currency symbol | `UI/Pages/SettingsPage.xaml` | TODO |
-| 4.2 | Category management (add/rename/delete categories) | `UI/Dialogs/` | TODO |
-| 4.3 | Review all page layouts — fix spacing, padding, alignment consistency | All Pages | TODO |
-| 4.4 | Export reports to PDF | `Utilities/Helpers/` | TODO |
-| 4.5 | User login / PIN screen | `Security/Authentication/` | TODO |
-| 4.6 | Role-based access control (Admin, Cashier) | `Security/Authorization/` | TODO |
-| 4.7 | DB backup & restore | `Utilities/Helpers/` | TODO |
+| 4.1 | Settings page — store name, receipt footer, printer name, tax rate/mode, currency, keyboard shortcuts, DB backup/restore | `UI/Pages/SettingsPage.xaml` | ✅ Done |
+| 4.2 | Category management (add/rename/delete categories) — `CategoryManagementDialog`, `CategoryRepository`, `CategoryService`; categories stored in DB; `ProductDialog` and `SalesPage` filter load dynamically; Products toolbar has "Categories" button | `UI/Dialogs/`, `Business/Services/`, `DataAccess/Repositories/` | ✅ Done |
+| 4.3 | Review all page layouts — fix spacing, padding, alignment consistency | All Pages | ✅ Done |
+| 4.4 | Export reports to PDF from `ReportsPage` alongside Excel export | `UI/Pages/ReportsPage.xaml.cs` | ✅ Done |
+| 4.5 | Licensing architecture — `ILicenseService`, `LicenseService` (mock, always Valid), `LicenseInfo`, `FileLicenseStorage`, `LicenseRequiredWindow`; startup check wired in `App.xaml.cs`; real API/Stripe integration left as TODO | `Core/Licensing/`, `Infrastructure/Licensing/`, `UI/Licensing/` | TODO (mock done, real validation pending) |
+| 4.6 | DB backup & restore from Settings — backup current `EZPos.db`, validate restore file, auto-create pre-restore safety backup, then restart app | `UI/Pages/SettingsPage.xaml(.cs)` | ✅ Done |
+
+> **Nice to have (future client request):** Role-based access control (Admin vs Cashier) — `Security/Authorization/`. Not in scope for current build. Add if client requests multi-operator restrictions.
 
 ---
 
-### ⚫ Phase 5 — Hardware Integration *(last phase only)*
+## 🔄 Update System Architecture *(Professional Self-Update)*
+
+### Design Decision: Option 1 — In-App Updater + Hosted Installer
+
+**Why this approach was chosen:**
+- ✅ Works seamlessly with current Inno Setup installer pipeline
+- ✅ Preserves SQLite database across updates (critical for offline POS)
+- ✅ Professional but low-complexity for current deployment model
+- ✅ Aligns with GitHub Releases CI/CD workflow already in place
+- ✅ Supports Windows 7+ targets (no MSIX or modern package dependencies)
+- ✅ Gives users control over update timing (never interrupts active sale)
+
+**Rejected alternatives:**
+- ❌ ClickOnce — too rigid for POS, doesn't feel professional, poor control
+- ❌ MSIX / App Installer — requires Win10+, incompatible with net6.0-windows7.0 target
+- ❌ Fully custom backend — overkill for current stage, defer to Phase 6 if licensing/subscriptions added later
+
+### Data Storage Architecture
+
+**Before:** Mutable data (DB, config) lives next to .exe in install folder
+**After:** Mutable data lives in `%ProgramData%\EZPos\` (Windows standard)
+
+```
+Program Files\EZPos\          ← Read-only binaries
+  ├── EZPos.exe
+  ├── ClosedXML.dll
+  ├── FontAwesome.Sharp.dll
+  ├── System.Data.SQLite.dll
+  └── ... (other runtime DLLs)
+
+%ProgramData%\EZPos\          ← Read-write app data (survives updates)
+  ├── EZPos.db              ← Live transaction database
+  ├── config.ini            ← Store name, tax rate, printer, hotkeys
+  ├── license.dat           ← License key file (when licensing is real)
+  ├── Backups/              ← DB backup copies
+  │   ├── EZPos_Backup_20260506_120000.db
+  │   └── EZPos_PreRestore_20260506_130000.db
+  └── Logs/                 ← Optional app logs (future)
+```
+
+**Rationale:**
+- Updates can safely replace binaries without risking data corruption
+- Backup/Restore operations work from a standard, predictable location
+- Follows Windows best practices (system folder separation)
+- Cleaner permissions: `Program Files` is read-only, `%ProgramData%` is read-write
+- Makes it obvious to IT/support where "live data" lives
+
+### Update Flow — End-to-End
+
+```
+1. User Action (or Auto-Check)
+   └─► Settings → About → "Check for Updates" button
+       OR: App checks on startup (configurable)
+
+2. Version Check
+   App calls: GET https://updates.ezpos.my/latest.json
+   
+   Response:
+   {
+     "version": "1.0.1",
+     "changesSince": "1.0.0",
+     "releaseNotes": "Fixed: category import bug; Added: PDF report export",
+     "downloadUrl": "https://github.com/releases/download/v1.0.1/EZPos-Setup-v1.0.1.exe",
+     "checksum": "sha256:abc123def456...",
+     "mandatory": false,
+     "minimumVersion": "1.0.0",  ← older versions must update if they are below this
+     "publishedDate": "2026-05-06T10:30:00Z"
+   }
+
+3. Comparison
+   Local version: 1.0.0
+   Remote version: 1.0.1
+   
+   IF remote > local:
+     SHOW update dialog with changelog
+     ALLOW user to "Update Now" or "Skip for now"
+   ELSE:
+     SHOW "You are on the latest version"
+
+4. Download & Prepare (if user clicks "Update Now")
+   - Download installer to: %TEMP%\EZPos-Setup-v1.0.1.exe
+   - Verify checksum matches remote checksum
+   - Create safety backup: %ProgramData%\EZPos\Backups\EZPos_PreUpdate_[timestamp].db
+
+5. Exit & Update
+   - Close all open sales (prompt user to finish checkout)
+   - Close app cleanly
+   - Run installer silently or semi-silently:
+     EZPos-Setup-v1.0.1.exe /SILENT /NORESTART
+   - Installer detects existing EZPos.db and skips overwrite (Inno flag: onlyifdoesntexist)
+
+6. Post-Update Launch
+   - User manually restarts EZPos.exe OR installer auto-launches
+   - App detects DB schema version in PRAGMA schema_version
+   - IF schema changed: run migration in Database.cs
+   - App loads with updated binaries + preserved data
+   - Migration succeeds or rolls back to pre-update backup
+
+7. Verify & Clean Up
+   - User verifies everything looks right
+   - Old %TEMP% installer can be deleted (or cleaned by Windows)
+   - Pre-update backup stays in %ProgramData%\EZPos\Backups\ for manual recovery if needed
+```
+
+### Implementation Components
+
+**Phase 4.7 — Data Migration (Prerequisite)**
+- Move `EZPos.db` initialization from `AppDomain.CurrentDomain.BaseDirectory` to `%ProgramData%\EZPos\`
+- Move `config.ini` location to `%ProgramData%\EZPos\`
+- Move `license.dat` location to `%ProgramData%\EZPos\`
+- Update Inno Setup to create `%ProgramData%\EZPos\` with correct permissions
+- Add migration logic in `App.xaml.cs` to detect old location and copy data on first run
+
+**Phase 4.8 — Updater Service & UI**
+- Create `UpdaterService.cs` in `src/Business/Services/`
+- Implement version check: `async Task<UpdateManifest> CheckForUpdatesAsync()`
+- Implement download with checksum: `async Task DownloadInstallerAsync(string url, string checksum)`
+- Add "Check for Updates" button in Settings About section
+- Add update dialog showing version, changelog, and prompts
+- Add "Update Now" / "Skip" / "Remind Later" buttons
+- Handle mandatory updates (block app if client is too old, show warning)
+
+**Phase 4.9 — Update Manifest Hosting**
+- Create/host `latest.json` on GitHub Releases OR your server
+- GitHub Actions build should publish `latest.json` alongside installer
+- Format: include version, download URL, checksum, release notes, mandatory flag
+- Support rollback: older versions can check and refuse to run if below `minimumVersion`
+
+**Phase 4.10 — Database Schema Versioning**
+- Add `PRAGMA schema_version` or custom `_schema_info` table tracking
+- On app startup after update, check if schema changed
+- If schema version is newer: run migration scripts in Database.cs
+- If migration fails: restore from pre-update backup and show error
+
+### Files Involved
+
+```
+src/Business/Services/UpdaterService.cs       [NEW]  — version check, download, verification
+src/UI/Dialogs/UpdateAvailableDialog.xaml    [NEW]  — update prompt with changelog
+src/UI/Pages/SettingsPage.xaml.cs            [EDIT] — add "Check for Updates" handler
+src/DataAccess/Repositories/Database.cs      [EDIT] — add schema version + migration support
+src/App.xaml.cs                               [EDIT] — add %ProgramData% folder detection + data migration
+Config/config.ini                             [EDIT] — document new ProgramData location
+InnoSetup-EZPos.iss                           [EDIT] — create %ProgramData% folder, set permissions
+.github/workflows/build.yml                   [EDIT] — generate latest.json after build
+```
+
+### Data Migration Strategy (App Startup)
+
+```csharp
+// In App.xaml.cs Constructor or App_Startup
+private void MigrateToNewDataLocation()
+{
+    // Old location: next to .exe
+    var oldDbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "EZPos.db");
+    var oldConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.ini");
+    
+    // New location: %ProgramData%\EZPos\
+    var programDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "EZPos");
+    var newDbPath = Path.Combine(programDataDir, "EZPos.db");
+    var newConfigPath = Path.Combine(programDataDir, "config.ini");
+    
+    // Ensure new directory exists
+    Directory.CreateDirectory(programDataDir);
+    
+    // If old location has DB and new location doesn't: copy (one-time migration)
+    if (File.Exists(oldDbPath) && !File.Exists(newDbPath))
+    {
+        File.Copy(oldDbPath, newDbPath);
+    }
+    
+    // Same for config
+    if (File.Exists(oldConfigPath) && !File.Exists(newConfigPath))
+    {
+        File.Copy(oldConfigPath, newConfigPath);
+    }
+    
+    // Update Database.DbFile to new location
+    Database.DbFile = newDbPath;
+    ConfigHelper.ConfigPath = newConfigPath;
+}
+```
+
+### Version Manifest Format (latest.json)
+
+```json
+{
+  "version": "1.0.1",
+  "name": "EZPos v1.0.1",
+  "publishedDate": "2026-05-06T10:30:00Z",
+  "releaseNotes": "• Fixed: category import bug when merging duplicates\n• Added: PDF export for analytics reports\n• Improved: database backup/restore safety with pre-restore snapshots",
+  "downloadUrl": "https://github.com/YourOrg/EZPos/releases/download/v1.0.1/EZPos-Setup-v1.0.1.exe",
+  "checksum": {
+    "algorithm": "sha256",
+    "value": "abc123def456789..."
+  },
+  "mandatory": false,
+  "minimumVersion": "1.0.0",
+  "targetFramework": "net6.0-windows7.0",
+  "updatedComponents": {
+    "binaries": true,
+    "schema": false
+  }
+}
+```
+
+### Configuration (config.ini)
+
+Add these keys to track versions and update behavior:
+
+```ini
+[App]
+Version=1.0.0
+LastUpdateCheck=2026-05-06T10:30:00Z
+UpdateChannel=stable          ; stable, beta, dev (for future phased rollouts)
+AutoCheckUpdates=true         ; check on app startup
+UpdateNotificationStyle=popup ; popup or notification
+
+[UpdateServer]
+ManifestUrl=https://updates.ezpos.my/latest.json
+; Leave blank to disable auto-update and hide "Check for Updates" button
+```
+
+### Important Notes for Developers
+
+1. **DB Preservation is Sacred** — Never, ever overwrite `EZPos.db` during install/update. Our Inno flag `onlyifdoesntexist` enforces this, but verify in review.
+
+2. **Schema Versioning Required** — If you add/remove/rename DB columns in a future version, increment `PRAGMA schema_version` and write a migration in `Database.cs`. Failing to do this = corrupted data on update.
+
+3. **Always Backup Before Update** — The updater creates `EZPos_PreUpdate_[timestamp].db` automatically. If migration fails, users can manually restore via Settings → Database Maintenance.
+
+4. **Checksum Verification is Mandatory** — Never skip SHA256 verification. It's your defense against corrupted downloads or man-in-the-middle attacks. Even in private networks, verify.
+
+5. **Mandatory Update Logic** — `minimumVersion` field blocks old clients from running if they fall below a security threshold. Use sparingly, only for critical bugs.
+
+6. **No Updates During Active Sale** — In the update dialog, check `SalesPage` state. If active, show "Finish current sale before updating" and block Update button.
+
+---
 
 **Why hardware is last:** Every hardware component depends on a stable, fully connected system. `BarcodeService` must call a working `ProductService`. `PrinterService` must receive a valid `SaleResult` from a working `SaleService`. Wiring hardware into an unstable or partially connected system creates hidden failures that are hard to diagnose — it is never the cause of a bug, but it always amplifies them. Hardware is added last to a system that is already fully functional without it.
 
@@ -621,10 +857,10 @@ src/Hardware/
 
 | # | Task | File(s) | Status |
 |---|---|---|---|
-| 5.1 | `EscPosCommands.cs` — ESC/POS byte constant definitions | `Hardware/Printer/EscPosCommands.cs` | TODO |
-| 5.2 | `ReceiptBuilder.cs` — formats `SaleResult` → ESC/POS byte array | `Hardware/Printer/ReceiptBuilder.cs` | TODO |
-| 5.3 | `PrinterService.cs` — async raw print via Win32 spooler, 3-attempt retry, graceful fallback | `Hardware/Printer/PrinterService.cs` | TODO |
-| 5.4 | Add `[Printer] Name=` to `config.ini` — skip print gracefully if blank | `Config/config.ini` | TODO |
+| 5.1 | `EscPosCommands.cs` — ESC/POS byte constant definitions | `Hardware/Printer/EscPosCommands.cs` | ⏳ Foundation in `Utilities/Helpers/EscPosDocument.cs` — move/refactor to Hardware layer |
+| 5.2 | `ReceiptBuilder.cs` — formats `SaleResult` → ESC/POS byte array | `Hardware/Printer/ReceiptBuilder.cs` | ⏳ Foundation in `Utilities/Helpers/EscPosDocument.cs` — move/refactor to Hardware layer |
+| 5.3 | `PrinterService.cs` — async raw print via Win32 spooler, 3-attempt retry, graceful fallback | `Hardware/Printer/PrinterService.cs` | ⏳ P/Invoke layer in `Utilities/Helpers/RawPrinterHelper.cs` — PrinterService wrapper with retry still needed |
+| 5.4 | Add `PrinterName=` to `config.ini` — skip print gracefully if blank | `Config/config.ini` | ✅ Done — `PrinterName=` key present, Settings page exposes it with Detect button |
 | 5.5 | Wire `PrinterService.PrintReceiptAsync()` into `SalesViewModel` after checkout | `UI/ViewModels/SalesViewModel.cs` | TODO |
 | 5.6 | `BarcodeInputBuffer.cs` — HID timing-aware input accumulator | `Hardware/Barcode/BarcodeInputBuffer.cs` | TODO |
 | 5.7 | `BarcodeService.cs` — barcode → `ProductService.GetByBarcode()` → events | `Hardware/Barcode/BarcodeService.cs` | TODO |
@@ -768,9 +1004,17 @@ iscc InnoSetup-EZPos.iss
 - ~~Stock In/Out buttons were MessageBox stubs~~ → `StockAdjustDialog` + `StockService` fully wired
 - ~~Stock changes from sales not reflected in UI~~ → `SaleService` syncs stock back to `PosStateStore`
 
-### Still TODO (Phase 3)
-- Reports chart data is hardcoded static arrays
-- Dashboard page not yet created
+### ✅ Fixed in Phase 3
+- ~~Reports chart data is hardcoded static arrays~~ → `ReportService` queries real SQLite data; date-range filter + PDF/Excel export live
+- ~~Dashboard page not yet created~~ → `DashboardPage` live with today's revenue, order count, avg order value, low stock alerts grid
+
+### Still TODO (Phase 4)
+- Category management UI (add/rename/delete) ✅ done
+- Page layout consistency review ✅ done
+- PDF export ✅ done
+- Licensing real API/Stripe validation (mock layer already in place — `Core/Licensing/`, `Infrastructure/Licensing/`, `UI/Licensing/`)
+
+> **Nice to have (future):** Role-based access control (Admin vs Cashier) — not in current scope.
 
 ---
 
@@ -788,6 +1032,6 @@ iscc InnoSetup-EZPos.iss
 
 ---
 
-**Last Updated**: May 2, 2026
-**Version**: 1.4 — Phase 2 complete; full Product CRUD, Stock Adjust, Checkout + Receipt live
-**Status**: Phase 3 next — Data Flow & Reporting (real numbers, live dashboard)
+**Last Updated**: May 6, 2026
+**Version**: 1.7 — Phase 4 in progress; RBAC removed from scope (nice-to-have for future)
+**Status**: Phase 4 in progress — licensing real validation remains; layout review, PDF export, and DB backup/restore are done

@@ -27,7 +27,7 @@ namespace EZPos.Business.Services
             var record = _store.Products.FirstOrDefault(p => p.Id == productId);
             if (record == null) return false;
 
-            int newStock = record.Stock + changeQty;
+            decimal newStock = record.Stock + changeQty;
             if (newStock < 0) newStock = 0;
 
             ProductRepository.UpdateStock(productId, newStock);

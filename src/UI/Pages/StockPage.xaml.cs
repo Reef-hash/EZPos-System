@@ -40,15 +40,17 @@ namespace EZPos.UI.Pages
     {
         private readonly PosStateStore stateStore;
         private readonly StockService stockService;
+        private readonly CategoryService categoryService;
         private ICollectionView? stockView;
         private bool isInitialized;
 
-        public StockPage(PosStateStore stateStore, StockService stockService)
+        public StockPage(PosStateStore stateStore, StockService stockService, CategoryService categoryService)
         {
             InitializeComponent();
 
-            this.stateStore   = stateStore;
-            this.stockService = stockService;
+            this.stateStore      = stateStore;
+            this.stockService    = stockService;
+            this.categoryService = categoryService;
             // Independent view per page — never share the default view across pages
             stockView = new ListCollectionView(this.stateStore.Products);
 
@@ -74,7 +76,7 @@ namespace EZPos.UI.Pages
 
             if (CategoryFilterCombo is not null)
             {
-                CategoryFilterCombo.SelectedIndex = 0;
+                LoadCategoryFilter();
             }
 
             UpdateSummary();
@@ -141,6 +143,15 @@ namespace EZPos.UI.Pages
 
             stockView.Refresh();
             UpdateSummary();
+        }
+
+        private void LoadCategoryFilter()
+        {
+            CategoryFilterCombo.Items.Clear();
+            CategoryFilterCombo.Items.Add(new ComboBoxItem { Content = "All Categories", IsSelected = true });
+            foreach (var cat in categoryService.GetAll())
+                CategoryFilterCombo.Items.Add(new ComboBoxItem { Content = cat });
+            CategoryFilterCombo.SelectedIndex = 0;
         }
 
         private void StockIn_Click(object sender, RoutedEventArgs e)
@@ -221,7 +232,7 @@ namespace EZPos.UI.Pages
             var inStock = 0;
             var lowStock = 0;
             var outOfStock = 0;
-            var totalUnits = 0;
+            decimal totalUnits = 0;
 
             foreach (var item in stateStore.Products)
             {

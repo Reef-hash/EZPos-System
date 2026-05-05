@@ -42,18 +42,20 @@ namespace EZPos.UI.Pages
     {
         private readonly PosStateStore stateStore;
         private readonly ProductService productService;
+        private readonly CategoryService categoryService;
         private ICollectionView? productsView;
         private bool isInitialized;
 
         // Barcode scanner detection — same 150 ms threshold as SalesPage
         private DateTime _firstKeyTime = DateTime.MinValue;
 
-        public ProductsPage(PosStateStore stateStore, ProductService productService)
+        public ProductsPage(PosStateStore stateStore, ProductService productService, CategoryService categoryService)
         {
             InitializeComponent();
 
-            this.stateStore     = stateStore;
-            this.productService = productService;
+            this.stateStore      = stateStore;
+            this.productService  = productService;
+            this.categoryService = categoryService;
             // Independent view per page — never share the default view across pages
             productsView = new ListCollectionView(this.stateStore.Products);
             this.stateStore.PropertyChanged += StateStore_PropertyChanged;
@@ -172,7 +174,7 @@ namespace EZPos.UI.Pages
                 // New barcode — open Add Product dialog pre-filled
                 SearchBox.Text = string.Empty;
                 productsView?.Refresh();
-                var dialog = new ProductDialog(productService, input) { Owner = Window.GetWindow(this) };
+                var dialog = new ProductDialog(productService, categoryService, input) { Owner = Window.GetWindow(this) };
                 if (dialog.ShowDialog() == true)
                 {
                     productsView?.Refresh();
@@ -207,9 +209,17 @@ namespace EZPos.UI.Pages
             UpdateCounters();
         }
 
+        private void ManageCategories_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new CategoryManagementDialog(categoryService) { Owner = Window.GetWindow(this) };
+            dialog.ShowDialog();
+            // After managing categories, reload products view (category names may have changed)
+            productsView?.Refresh();
+        }
+
         private void AddProduct_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new ProductDialog(productService) { Owner = Window.GetWindow(this) };
+            var dialog = new ProductDialog(productService, categoryService) { Owner = Window.GetWindow(this) };
             if (dialog.ShowDialog() == true)
             {
                 productsView?.Refresh();
@@ -228,18 +238,21 @@ namespace EZPos.UI.Pages
             // Map ProductRecord → Product domain model for the dialog
             var domainProduct = new Product
             {
-                Id           = selected.Id,
-                Barcode      = selected.Barcode,
-                Name         = selected.Name,
-                Category     = selected.Category,
-                Price        = selected.Price,
-                Stock        = selected.Stock,
-                ReorderLevel = selected.ReorderLevel,
-                MaxStock     = selected.MaxStock,
-                LastUpdated  = selected.LastUpdated
+                Id              = selected.Id,
+                Barcode         = selected.Barcode,
+                Name            = selected.Name,
+                Category        = selected.Category,
+                Price           = selected.Price,
+                Stock           = selected.Stock,
+                ReorderLevel    = selected.ReorderLevel,
+                MaxStock        = selected.MaxStock,
+                LastUpdated     = selected.LastUpdated,
+                UnitType        = selected.UnitType,
+                ConversionRate  = selected.ConversionRate,
+                ParentProductId = selected.ParentProductId
             };
 
-            var dialog = new ProductDialog(productService, domainProduct) { Owner = Window.GetWindow(this) };
+            var dialog = new ProductDialog(productService, categoryService, domainProduct) { Owner = Window.GetWindow(this) };
             if (dialog.ShowDialog() == true)
             {
                 productsView?.Refresh();

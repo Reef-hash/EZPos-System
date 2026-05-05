@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using EZPos.Business.Services;
 using EZPos.DataAccess.Repositories;
@@ -15,11 +17,18 @@ namespace EZPos.UI.Dialogs
     public partial class ReceiptDialog : Window
     {
         private readonly SaleResult _result;
+        private readonly Dictionary<Key, Action> _shortcuts = new();
 
         public ReceiptDialog(SaleResult result)
         {
             InitializeComponent();
             _result = result;
+
+            PreviewKeyDown += ReceiptDialog_PreviewKeyDown;
+            Loaded += ReceiptDialog_Loaded;
+
+            RegisterShortcut("ReceiptHotkeyNewSale", "PageUp", TriggerNewSale);
+            RegisterShortcut("ReceiptHotkeyPrint", "PageDown", TriggerPrint);
 
             SaleIdText.Text        = $"Sale #{result.SaleId:D4}";
             DateTimeText.Text      = result.DateTime.ToString("dd MMM yyyy  hh:mm tt");
@@ -56,9 +65,40 @@ namespace EZPos.UI.Dialogs
             LineItemsControl.ItemsSource = lines;
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
+        private void ReceiptDialog_Loaded(object sender, RoutedEventArgs e)
+        {
+            NewSaleBtn.Focus();
+        }
+
+        private void RegisterShortcut(string configKey, string defaultKey, Action action)
+        {
+            var key = ConfigHelper.GetKey(configKey, defaultKey);
+            if (key != Key.None)
+                _shortcuts[key] = action;
+        }
+
+        private void ReceiptDialog_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!_shortcuts.TryGetValue(e.Key, out var action))
+                return;
+
+            action();
+            e.Handled = true;
+        }
+
+        private void TriggerNewSale()
         {
             DialogResult = true;
+        }
+
+        private void TriggerPrint()
+        {
+            Print_Click(this, new RoutedEventArgs());
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            TriggerNewSale();
         }
 
         private void Print_Click(object sender, RoutedEventArgs e)
@@ -136,7 +176,7 @@ namespace EZPos.UI.Dialogs
         private class ReceiptLine
         {
             public string ProductName { get; set; } = string.Empty;
-            public int Quantity { get; set; }
+            public decimal Quantity { get; set; }
             public decimal LineTotal { get; set; }
         }
     }

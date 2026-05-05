@@ -45,9 +45,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Today's Revenue -->
-                <Border Grid.Column="0" Background="{StaticResource CardBackgroundBrush}"
-                        Padding="20,16" CornerRadius="6" BorderThickness="1"
-                        BorderBrush="{StaticResource BorderBrush}" Margin="0,0,10,0">
+                <Border Grid.Column="0" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <fa:IconBlock Icon="DollarSign" FontSize="14"
@@ -61,9 +59,7 @@
                 </Border>
 
                 <!-- Today's Transactions -->
-                <Border Grid.Column="1" Background="{StaticResource CardBackgroundBrush}"
-                        Padding="20,16" CornerRadius="6" BorderThickness="1"
-                        BorderBrush="{StaticResource BorderBrush}" Margin="0,0,10,0">
+                <Border Grid.Column="1" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <fa:IconBlock Icon="Receipt" FontSize="14"
@@ -77,9 +73,7 @@
                 </Border>
 
                 <!-- Low Stock Count -->
-                <Border Grid.Column="2" Background="{StaticResource CardBackgroundBrush}"
-                        Padding="20,16" CornerRadius="6" BorderThickness="1"
-                        BorderBrush="{StaticResource BorderBrush}" Margin="0,0,10,0">
+                <Border Grid.Column="2" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <fa:IconBlock Icon="TriangleExclamation" FontSize="14"
@@ -93,9 +87,7 @@
                 </Border>
 
                 <!-- Avg Order Value -->
-                <Border Grid.Column="3" Background="{StaticResource CardBackgroundBrush}"
-                        Padding="20,16" CornerRadius="6" BorderThickness="1"
-                        BorderBrush="{StaticResource BorderBrush}">
+                <Border Grid.Column="3" Style="{StaticResource PosCardStyle}" Margin="0">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <fa:IconBlock Icon="ArrowTrendUp" FontSize="14"

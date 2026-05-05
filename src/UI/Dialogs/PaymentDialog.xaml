@@ -115,8 +115,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Content="Cancel" Padding="18,9" Margin="0,0,8,0" Click="CancelBtn_Click" />
-                <Button Grid.Column="1" x:Name="ConfirmBtn" Padding="20,9" Click="ConfirmBtn_Click" Style="{StaticResource PrimaryButtonStyle}" Foreground="{StaticResource SidebarBrush}" />
+                <Button Grid.Column="0" Content="Cancel" Padding="18,9" Margin="0,0,8,0" IsCancel="True" Click="CancelBtn_Click" />
+                <Button Grid.Column="1" x:Name="ConfirmBtn" Padding="20,9" IsDefault="True" Click="ConfirmBtn_Click" Style="{StaticResource PrimaryButtonStyle}" Foreground="{StaticResource SidebarBrush}" />
             </Grid>
         </Grid>
     </Border>
