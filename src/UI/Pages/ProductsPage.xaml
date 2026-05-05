@@ -39,7 +39,8 @@
                              Height="36"
                              Margin="0,0,8,8"
                              VerticalContentAlignment="Center"
-                             TextChanged="SearchBox_TextChanged" />
+                             TextChanged="SearchBox_TextChanged"
+                             KeyDown="SearchBox_KeyDown" />
 
                     <ComboBox x:Name="FilterCombo"
                               Width="150"

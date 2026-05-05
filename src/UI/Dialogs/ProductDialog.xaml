@@ -86,7 +86,7 @@
                 <!-- Category -->
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="Category" Style="{StaticResource FieldLabel}" />
-                    <ComboBox x:Name="CategoryCombo" Height="36" IsEditable="True"
+                    <ComboBox x:Name="CategoryCombo" Height="36"
                               Foreground="{StaticResource TextPrimaryBrush}"
                               Background="{StaticResource CardBackgroundBrush}"
                               BorderBrush="{StaticResource BorderBrush}">

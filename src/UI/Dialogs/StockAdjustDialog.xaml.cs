@@ -81,10 +81,14 @@ namespace EZPos.UI.Dialogs
             int qty    = int.Parse(QuantityBox.Text.Trim());
             int change = GetSignedChange(qty);
 
-            var reasonItem = ReasonCombo.SelectedItem as ComboBoxItem;
-            string reason  = reasonItem?.Content?.ToString()?.Trim()
-                             ?? ReasonCombo.Text?.Trim()
-                             ?? "ADJUSTMENT";
+            string reason = ReasonCombo.SelectedItem switch
+            {
+                ComboBoxItem item => item.Content?.ToString(),
+                string value => value,
+                _ => ReasonCombo.Text
+            };
+
+            reason = (reason ?? string.Empty).Trim();
 
             if (string.IsNullOrWhiteSpace(reason))
                 reason = "ADJUSTMENT";
@@ -129,10 +133,14 @@ namespace EZPos.UI.Dialogs
                 QuantityError.Visibility = Visibility.Collapsed;
             }
 
-            var reasonItem = ReasonCombo.SelectedItem as ComboBoxItem;
-            string reasonText = reasonItem?.Content?.ToString()?.Trim()
-                                ?? ReasonCombo.Text?.Trim()
-                                ?? string.Empty;
+            string reasonText = ReasonCombo.SelectedItem switch
+            {
+                ComboBoxItem item => item.Content?.ToString(),
+                string value => value,
+                _ => ReasonCombo.Text
+            };
+
+            reasonText = (reasonText ?? string.Empty).Trim();
 
             if (string.IsNullOrWhiteSpace(reasonText))
             {

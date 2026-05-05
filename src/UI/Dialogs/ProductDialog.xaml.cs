@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using EZPos.Business.Services;
 using EZPos.Models.Domain;
 
@@ -29,6 +30,24 @@ namespace EZPos.UI.Dialogs
 
             TitleText.Text = "Add Product";
             CategoryCombo.SelectedIndex = 0;
+        }
+
+        // ── Constructor: Scan mode (new product with barcode pre-filled) ──────
+        public ProductDialog(ProductService productService, string scannedBarcode)
+        {
+            InitializeComponent();
+            _productService = productService;
+            _editingProduct = null;
+
+            TitleText.Text  = "Register New Product";
+            SaveText.Text   = "Register Product";
+
+            BarcodeBox.Text        = scannedBarcode;
+            BarcodeBox.IsReadOnly  = true; // barcode came from scanner — lock it
+            CategoryCombo.SelectedIndex = 0;
+
+            // Focus name field so user can type immediately after scan
+            Loaded += (_, _) => NameBox.Focus();
         }
 
         // ── Constructor: Edit mode ─────────────────────────────────────────────
@@ -70,9 +89,14 @@ namespace EZPos.UI.Dialogs
             var price    = decimal.Parse(PriceBox.Text.Trim());
             var stock    = int.Parse(StockBox.Text.Trim());
             var reorder  = int.Parse(ReorderBox.Text.Trim());
-            var category = (CategoryCombo.SelectedItem is System.Windows.Controls.ComboBoxItem item
-                ? item.Content?.ToString()
-                : CategoryCombo.Text?.Trim()) ?? "General";
+            var category = CategoryCombo.SelectedItem switch
+            {
+                ComboBoxItem item => item.Content?.ToString(),
+                string value => value,
+                _ => CategoryCombo.Text?.Trim()
+            };
+
+            category = (category ?? string.Empty).Trim();
 
             if (string.IsNullOrWhiteSpace(category))
                 category = "General";

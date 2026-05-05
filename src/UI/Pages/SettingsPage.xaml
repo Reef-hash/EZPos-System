@@ -1,0 +1,184 @@
+<UserControl x:Class="EZPos.UI.Pages.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+             Background="{StaticResource ContentBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,0,24,24">
+
+            <!-- ── Page header ── -->
+            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Settings" FontSize="22" FontWeight="Bold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Configure store information, printer, and system preferences."
+                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            x:Name="SaveButton"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Padding="20,8" Height="40"
+                            Click="SaveButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconBlock Icon="Save" Foreground="{StaticResource SidebarBrush}" Margin="0,0,8,0" />
+                            <TextBlock Text="Save Changes" Foreground="{StaticResource SidebarBrush}" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- ── Store Information ── -->
+            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <fa:IconBlock Icon="Store" FontSize="16"
+                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Store Information" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" MaxWidth="420" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Store Name -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Store Name"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1"
+                                 x:Name="StoreNameBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+
+                        <!-- Receipt Footer -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Receipt Footer Message"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="2" Grid.Column="1"
+                                 x:Name="ReceiptFooterBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ── Printer ── -->
+            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <fa:IconBlock Icon="Print" FontSize="16"
+                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Receipt Printer" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" MaxWidth="420" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Printer Name"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1"
+                                 x:Name="PrinterNameBox"
+                                 Height="36" VerticalContentAlignment="Center"
+                                 Margin="0,0,8,0" />
+                        <Button Grid.Column="2"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Height="36" Padding="12,0"
+                                Click="DetectPrinters_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:IconBlock Icon="Search" Margin="0,0,6,0" />
+                                <TextBlock Text="Detect" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <TextBlock x:Name="PrinterHintText"
+                               Text="Leave blank to disable receipt printing."
+                               Foreground="{StaticResource TextMutedBrush}"
+                               FontSize="11" Margin="220,6,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- ── Sales & Tax ── -->
+            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <fa:IconBlock Icon="Percent" FontSize="16"
+                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Sales &amp; Tax" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" MaxWidth="200" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Tax Rate -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Tax Rate (%)"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1"
+                                 x:Name="TaxRateBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+
+                        <!-- Currency Symbol -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Currency Symbol"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="2" Grid.Column="1"
+                                 x:Name="CurrencyBox"
+                                 Height="36" VerticalContentAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11"
+                               Margin="220,6,0,0"
+                               Text="Tax rate change takes effect on the next sale." />
+                </StackPanel>
+            </Border>
+
+            <!-- ── About ── -->
+            <Border Style="{StaticResource PosCardStyle}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <fa:IconBlock Icon="InfoCircle" FontSize="16"
+                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                        <TextBlock Text="About" FontSize="15" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="13">
+                        <Run Text="EZPos Point of Sale System" FontWeight="SemiBold" />
+                        <LineBreak />
+                        <Run Text="Version 1.0  •  Built with .NET 6 + WPF" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

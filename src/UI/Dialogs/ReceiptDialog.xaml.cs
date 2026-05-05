@@ -1,5 +1,8 @@
+using System;
 using System.Windows;
 using EZPos.Business.Services;
+using EZPos.DataAccess.Repositories;
+using EZPos.Utilities.Helpers;
 
 namespace EZPos.UI.Dialogs
 {
@@ -9,9 +12,12 @@ namespace EZPos.UI.Dialogs
     /// </summary>
     public partial class ReceiptDialog : Window
     {
+        private readonly SaleResult _result;
+
         public ReceiptDialog(SaleResult result)
         {
             InitializeComponent();
+            _result = result;
 
             SaleIdText.Text       = $"Sale #{result.SaleId:D4}";
             DateTimeText.Text     = result.DateTime.ToString("dd MMM yyyy  hh:mm tt");
@@ -39,6 +45,30 @@ namespace EZPos.UI.Dialogs
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
+        }
+
+        private void Print_Click(object sender, RoutedEventArgs e)
+        {
+            var printerName = ConfigHelper.Get("PrinterName");
+            if (string.IsNullOrWhiteSpace(printerName))
+            {
+                MessageBox.Show(
+                    "No printer configured.\n\nSet 'PrinterName' in Config\\config.ini to the exact Windows printer name.",
+                    "Printer Not Configured", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var storeName = ConfigHelper.Get("StoreName", "EZPos");
+                var bytes     = EscPosDocument.Build(_result, storeName);
+                RawPrinterHelper.SendBytes(printerName, bytes);
+                MessageBox.Show("Receipt sent to printer.", "Print", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Print failed:\n{ex.Message}", "Print Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private class ReceiptLine

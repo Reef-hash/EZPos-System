@@ -57,3 +57,11 @@ D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\EZPos_Content.g.cs
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Pages\DashboardPage.baml
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Pages\DashboardPage.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\ClosedXML.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\DocumentFormat.OpenXml.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\ExcelNumberFormat.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\Irony.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\SixLabors.Fonts.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\XLParser.dll
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Pages\SettingsPage.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Pages\SettingsPage.g.cs

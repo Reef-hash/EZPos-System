@@ -1,9 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ClosedXML.Excel;
 using EZPos.Business.Services;
+using Microsoft.Win32;
 
 namespace EZPos.UI.Pages
 {
@@ -180,8 +184,390 @@ namespace EZPos.UI.Pages
 
         private void ExportButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Export to PDF will be available in Phase 4.",
-                "Coming Soon", MessageBoxButton.OK, MessageBoxImage.Information);
+            var (from, to) = GetSelectedDateRange();
+
+            var dialog = new SaveFileDialog
+            {
+                Title      = "Export Report",
+                Filter     = "Excel Workbook (*.xlsx)|*.xlsx",
+                FileName   = $"EZPos_Report_{from:yyyyMMdd}_{to:yyyyMMdd}.xlsx",
+                DefaultExt = ".xlsx"
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            try
+            {
+                ExportToExcel(dialog.FileName, from, to);
+                var result = MessageBox.Show(
+                    $"Report exported successfully.\n\nOpen the file now?",
+                    "Export Complete", MessageBoxButton.YesNo, MessageBoxImage.Information);
+
+                if (result == MessageBoxResult.Yes)
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dialog.FileName) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Export failed:\n{ex.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExportToExcel(string filePath, DateTime from, DateTime to)
+        {
+            using var workbook = new XLWorkbook();
+
+            // ── Palette (readable light theme) ────────────────────────────
+            var hdrFill    = XLColor.FromHtml("#1E293B");   // dark navy   — header bg
+            var hdrFont    = XLColor.FromHtml("#FFFFFF");   // white       — header text
+            var hdrAccent  = XLColor.FromHtml("#00D9FF");   // cyan        — accent header text (title)
+            var altFill    = XLColor.FromHtml("#F1F5F9");   // light gray  — alternate data row
+            var whiteFill  = XLColor.White;
+            var totalFill  = XLColor.FromHtml("#E2E8F0");   // soft gray   — total row
+            var bodyFont   = XLColor.FromHtml("#1E293B");   // dark        — body text
+            var borderClr  = XLColor.FromHtml("#CBD5E1");   // subtle      — border
+            var okColor    = XLColor.FromHtml("#166534");   // green text  — OK status
+            var lowColor   = XLColor.FromHtml("#92400E");   // amber text  — Low Stock
+            var outColor   = XLColor.FromHtml("#991B1B");   // red text    — Out of Stock
+            var okFill     = XLColor.FromHtml("#DCFCE7");
+            var lowFill    = XLColor.FromHtml("#FEF3C7");
+            var outFill    = XLColor.FromHtml("#FEE2E2");
+
+            var storeName = EZPos.DataAccess.Repositories.ConfigHelper.Get("StoreName", "EZPos");
+
+            // ─────────────────────────────────────────────────────────────
+            // Sheet 1 — Summary
+            // ─────────────────────────────────────────────────────────────
+            var ws1 = SetupSheet(workbook, "Summary");
+
+            // Title banner (merged A1:E3)
+            ws1.Range("A1:E1").Merge().Value = $"{storeName} — Sales Report";
+            ws1.Cell("A1").Style.Font.Bold = true;
+            ws1.Cell("A1").Style.Font.FontSize = 16;
+            ws1.Cell("A1").Style.Font.FontColor = hdrAccent;
+            ws1.Cell("A1").Style.Fill.BackgroundColor = hdrFill;
+            ws1.Cell("A1").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            ws1.Row(1).Height = 26;
+
+            ws1.Range("A2:E2").Merge().Value = $"Period: {from:dd MMM yyyy} – {to:dd MMM yyyy}";
+            ws1.Cell("A2").Style.Font.Italic = true;
+            ws1.Cell("A2").Style.Font.FontColor = hdrFont;
+            ws1.Cell("A2").Style.Fill.BackgroundColor = hdrFill;
+
+            ws1.Range("A3:E3").Merge().Value = $"Generated: {DateTime.Now:dd MMM yyyy  hh:mm tt}";
+            ws1.Cell("A3").Style.Font.Italic = true;
+            ws1.Cell("A3").Style.Font.FontColor = XLColor.FromHtml("#94A3B8");
+            ws1.Cell("A3").Style.Fill.BackgroundColor = hdrFill;
+
+            // KPI section label
+            int r = 5;
+            ws1.Cell(r, 1).Value = "KEY PERFORMANCE INDICATORS";
+            ws1.Cell(r, 1).Style.Font.Bold = true;
+            ws1.Cell(r, 1).Style.Font.FontColor = hdrFill;
+            ws1.Cell(r, 1).Style.Font.FontSize = 10;
+            r++;
+
+            WriteHeaderRow(ws1, r, hdrFill, hdrFont, borderClr, "Metric", "Value");
+            r++;
+
+            var summary = _reportService.GetSummary(from, to);
+            var kpis = new[]
+            {
+                ("Total Revenue",    $"RM {summary.TotalRevenue:N2}"),
+                ("Total Orders",     summary.TotalOrders.ToString("N0")),
+                ("Average Order",    $"RM {summary.AverageOrder:N2}"),
+                ("Total Items Sold", summary.TotalItemsSold.ToString("N0")),
+            };
+
+            foreach (var (i, (metric, value)) in kpis.Select((k, i) => (i, k)))
+            {
+                var fill = i % 2 == 0 ? whiteFill : altFill;
+                ws1.Cell(r, 1).Value = metric;
+                ws1.Cell(r, 1).Style.Font.FontColor = bodyFont;
+                ws1.Cell(r, 2).Value = value;
+                ws1.Cell(r, 2).Style.Font.Bold = true;
+                ws1.Cell(r, 2).Style.Font.FontColor = bodyFont;
+                ApplyDataRowStyle(ws1.Range(r, 1, r, 2), fill, borderClr);
+                r++;
+            }
+
+            // Payment breakdown sub-table
+            r++;
+            ws1.Cell(r, 1).Value = "PAYMENT METHOD BREAKDOWN";
+            ws1.Cell(r, 1).Style.Font.Bold = true;
+            ws1.Cell(r, 1).Style.Font.FontColor = hdrFill;
+            ws1.Cell(r, 1).Style.Font.FontSize = 10;
+            r++;
+
+            WriteHeaderRow(ws1, r, hdrFill, hdrFont, borderClr, "Payment Method", "Orders", "Revenue (RM)", "% of Revenue");
+            r++;
+
+            var payments = _reportService.GetPaymentBreakdown(from, to);
+            foreach (var (i, p) in payments.Select((p, i) => (i, p)))
+            {
+                var fill = i % 2 == 0 ? whiteFill : altFill;
+                decimal pct = summary.TotalRevenue > 0 ? p.Revenue / summary.TotalRevenue * 100 : 0;
+                ws1.Cell(r, 1).Value = p.Method;
+                ws1.Cell(r, 2).Value = p.Orders;
+                ws1.Cell(r, 3).Value = (double)p.Revenue;
+                ws1.Cell(r, 3).Style.NumberFormat.Format = "#,##0.00";
+                ws1.Cell(r, 4).Value = $"{pct:F1}%";
+                SetRowFontColor(ws1.Range(r, 1, r, 4), bodyFont);
+                ApplyDataRowStyle(ws1.Range(r, 1, r, 4), fill, borderClr);
+                r++;
+            }
+
+            // Total row for payment
+            if (payments.Count > 0)
+            {
+                ws1.Cell(r, 1).Value = "TOTAL";
+                ws1.Cell(r, 1).Style.Font.Bold = true;
+                ws1.Cell(r, 2).Value = payments.Sum(p => p.Orders);
+                ws1.Cell(r, 2).Style.Font.Bold = true;
+                ws1.Cell(r, 3).Value = (double)payments.Sum(p => p.Revenue);
+                ws1.Cell(r, 3).Style.NumberFormat.Format = "#,##0.00";
+                ws1.Cell(r, 3).Style.Font.Bold = true;
+                ws1.Cell(r, 4).Value = "100.0%";
+                ws1.Cell(r, 4).Style.Font.Bold = true;
+                ws1.Range(r, 1, r, 4).Style.Fill.BackgroundColor = totalFill;
+                SetRowFontColor(ws1.Range(r, 1, r, 4), bodyFont);
+                ApplyBorder(ws1.Range(r, 1, r, 4), borderClr);
+            }
+
+            ws1.Column(1).Width = 26;
+            ws1.Column(2).Width = 14;
+            ws1.Column(3).Width = 18;
+            ws1.Column(4).Width = 16;
+            ws1.SheetView.FreezeRows(1);
+
+            // ─────────────────────────────────────────────────────────────
+            // Sheet 2 — Transactions
+            // ─────────────────────────────────────────────────────────────
+            var ws2 = SetupSheet(workbook, "Transactions");
+            r = 1;
+            WriteHeaderRow(ws2, r, hdrFill, hdrFont, borderClr, "Sale #", "Date", "Time", "Payment", "Items", "Total (RM)", "Items Detail");
+            r++;
+
+            var transactions = _reportService.GetTransactions(from, to);
+            foreach (var (i, t) in transactions.Select((t, i) => (i, t)))
+            {
+                var fill = i % 2 == 0 ? whiteFill : altFill;
+                ws2.Cell(r, 1).Value = t.SaleId;
+                ws2.Cell(r, 2).Value = t.DateTime.ToString("dd MMM yyyy");
+                ws2.Cell(r, 3).Value = t.DateTime.ToString("hh:mm tt");
+                ws2.Cell(r, 4).Value = t.PaymentMethod;
+                ws2.Cell(r, 5).Value = t.ItemCount;
+                ws2.Cell(r, 6).Value = (double)t.TotalAmount;
+                ws2.Cell(r, 6).Style.NumberFormat.Format = "#,##0.00";
+                ws2.Cell(r, 7).Value = t.ItemsSummary;
+                SetRowFontColor(ws2.Range(r, 1, r, 7), bodyFont);
+                ApplyDataRowStyle(ws2.Range(r, 1, r, 7), fill, borderClr);
+                r++;
+            }
+
+            // Grand total row
+            if (transactions.Count > 0)
+            {
+                ws2.Cell(r, 1).Value = "GRAND TOTAL";
+                ws2.Cell(r, 1).Style.Font.Bold = true;
+                ws2.Cell(r, 5).Value = transactions.Sum(t => t.ItemCount);
+                ws2.Cell(r, 5).Style.Font.Bold = true;
+                ws2.Cell(r, 6).Value = (double)transactions.Sum(t => t.TotalAmount);
+                ws2.Cell(r, 6).Style.NumberFormat.Format = "#,##0.00";
+                ws2.Cell(r, 6).Style.Font.Bold = true;
+                ws2.Range(r, 1, r, 7).Style.Fill.BackgroundColor = totalFill;
+                SetRowFontColor(ws2.Range(r, 1, r, 7), bodyFont);
+                ApplyBorder(ws2.Range(r, 1, r, 7), borderClr);
+            }
+
+            ws2.Column(1).Width = 10;
+            ws2.Column(2).Width = 16;
+            ws2.Column(3).Width = 12;
+            ws2.Column(4).Width = 12;
+            ws2.Column(5).Width = 8;
+            ws2.Column(6).Width = 14;
+            ws2.Column(7).Width = 50;
+            ws2.SheetView.FreezeRows(1);
+
+            // ─────────────────────────────────────────────────────────────
+            // Sheet 3 — Daily Breakdown
+            // ─────────────────────────────────────────────────────────────
+            var ws3 = SetupSheet(workbook, "Daily Breakdown");
+            r = 1;
+            WriteHeaderRow(ws3, r, hdrFill, hdrFont, borderClr, "Date", "Revenue (RM)");
+            r++;
+
+            var daily = _reportService.GetDailyBreakdown(from, to);
+            foreach (var (i, d) in daily.Select((d, i) => (i, d)))
+            {
+                var fill = i % 2 == 0 ? whiteFill : altFill;
+                ws3.Cell(r, 1).Value = d.Label;
+                ws3.Cell(r, 1).Style.Font.FontColor = bodyFont;
+                ws3.Cell(r, 2).Value = (double)d.Revenue;
+                ws3.Cell(r, 2).Style.NumberFormat.Format = "#,##0.00";
+                ws3.Cell(r, 2).Style.Font.FontColor = bodyFont;
+                ApplyDataRowStyle(ws3.Range(r, 1, r, 2), fill, borderClr);
+                r++;
+            }
+
+            if (daily.Count > 0)
+            {
+                ws3.Cell(r, 1).Value = "TOTAL";
+                ws3.Cell(r, 1).Style.Font.Bold = true;
+                ws3.Cell(r, 1).Style.Font.FontColor = bodyFont;
+                ws3.Cell(r, 2).FormulaA1 = $"=SUM(B2:B{r - 1})";
+                ws3.Cell(r, 2).Style.Font.Bold = true;
+                ws3.Cell(r, 2).Style.Font.FontColor = bodyFont;
+                ws3.Cell(r, 2).Style.NumberFormat.Format = "#,##0.00";
+                ws3.Range(r, 1, r, 2).Style.Fill.BackgroundColor = totalFill;
+                ApplyBorder(ws3.Range(r, 1, r, 2), borderClr);
+            }
+
+            ws3.Column(1).Width = 20;
+            ws3.Column(2).Width = 18;
+            ws3.SheetView.FreezeRows(1);
+
+            // ─────────────────────────────────────────────────────────────
+            // Sheet 4 — Top Products
+            // ─────────────────────────────────────────────────────────────
+            var ws4 = SetupSheet(workbook, "Top Products");
+            r = 1;
+            WriteHeaderRow(ws4, r, hdrFill, hdrFont, borderClr, "Rank", "Product Name", "Qty Sold", "Revenue (RM)");
+            r++;
+
+            var top = _reportService.GetTopProducts(from, to, 20);
+            foreach (var (i, p) in top.Select((p, i) => (i, p)))
+            {
+                var fill = i % 2 == 0 ? whiteFill : altFill;
+                ws4.Cell(r, 1).Value = p.Rank;
+                ws4.Cell(r, 2).Value = p.Name;
+                ws4.Cell(r, 3).Value = p.Quantity;
+                ws4.Cell(r, 4).Value = (double)p.Revenue;
+                ws4.Cell(r, 4).Style.NumberFormat.Format = "#,##0.00";
+                SetRowFontColor(ws4.Range(r, 1, r, 4), bodyFont);
+                ApplyDataRowStyle(ws4.Range(r, 1, r, 4), fill, borderClr);
+                r++;
+            }
+
+            ws4.Column(1).Width = 8;
+            ws4.Column(2).Width = 32;
+            ws4.Column(3).Width = 12;
+            ws4.Column(4).Width = 18;
+            ws4.SheetView.FreezeRows(1);
+
+            // ─────────────────────────────────────────────────────────────
+            // Sheet 5 — Hourly Breakdown
+            // ─────────────────────────────────────────────────────────────
+            var ws5 = SetupSheet(workbook, "Hourly Breakdown");
+            r = 1;
+            WriteHeaderRow(ws5, r, hdrFill, hdrFont, borderClr, "Time Slot", "Orders", "Sales (RM)");
+            r++;
+
+            var hourly = _reportService.GetHourlyBreakdown(from);
+            foreach (var (i, h) in hourly.Select((h, i) => (i, h)))
+            {
+                var fill = i % 2 == 0 ? whiteFill : altFill;
+                ws5.Cell(r, 1).Value = h.TimeSlot;
+                ws5.Cell(r, 2).Value = h.Orders;
+                ws5.Cell(r, 3).Value = (double)h.Sales;
+                ws5.Cell(r, 3).Style.NumberFormat.Format = "#,##0.00";
+                SetRowFontColor(ws5.Range(r, 1, r, 3), bodyFont);
+                ApplyDataRowStyle(ws5.Range(r, 1, r, 3), fill, borderClr);
+                r++;
+            }
+
+            ws5.Column(1).Width = 18;
+            ws5.Column(2).Width = 12;
+            ws5.Column(3).Width = 16;
+            ws5.SheetView.FreezeRows(1);
+
+            // ─────────────────────────────────────────────────────────────
+            // Sheet 6 — Stock Snapshot
+            // ─────────────────────────────────────────────────────────────
+            var ws6 = SetupSheet(workbook, "Stock Snapshot");
+            r = 1;
+            WriteHeaderRow(ws6, r, hdrFill, hdrFont, borderClr, "Barcode", "Product Name", "Category", "Price (RM)", "Current Stock", "Reorder Level", "Status");
+            r++;
+
+            var stock = _reportService.GetStockSnapshot();
+            foreach (var (i, s) in stock.Select((s, i) => (i, s)))
+            {
+                var rowFill = s.Status == "Out of Stock" ? outFill
+                            : s.Status == "Low Stock"    ? lowFill
+                            : i % 2 == 0                 ? whiteFill : altFill;
+                var statusColor = s.Status == "Out of Stock" ? outColor
+                                : s.Status == "Low Stock"    ? lowColor
+                                : okColor;
+
+                ws6.Cell(r, 1).Value = s.Barcode;
+                ws6.Cell(r, 2).Value = s.Name;
+                ws6.Cell(r, 3).Value = s.Category;
+                ws6.Cell(r, 4).Value = (double)s.Price;
+                ws6.Cell(r, 4).Style.NumberFormat.Format = "#,##0.00";
+                ws6.Cell(r, 5).Value = s.Stock;
+                ws6.Cell(r, 6).Value = s.ReorderLevel;
+                ws6.Cell(r, 7).Value = s.Status;
+                ws6.Cell(r, 7).Style.Font.Bold = true;
+                ws6.Cell(r, 7).Style.Font.FontColor = statusColor;
+
+                SetRowFontColor(ws6.Range(r, 1, r, 6), bodyFont);
+                ApplyDataRowStyle(ws6.Range(r, 1, r, 7), rowFill, borderClr);
+                r++;
+            }
+
+            ws6.Column(1).Width = 18;
+            ws6.Column(2).Width = 30;
+            ws6.Column(3).Width = 16;
+            ws6.Column(4).Width = 14;
+            ws6.Column(5).Width = 16;
+            ws6.Column(6).Width = 16;
+            ws6.Column(7).Width = 14;
+            ws6.SheetView.FreezeRows(1);
+
+            workbook.SaveAs(filePath);
+        }
+
+        private static IXLWorksheet SetupSheet(XLWorkbook wb, string name)
+        {
+            var ws = wb.Worksheets.Add(name);
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+            return ws;
+        }
+
+        private static void WriteHeaderRow(IXLWorksheet ws, int row, XLColor fill, XLColor font, XLColor border, params string[] headers)
+        {
+            for (int col = 1; col <= headers.Length; col++)
+            {
+                var cell = ws.Cell(row, col);
+                cell.Value = headers[col - 1];
+                cell.Style.Font.Bold            = true;
+                cell.Style.Font.FontColor       = font;
+                cell.Style.Fill.BackgroundColor = fill;
+                cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                cell.Style.Border.OutsideBorderColor = border;
+            }
+            ws.Row(row).Height = 20;
+        }
+
+        private static void ApplyDataRowStyle(IXLRange range, XLColor fill, XLColor border)
+        {
+            range.Style.Fill.BackgroundColor = fill;
+            ApplyBorder(range, border);
+        }
+
+        private static void SetRowFontColor(IXLRange range, XLColor color)
+        {
+            range.Style.Font.FontColor = color;
+        }
+
+        private static void ApplyBorder(IXLRange range, XLColor border)
+        {
+            range.Style.Border.OutsideBorder     = XLBorderStyleValues.Thin;
+            range.Style.Border.OutsideBorderColor = border;
+            range.Style.Border.InsideBorder      = XLBorderStyleValues.Thin;
+            range.Style.Border.InsideBorderColor  = border;
         }
 
         private void RefreshData()

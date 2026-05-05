@@ -3,7 +3,30 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
              xmlns:local="clr-namespace:EZPos.UI.Pages"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
              Background="{StaticResource ContentBrush}">
+
+    <UserControl.Resources>
+        <Style x:Key="ReportDatePickerStyle" TargetType="DatePicker">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Width" Value="128" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{StaticResource SidebarBrush}" />
+            <Setter Property="Background" Value="#FFF8FAFC" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="SelectedDateFormat" Value="Short" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+
+        <Style TargetType="DatePickerTextBox">
+            <Setter Property="Foreground" Value="{StaticResource SidebarBrush}" />
+            <Setter Property="Background" Value="#FFF8FAFC" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6,2" />
+        </Style>
+    </UserControl.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -52,7 +75,8 @@
                              BorderThickness="1"
                              Padding="10,6"
                              FontSize="11"
-                             SelectionChanged="PeriodCombo_SelectionChanged">
+                                SelectionChanged="PeriodCombo_SelectionChanged"
+                                Margin="0,0,10,0">
                         <ComboBoxItem IsSelected="True">Today</ComboBoxItem>
                         <ComboBoxItem>Yesterday</ComboBoxItem>
                         <ComboBoxItem>This Week</ComboBoxItem>
@@ -63,21 +87,26 @@
                         <ComboBoxItem>Custom</ComboBoxItem>
                     </ComboBox>
 
-                    <TextBlock Text="From:" Foreground="{StaticResource TextSecondaryBrush}" 
-                              FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                    <DatePicker x:Name="StartDatePicker" Width="110" Height="32" 
+                    <TextBlock Text="From" Foreground="{StaticResource TextSecondaryBrush}" 
+                              FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <DatePicker x:Name="StartDatePicker"
+                               Style="{StaticResource ReportDatePickerStyle}"
                                SelectedDate="{x:Static system:DateTime.Today}"
-                               xmlns:system="clr-namespace:System;assembly=mscorlib"/>
+                               Margin="0,0,10,0"/>
 
-                    <TextBlock Text="To:" Foreground="{StaticResource TextSecondaryBrush}" 
-                              FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"/>
-                    <DatePicker x:Name="EndDatePicker" Width="110" Height="32" 
+                    <TextBlock Text="To" Foreground="{StaticResource TextSecondaryBrush}" 
+                              FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <DatePicker x:Name="EndDatePicker"
+                               Style="{StaticResource ReportDatePickerStyle}"
                                SelectedDate="{x:Static system:DateTime.Today}"
-                               xmlns:system="clr-namespace:System;assembly=mscorlib"/>
+                               Margin="0,0,10,0"/>
 
                     <Button Style="{StaticResource SecondaryButtonStyle}"
+                           Height="32"
+                           MinWidth="84"
                            Padding="12,6"
                            FontSize="12"
+                           Margin="0,0,6,0"
                            Click="FilterButton_Click">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <fa:IconBlock Icon="MagnifyingGlass" Margin="0,0,6,0" FontSize="12"/>
@@ -86,10 +115,12 @@
                     </Button>
                     
                     <Button Style="{StaticResource SecondaryButtonStyle}"
+                           Height="32"
+                           MinWidth="76"
                            Padding="12,6"
                            FontSize="11"
                            Click="ExportButton_Click"
-                           Margin="4,0,0,0">
+                           Margin="0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBlock Text="Export" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -122,8 +153,7 @@
                                   FontSize="12" Margin="0,0,0,8"/>
                         <TextBlock x:Name="TotalSalesValue" Text="RM 12,450.00" Foreground="{StaticResource PrimaryBrush}" 
                                   FontSize="20" FontWeight="Bold"/>
-                        <TextBlock Text="â†‘ 15% from yesterday" Foreground="{StaticResource SuccessBrush}" 
-                                  FontSize="10" Margin="0,6,0,0"/>
+
                     </StackPanel>
                 </Border>
 
@@ -132,12 +162,13 @@
                        Padding="20,16" CornerRadius="6" BorderThickness="1" 
                        BorderBrush="{StaticResource BorderBrush}" Margin="0,0,8,0">
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Text="ðŸ›’ Total Orders" Foreground="{StaticResource TextSecondaryBrush}" 
-                                  FontSize="12" Margin="0,0,0,8"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <fa:IconBlock Icon="Receipt" FontSize="12" Foreground="{StaticResource InfoBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Total Orders" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <TextBlock x:Name="TotalOrdersValue" Text="145" Foreground="{StaticResource InfoBrush}" 
                                   FontSize="20" FontWeight="Bold"/>
-                        <TextBlock Text="â†‘ 8% from yesterday" Foreground="{StaticResource SuccessBrush}" 
-                                  FontSize="10" Margin="0,6,0,0"/>
+
                     </StackPanel>
                 </Border>
 
@@ -153,8 +184,7 @@
                                   FontSize="12" Margin="0,0,0,8"/>
                         <TextBlock x:Name="AvgOrderValue" Text="RM 85.86" Foreground="{StaticResource WarningBrush}" 
                                   FontSize="20" FontWeight="Bold"/>
-                        <TextBlock Text="â†‘ 6% from yesterday" Foreground="{StaticResource SuccessBrush}" 
-                                  FontSize="10" Margin="0,6,0,0"/>
+
                     </StackPanel>
                 </Border>
 
@@ -170,8 +200,7 @@
                                   FontSize="12" Margin="0,0,0,8"/>
                         <TextBlock x:Name="TransactionsValue" Text="287" Foreground="{StaticResource SuccessBrush}" 
                                   FontSize="20" FontWeight="Bold"/>
-                        <TextBlock Text="â†‘ 12% from yesterday" Foreground="{StaticResource SuccessBrush}" 
-                                  FontSize="10" Margin="0,6,0,0"/>
+
                     </StackPanel>
                 </Border>
             </Grid>
@@ -230,8 +259,10 @@
                        Padding="16" CornerRadius="6" BorderThickness="1" 
                        BorderBrush="{StaticResource BorderBrush}">
                     <StackPanel Orientation="Vertical">
-                        <TextBlock Text="ðŸ’³ Payment Methods" Foreground="{StaticResource TextPrimaryBrush}" 
-                                  FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <fa:IconBlock Icon="CreditCard" FontSize="13" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Payment Methods" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
                         
                         <!-- Cash -->
                         <StackPanel Orientation="Vertical" Margin="0,0,0,12">
@@ -313,8 +344,10 @@
 
                 <!-- Top Selling Products -->
                 <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0,0,16,0">
-                    <TextBlock Text="ðŸ† Top Selling Products" Foreground="{StaticResource TextPrimaryBrush}" 
-                              FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <fa:IconBlock Icon="Trophy" FontSize="13" Foreground="{StaticResource WarningBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Top Selling Products" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
                     
                     <DataGrid x:Name="TopProductsGrid" 
                              AutoGenerateColumns="False"
@@ -332,8 +365,10 @@
 
                 <!-- Hourly Summary -->
                 <StackPanel Grid.Column="1" Orientation="Vertical">
-                    <TextBlock Text="â° Peak Hours" Foreground="{StaticResource TextPrimaryBrush}" 
-                              FontSize="13" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <fa:IconBlock Icon="Clock" FontSize="13" Foreground="{StaticResource InfoBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Peak Hours" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
                     
                     <DataGrid x:Name="PeakHoursGrid" 
                              AutoGenerateColumns="False"

@@ -42,6 +42,7 @@ namespace EZPos.UI
             navigationService.Register("Products",  () => new UI.Pages.ProductsPage(stateStore, productService));
             navigationService.Register("Stock",     () => new UI.Pages.StockPage(stateStore, stockService));
             navigationService.Register("Reports",   () => new UI.Pages.ReportsPage());
+            navigationService.Register("Settings",  () => new UI.Pages.SettingsPage());
         }
 
         private void NavButton_Click(object sender, RoutedEventArgs e)
@@ -96,6 +97,7 @@ namespace EZPos.UI
             ApplyNavState(ProductsNavBtn,   pageName == "Products",  activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(StockNavBtn,      pageName == "Stock",     activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(ReportsNavBtn,    pageName == "Reports",   activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(SettingsNavBtn,   pageName == "Settings",  activeBackground, inactiveBackground, activeForeground, inactiveForeground);
         }
 
         private static void ApplyNavState(Button button, bool isActive, Brush? activeBackground, Brush inactiveBackground, Brush? activeForeground, Brush? inactiveForeground)
@@ -111,7 +113,7 @@ namespace EZPos.UI
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Settings coming soon!", "Settings", MessageBoxButton.OK, MessageBoxImage.Information);
+            NavigateToPage("Settings");
         }
 
         private void AboutButton_Click(object sender, RoutedEventArgs e)

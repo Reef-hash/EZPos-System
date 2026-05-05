@@ -125,9 +125,20 @@
         </Border>
 
         <!-- ── Close ── -->
-        <Button Grid.Row="6"
-                Style="{StaticResource PrimaryButtonStyle}"
-                Content="New Sale" Height="40"
-                Click="Close_Click" />
+        <Grid Grid.Row="6" Margin="0,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Content="Print Receipt" Height="40"
+                    Click="Print_Click" />
+            <Button Grid.Column="2"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Content="New Sale" Height="40"
+                    Click="Close_Click" />
+        </Grid>
     </Grid>
 </Window>

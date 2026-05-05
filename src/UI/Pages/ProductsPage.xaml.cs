@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 using EZPos.Business.Services;
 using EZPos.Models.Domain;
@@ -43,6 +44,9 @@ namespace EZPos.UI.Pages
         private readonly ProductService productService;
         private ICollectionView? productsView;
         private bool isInitialized;
+
+        // Barcode scanner detection — same 150 ms threshold as SalesPage
+        private DateTime _firstKeyTime = DateTime.MinValue;
 
         public ProductsPage(PosStateStore stateStore, ProductService productService)
         {
@@ -117,8 +121,66 @@ namespace EZPos.UI.Pages
                 return;
             }
 
+            if (_firstKeyTime == DateTime.MinValue)
+                _firstKeyTime = DateTime.Now;
+
             productsView.Refresh();
             UpdateCounters();
+        }
+
+        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter || !isInitialized)
+                return;
+
+            var input = SearchBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(input))
+                return;
+
+            bool isScan = _firstKeyTime != DateTime.MinValue
+                          && (DateTime.Now - _firstKeyTime).TotalMilliseconds < 150;
+            _firstKeyTime = DateTime.MinValue;
+
+            if (!isScan)
+            {
+                // Manual Enter — just refresh filter
+                productsView?.Refresh();
+                e.Handled = true;
+                return;
+            }
+
+            // Scanner path — look up by exact barcode
+            var existing = System.Linq.Enumerable.FirstOrDefault(
+                stateStore.Products, p => string.Equals(p.Barcode, input, StringComparison.OrdinalIgnoreCase));
+
+            if (existing is not null)
+            {
+                // Product already registered — highlight it in the grid
+                SearchBox.Text = string.Empty;
+                productsView?.Refresh();
+                // Show all and select the matched row
+                FilterCombo.SelectedIndex = 0;
+                SearchBox.Text = existing.Barcode;
+                productsView?.Refresh();
+                ProductsGrid.SelectedItem = existing;
+                ProductsGrid.ScrollIntoView(existing);
+                MessageBox.Show($"Barcode already registered:\n{existing.Name}",
+                    "Product Found", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                // New barcode — open Add Product dialog pre-filled
+                SearchBox.Text = string.Empty;
+                productsView?.Refresh();
+                var dialog = new ProductDialog(productService, input) { Owner = Window.GetWindow(this) };
+                if (dialog.ShowDialog() == true)
+                {
+                    productsView?.Refresh();
+                    UpdateCounters();
+                }
+            }
+
+            e.Handled = true;
         }
 
         private void FilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

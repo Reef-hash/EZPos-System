@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using EZPos.Business.Services;
 using EZPos.UI.Dialogs;
 using EZPos.UI.State;
@@ -15,6 +16,10 @@ namespace EZPos.UI.Pages
         private readonly SaleService saleService;
         private ICollectionView? productsView;
         private bool isInitialized;
+
+        // Barcode scanner detection — scanners type all chars then Enter very fast (<150 ms total)
+        private DateTime _firstKeyTime = DateTime.MinValue;
+        private bool _scanInProgress;
 
         public SalesPage(PosStateStore stateStore, SaleService saleService)
         {
@@ -99,7 +104,59 @@ namespace EZPos.UI.Pages
                 return;
             }
 
+            // Track first keystroke time for scanner detection
+            if (_firstKeyTime == DateTime.MinValue)
+                _firstKeyTime = DateTime.Now;
+
             productsView.Refresh();
+        }
+
+        private void ProductSearchBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter || !isInitialized)
+                return;
+
+            var input = ProductSearchBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(input))
+                return;
+
+            // Determine if this is a barcode scan (all chars typed in <150 ms = scanner speed)
+            bool isScan = _firstKeyTime != DateTime.MinValue
+                          && (DateTime.Now - _firstKeyTime).TotalMilliseconds < 150;
+
+            _firstKeyTime = DateTime.MinValue; // reset
+
+            if (isScan)
+            {
+                // Barcode scan path — exact barcode match, add to cart directly
+                var match = System.Linq.Enumerable.FirstOrDefault(
+                    stateStore.Products, p => string.Equals(p.Barcode, input, StringComparison.OrdinalIgnoreCase));
+
+                if (match is not null)
+                {
+                    if (!stateStore.AddToCart(match.Id))
+                        MessageBox.Show("Product has reached stock limit.", "Stock Limit", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    else
+                    {
+                        // Flash feedback: briefly show matched name in search box then clear
+                        ProductSearchBox.Text = string.Empty;
+                        _firstKeyTime = DateTime.MinValue;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"Barcode '{input}' not found in product list.", "Not Found",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ProductSearchBox.SelectAll();
+                }
+
+                e.Handled = true;
+                return;
+            }
+
+            // Manual search — Enter triggers filter refresh (already done via TextChanged)
+            productsView?.Refresh();
+            e.Handled = true;
         }
 
         private void CategoryCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

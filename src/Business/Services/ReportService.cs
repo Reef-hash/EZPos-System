@@ -43,6 +43,34 @@ namespace EZPos.Business.Services
         public int    ReorderLevel { get; set; }
     }
 
+    public class TransactionRecord
+    {
+        public int     SaleId        { get; set; }
+        public DateTime DateTime     { get; set; }
+        public string  PaymentMethod { get; set; } = string.Empty;
+        public decimal TotalAmount   { get; set; }
+        public int     ItemCount     { get; set; }
+        public string  ItemsSummary  { get; set; } = string.Empty; // "ProductA x2, ProductB x1"
+    }
+
+    public class PaymentBreakdown
+    {
+        public string  Method  { get; set; } = string.Empty;
+        public int     Orders  { get; set; }
+        public decimal Revenue { get; set; }
+    }
+
+    public class StockSnapshot
+    {
+        public string  Barcode      { get; set; } = string.Empty;
+        public string  Name         { get; set; } = string.Empty;
+        public string  Category     { get; set; } = string.Empty;
+        public decimal Price        { get; set; }
+        public int     Stock        { get; set; }
+        public int     ReorderLevel { get; set; }
+        public string  Status       { get; set; } = string.Empty; // OK / Low / Out
+    }
+
     // ── Service ───────────────────────────────────────────────────────────────
 
     /// <summary>
@@ -237,5 +265,136 @@ namespace EZPos.Business.Services
         /// <summary>Returns today's summary (convenience wrapper).</summary>
         public PeriodSummary GetTodaySummary()
             => GetSummary(DateTime.Today, DateTime.Today);
+
+        /// <summary>Returns all individual sales transactions in the date range, with an items summary string.</summary>
+        public List<TransactionRecord> GetTransactions(DateTime from, DateTime to)
+        {
+            var result = new List<TransactionRecord>();
+            try
+            {
+                using var conn = Database.GetConnection();
+                conn.Open();
+
+                // First pass: get sale headers
+                var salesCmd = conn.CreateCommand();
+                salesCmd.CommandText = @"
+                    SELECT Id, DateTime, PaymentMethod, TotalAmount
+                    FROM Sales
+                    WHERE DATE(DateTime) BETWEEN @from AND @to
+                    ORDER BY DateTime DESC";
+                salesCmd.Parameters.AddWithValue("@from", from.ToString("yyyy-MM-dd"));
+                salesCmd.Parameters.AddWithValue("@to",   to.ToString("yyyy-MM-dd"));
+
+                var sales = new List<(int id, DateTime dt, string method, decimal total)>();
+                using (var r = salesCmd.ExecuteReader())
+                    while (r.Read())
+                        sales.Add((r.GetInt32(0), DateTime.Parse(r.GetString(1)), r.GetString(2), r.GetDecimal(3)));
+
+                foreach (var (id, dt, method, total) in sales)
+                {
+                    // Second pass: get items for this sale
+                    var itemsCmd = conn.CreateCommand();
+                    itemsCmd.CommandText = @"
+                        SELECT p.Name, si.Quantity
+                        FROM SaleItems si
+                        JOIN Products p ON p.Id = si.ProductId
+                        WHERE si.SaleId = @saleId
+                        ORDER BY p.Name";
+                    itemsCmd.Parameters.AddWithValue("@saleId", id);
+
+                    int count = 0;
+                    var parts = new List<string>();
+                    using (var ir = itemsCmd.ExecuteReader())
+                        while (ir.Read())
+                        {
+                            count += ir.GetInt32(1);
+                            parts.Add($"{ir.GetString(0)} x{ir.GetInt32(1)}");
+                        }
+
+                    result.Add(new TransactionRecord
+                    {
+                        SaleId        = id,
+                        DateTime      = dt,
+                        PaymentMethod = method,
+                        TotalAmount   = total,
+                        ItemCount     = count,
+                        ItemsSummary  = string.Join(", ", parts)
+                    });
+                }
+            }
+            catch { }
+            return result;
+        }
+
+        /// <summary>Returns revenue and order count grouped by payment method for a date range.</summary>
+        public List<PaymentBreakdown> GetPaymentBreakdown(DateTime from, DateTime to)
+        {
+            var result = new List<PaymentBreakdown>();
+            try
+            {
+                using var conn = Database.GetConnection();
+                conn.Open();
+
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT
+                        PaymentMethod,
+                        COUNT(*)                       AS Orders,
+                        COALESCE(SUM(TotalAmount), 0)  AS Revenue
+                    FROM Sales
+                    WHERE DATE(DateTime) BETWEEN @from AND @to
+                    GROUP BY PaymentMethod
+                    ORDER BY Revenue DESC";
+                cmd.Parameters.AddWithValue("@from", from.ToString("yyyy-MM-dd"));
+                cmd.Parameters.AddWithValue("@to",   to.ToString("yyyy-MM-dd"));
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                    result.Add(new PaymentBreakdown
+                    {
+                        Method  = reader.GetString(0),
+                        Orders  = reader.GetInt32(1),
+                        Revenue = reader.GetDecimal(2)
+                    });
+            }
+            catch { }
+            return result;
+        }
+
+        /// <summary>Returns a snapshot of all products with their current stock status.</summary>
+        public List<StockSnapshot> GetStockSnapshot()
+        {
+            var result = new List<StockSnapshot>();
+            try
+            {
+                using var conn = Database.GetConnection();
+                conn.Open();
+
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT Barcode, Name, Category, Price, Stock, ReorderLevel
+                    FROM Products
+                    ORDER BY Category ASC, Name ASC";
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    int stock  = reader.GetInt32(4);
+                    int reorder = reader.GetInt32(5);
+                    result.Add(new StockSnapshot
+                    {
+                        Barcode      = reader.GetString(0),
+                        Name         = reader.GetString(1),
+                        Category     = reader.GetString(2),
+                        Price        = reader.GetDecimal(3),
+                        Stock        = stock,
+                        ReorderLevel = reorder,
+                        Status       = stock == 0 ? "Out of Stock" : stock <= reorder ? "Low Stock" : "OK"
+                    });
+                }
+            }
+            catch { }
+            return result;
+        }
     }
 }
