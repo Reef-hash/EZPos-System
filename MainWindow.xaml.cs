@@ -1,8 +1,13 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using EZPos.Business.Services;
+using EZPos.DataAccess.Repositories;
+using EZPos.UI.Dialogs;
 using EZPos.UI.Navigation;
 using EZPos.UI.State;
 
@@ -35,6 +40,111 @@ namespace EZPos.UI
             RegisterRoutes();
 
             NavigateToPage(DefaultRoute);
+            Loaded += MainWindow_Loaded;
+        }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Loaded -= MainWindow_Loaded;
+            await CheckForUpdatesOnStartupAsync();
+        }
+
+        private async Task CheckForUpdatesOnStartupAsync()
+        {
+            try
+            {
+                var manifestUrl = ConfigHelper.Get("App:UpdateManifestUrl", "");
+                if (string.IsNullOrWhiteSpace(manifestUrl))
+                {
+                    return;
+                }
+
+                var currentVersion = GetCurrentAppVersion();
+                var updater = new UpdaterService(currentVersion, manifestUrl);
+                var manifest = await updater.CheckForUpdatesAsync();
+
+                if (manifest == null)
+                {
+                    return;
+                }
+
+                var dialog = new UpdateAvailableDialog(manifest, currentVersion)
+                {
+                    Owner = this
+                };
+
+                if (dialog.ShowDialog() != true || !dialog.UserClickedUpdate)
+                {
+                    return;
+                }
+
+                var installerPath = Path.Combine(Path.GetTempPath(), $"EZPos-Setup-v{manifest.Version}.exe");
+                var downloadSuccess = await updater.DownloadInstallerAsync(
+                    manifest.DownloadUrl ?? string.Empty,
+                    manifest.Checksum?.Algorithm,
+                    manifest.Checksum?.Value,
+                    installerPath);
+
+                if (!downloadSuccess)
+                {
+                    return;
+                }
+
+                try
+                {
+                    var dbDir = Path.GetDirectoryName(Database.DbFile) ?? AppDomain.CurrentDomain.BaseDirectory;
+                    var backupPath = Path.Combine(dbDir, $"EZPos_PreUpdate_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+                    File.Copy(Database.DbFile, backupPath, overwrite: false);
+                }
+                catch
+                {
+                    // Keep startup update flow non-intrusive.
+                }
+
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = installerPath,
+                        Arguments = "/SILENT /NORESTART",
+                        UseShellExecute = false
+                    });
+
+                    await Task.Delay(1000);
+                    Application.Current.Shutdown();
+                }
+                catch
+                {
+                    // Keep startup update flow non-intrusive.
+                }
+            }
+            catch
+            {
+                // Startup auto-check must be silent and never crash the app.
+            }
+        }
+
+        private static string GetCurrentAppVersion()
+        {
+            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+
+            var informational = assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+
+            if (!string.IsNullOrWhiteSpace(informational))
+            {
+                return informational.Split('+')[0];
+            }
+
+            var version = assembly.GetName().Version;
+            if (version == null)
+            {
+                return "1.0.0";
+            }
+
+            var build = version.Build < 0 ? 0 : version.Build;
+            return $"{version.Major}.{version.Minor}.{build}";
         }
 
         private void RegisterRoutes()

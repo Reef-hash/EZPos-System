@@ -12,9 +12,10 @@ using System.Reflection;
 
 [assembly: System.Reflection.AssemblyCompanyAttribute("EZPos")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
+[assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2026 EZPos")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c9c60dfd0be6aa2d10e7ea4705eaf5027746e4ee")]
-[assembly: System.Reflection.AssemblyProductAttribute("EZPos")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+52cd142e2b342f24f40636cbeecec696013b8f90")]
+[assembly: System.Reflection.AssemblyProductAttribute("EZPos Point of Sale")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EZPos")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]

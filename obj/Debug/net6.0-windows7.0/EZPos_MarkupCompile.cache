@@ -1,5 +1,5 @@
 ﻿EZPos
-
+1.0.1.0
 
 winexe
 C#
@@ -12,9 +12,9 @@ TRACE;DEBUG;NET;NET6_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\App.xaml
 17-1234405045
 1-659042472
-48-1220140503
+50-1241544672
 218-931546877
 MainWindow.xaml;src\UI\Dialogs\CategoryManagementDialog.xaml;src\UI\Dialogs\PaymentDialog.xaml;src\UI\Dialogs\ProductDialog.xaml;src\UI\Dialogs\ReceiptDialog.xaml;src\UI\Dialogs\RenameDialog.xaml;src\UI\Dialogs\StockAdjustDialog.xaml;src\UI\Dialogs\UpdateAvailableDialog.xaml;src\UI\Dialogs\WeightInputDialog.xaml;src\UI\Licensing\LicenseRequiredWindow.xaml;src\UI\Pages\DashboardPage.xaml;src\UI\Pages\ProductsPage.xaml;src\UI\Pages\ReportsPage.xaml;src\UI\Pages\SalesModeControl.xaml;src\UI\Pages\SalesPage.xaml;src\UI\Pages\SettingsPage.xaml;src\UI\Pages\StockPage.xaml;
 
-False
+True
 

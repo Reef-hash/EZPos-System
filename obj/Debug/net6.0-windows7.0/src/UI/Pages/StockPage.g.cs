@@ -118,7 +118,7 @@ namespace EZPos.UI.Pages {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/EZPos;component/src/ui/pages/stockpage.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/EZPos;V1.0.1.0;component/src/ui/pages/stockpage.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\..\src\UI\Pages\StockPage.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
