@@ -6,7 +6,9 @@
 ; ============================================================
 
 #define AppName    "EZPos"
+#ifndef AppVersion
 #define AppVersion "1.0.0"
+#endif
 #define AppPublisher "EZPos"
 #define AppURL     "https://github.com"
 #define AppExe     "EZPos.exe"

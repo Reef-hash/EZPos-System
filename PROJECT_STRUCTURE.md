@@ -667,7 +667,7 @@ Program Files\EZPos\          ← Read-only binaries
        OR: App checks on startup (configurable)
 
 2. Version Check
-   App calls: GET https://updates.ezpos.my/latest.json
+  App calls: GET https://reef-hash.github.io/EZPos-Update-System/latest.json
    
    Response:
    {
@@ -733,6 +733,7 @@ Program Files\EZPos\          ← Read-only binaries
 - Add update dialog showing version, changelog, and prompts
 - Add "Update Now" / "Skip" / "Remind Later" buttons
 - Handle mandatory updates (block app if client is too old, show warning)
+- Resolve current app version dynamically from assembly metadata (no hardcoded version strings)
 
 **Phase 4.9 — Update Manifest Hosting**
 - Create/host `latest.json` on GitHub Releases OR your server
@@ -830,9 +831,9 @@ UpdateChannel=stable          ; stable, beta, dev (for future phased rollouts)
 AutoCheckUpdates=true         ; check on app startup
 UpdateNotificationStyle=popup ; popup or notification
 
-[UpdateServer]
-ManifestUrl=https://reef-hash.github.io/EZPos-Update-System/latest.json
-; Leave blank to disable auto-update and hide "Check for Updates" button
+; App uses a flat key format in current ConfigHelper implementation:
+App:UpdateManifestUrl=https://reef-hash.github.io/EZPos-Update-System/latest.json
+; Leave blank to disable auto-update and show "Updates Disabled"
 ```
 
 Current hosted manifest in use for development/testing:
@@ -945,16 +946,168 @@ Use this checklist every time you push release-related code.
 5. Add release notes entry in project docs/changelog.
 6. Push only after staging verification passes.
 
-#### D) Current Workflow Note (Important)
+#### D) CI/CD Release Automation (Implemented)
 
-Current GitHub Actions workflow uses `github.run_number` for tag naming and currently uploads installer as `EZPos-Setup-v1.0.0.exe`. Before production rollout, align CI to real semantic versioning so:
+GitHub Actions now follows semantic versioned release flow on tag pushes (`v*`):
 
-1. Release tag = app semantic version (example: `v1.0.1`)
-2. Installer filename = matching semantic version
-3. `latest.json` version = same semantic version
-4. App's local version string = same semantic version
+1. Resolve app version from release tag (example: `v1.0.1` -> `1.0.1`)
+2. Build installer with Inno Setup using injected `AppVersion`
+3. Output installer as `EZPos-Setup-v<version>.exe`
+4. Generate `latest.json` automatically with:
+  - `version`
+  - `downloadUrl`
+  - `checksum.sha256`
+  - `publishedDate`
+5. Publish installer and `latest.json` to GitHub Release assets
+6. Optionally sync `latest.json` into hosted manifest repository (`Reef-hash/EZPos-Update-System`) when secret `UPDATE_MANIFEST_REPO_TOKEN` is configured
 
-If any of these differ, in-app update checks can become inconsistent.
+Result: installer filename, release tag, manifest version, and app-reported version are aligned by design.
+
+#### E) Auto-Tag from `EZPos.csproj` Version (Implemented)
+
+Tag creation is now automated via workflow:
+
+- Workflow file: `.github/workflows/auto-tag-from-csproj.yml`
+- Trigger: push to `main` when `EZPos.csproj` changes
+- Logic:
+  1. Read `<Version>` from `EZPos.csproj`
+  2. Build tag name as `v<Version>` (example: `v1.0.1`)
+  3. If tag does not exist, create and push it automatically
+  4. If tag already exists, skip safely (no duplicate tag)
+
+What is automatic now:
+1. You update `EZPos.csproj` version and push to `main`
+2. Auto-tag workflow creates `v<Version>`
+3. Release workflow detects that tag and runs installer + manifest publish
+
+What is NOT automatic:
+1. If `EZPos.csproj` version is unchanged, no new tag is created
+2. If you want emergency re-release with same version, you must bump version first (recommended) instead of reusing tag
+
+### Workflow Summary (System vs Developer)
+
+#### 1) System Runtime Workflow (What the app does)
+
+1. User clicks Settings -> About -> Check for Updates.
+2. App reads manifest URL from `App:UpdateManifestUrl` in `config.ini`.
+3. App sends HTTP GET to hosted `latest.json`.
+4. App compares `latest.json.version` with local assembly version.
+5. If no newer version: show "You are on the latest version".
+6. If newer version:
+  - Show update dialog (version + release notes)
+  - On Update Now: download installer to `%TEMP%`
+  - Verify SHA256 checksum
+  - Create pre-update DB backup in `%ProgramData%\EZPos\Backups\`
+  - Launch installer silently and close app
+7. After install: app restarts with updated binaries while keeping `%ProgramData%\EZPos\EZPos.db` intact.
+
+#### 2) Developer Release Workflow (What devs do)
+
+1. Update app version in `EZPos.csproj` (semantic versioning).
+2. Commit and push code to `main`.
+3. Auto-tag workflow creates and pushes release tag (example: `v1.0.1`) when version changed.
+4. GitHub Actions release pipeline then runs automatically:
+  - Builds release binaries
+  - Builds installer with injected `AppVersion`
+  - Computes SHA256
+  - Generates `latest.json`
+  - Publishes installer + `latest.json` to GitHub Release
+  - Optionally syncs `latest.json` to `Reef-hash/EZPos-Update-System` (if secret exists)
+5. Verify hosted manifest URL returns updated JSON.
+6. Smoke-test updater from an older installed build.
+
+#### 3) Secrets/Infra Required for Full Automation
+
+1. `UPDATE_MANIFEST_REPO_TOKEN` secret in main repo (PAT with push access to `Reef-hash/EZPos-Update-System`).
+2. GitHub Pages enabled in `Reef-hash/EZPos-Update-System`.
+3. App config points to:
+  - `https://reef-hash.github.io/EZPos-Update-System/latest.json`
+
+### EZPos.csproj Update Guide (What To Change Per Release)
+
+File reference: `EZPos.csproj`
+
+Purpose of this file:
+- `EZPos.csproj` is the .NET project definition for the desktop app.
+- It controls build target, app metadata, package dependencies, embedded resources, and publish content.
+- CI/CD and installer output versioning depend on values from this file (especially `Version`).
+
+#### PropertyGroup Meaning (Current Project)
+
+1. `<OutputType>WinExe</OutputType>`
+- Builds a Windows GUI executable (no console window).
+- Keep as-is for POS desktop app.
+
+2. `<TargetFramework>net6.0-windows7.0</TargetFramework>`
+- Targets .NET 6 with Windows 7 API floor.
+- Change only when deliberately upgrading runtime support policy.
+
+3. `<UseWPF>true</UseWPF>`
+- Enables WPF compile targets.
+- Must remain true for this UI architecture.
+
+4. `<RootNamespace>EZPos</RootNamespace>`
+- Default root namespace for generated code.
+- Do not change unless performing a full namespace migration.
+
+5. `<Nullable>enable</Nullable>`
+- Enables nullable reference type analysis.
+- Keep enabled (quality guardrail).
+
+6. `<ApplicationIcon>Resources\\Icons\\app.ico</ApplicationIcon>`
+- Executable icon used by Windows shell.
+- Change only when branding icon is updated.
+
+7. `<AssemblyTitle>`, `<Product>`, `<Company>`, `<Copyright>`
+- Assembly metadata shown in file properties/add-remove programs.
+- Update only for branding/legal changes.
+
+8. `<Version>1.0.0</Version>`
+- Main semantic app version.
+- Updater comparison and release alignment should follow this value.
+- Increase on every production release.
+
+9. `<FileVersion>1.0.0.0</FileVersion>`
+- Windows file version metadata.
+- Keep aligned with `Version` (4-part format).
+
+#### ItemGroup Meaning
+
+1. `<PackageReference ... />`
+- NuGet dependencies used by the app.
+- Update only when intentionally upgrading libraries.
+- Always run full build + smoke test after package upgrades.
+
+2. `<Resource Include="Resources\\Icons\\app.ico" />`
+- Embeds icon resource into build output.
+- Keep path valid if icon is renamed/moved.
+
+3. `<Content Include="EZPos.db"> ... </Content>`
+- Ensures seed DB is copied to output/publish artifacts.
+- Installer uses `onlyifdoesntexist`, so existing client DB is preserved.
+- Do not remove unless installer/data strategy is redesigned.
+
+### Release-Time Changes in EZPos.csproj
+
+For each new release (example 1.0.0 -> 1.0.1):
+
+1. Update `<Version>` to new semantic version.
+2. Update `<FileVersion>` to matching 4-part value.
+3. Keep framework and WPF settings unchanged unless this release explicitly upgrades platform support.
+4. If package versions changed, verify no runtime regressions in sales/payment/report flows.
+
+### Versioning Rules (Team Standard)
+
+1. Patch (`x.y.Z`): bug fixes, no breaking behavior.
+2. Minor (`x.Y.z`): new features, backward compatible.
+3. Major (`X.y.z`): breaking behavior or migration-heavy changes.
+
+Tagging and CI alignment:
+1. Git tag must match csproj version (example csproj `1.0.1` -> tag `v1.0.1`).
+2. Installer output version must match same semantic version.
+3. Hosted `latest.json` version must match same semantic version.
+
+If versions diverge across these 3 artifacts, updater behavior becomes inconsistent.
 
 ---
 

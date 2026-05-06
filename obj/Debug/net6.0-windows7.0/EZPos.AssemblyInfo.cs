@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2026 EZPos")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f8c2f0ec1657cc6fc4a074b1e8fa0230a35146e7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+105927f8ac0f22050f098e9297ccd5010cbe39a3")]
 [assembly: System.Reflection.AssemblyProductAttribute("EZPos Point of Sale")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EZPos")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

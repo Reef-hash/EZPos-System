@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Printing;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -399,7 +400,6 @@ namespace EZPos.UI.Pages
         {
             // Disable button during check
             CheckForUpdatesButton.IsEnabled = false;
-            CheckForUpdatesButton.Content = "Checking...";
 
             try
             {
@@ -416,7 +416,7 @@ namespace EZPos.UI.Pages
                 }
 
                 // Create updater service with current app version
-                var currentVersion = "1.0.0";  // TODO: read from assembly version
+                var currentVersion = GetCurrentAppVersion();
                 var updater = new EZPos.Business.Services.UpdaterService(currentVersion, manifestUrl);
 
                 // Check for available updates
@@ -527,8 +527,31 @@ namespace EZPos.UI.Pages
             {
                 // Re-enable button
                 CheckForUpdatesButton.IsEnabled = true;
-                // Note: button content is set in XAML, so we just need to re-enable it
             }
+        }
+
+        private static string GetCurrentAppVersion()
+        {
+            var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+
+            // Prefer informational version when present (supports semantic versioning with pre-release labels).
+            var informational = assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion;
+
+            if (!string.IsNullOrWhiteSpace(informational))
+            {
+                return informational.Split('+')[0];
+            }
+
+            var version = assembly.GetName().Version;
+            if (version == null)
+            {
+                return "1.0.0";
+            }
+
+            var build = version.Build < 0 ? 0 : version.Build;
+            return $"{version.Major}.{version.Minor}.{build}";
         }
     }
 }

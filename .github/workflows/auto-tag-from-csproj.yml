@@ -1,0 +1,69 @@
+name: Auto Tag from csproj Version
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'EZPos.csproj'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  auto-tag:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version from EZPos.csproj
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$csproj = Get-Content "EZPos.csproj"
+          $version = $csproj.Project.PropertyGroup.Version
+
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Version not found in EZPos.csproj"
+          }
+
+          $tag = "v$version"
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Check whether tag already exists
+        id: tagcheck
+        shell: pwsh
+        run: |
+          git fetch --tags --force
+          $tag = "${{ steps.version.outputs.tag }}"
+          $exists = git tag -l $tag
+
+          if ([string]::IsNullOrWhiteSpace($exists)) {
+            "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+          else {
+            "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          }
+
+      - name: Create and push tag
+        if: steps.tagcheck.outputs.exists == 'false'
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $version = "${{ steps.version.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag -a $tag -m "Release $tag (from EZPos.csproj version $version)"
+          git push origin $tag
+
+      - name: Tag already exists
+        if: steps.tagcheck.outputs.exists == 'true'
+        shell: pwsh
+        run: |
+          Write-Host "Tag ${{ steps.version.outputs.tag }} already exists. Nothing to do."

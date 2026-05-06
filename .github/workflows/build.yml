@@ -1,50 +1,158 @@
-name: Build EZPos WinForms
+name: Build and Release EZPos
 
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  ci:
     runs-on: windows-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '6.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore
 
-    - name: Publish
-      run: dotnet publish --configuration Release --output ./publish
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    needs: ci
+    permissions:
+      contents: write
+    env:
+      MANIFEST_REPO: Reef-hash/EZPos-Update-System
+      MANIFEST_URL: https://reef-hash.github.io/EZPos-Update-System/latest.json
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Download Inno Setup
-      run: |
-        Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
-        Start-Process -Wait -FilePath .\is.exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR="C:\innosetup"'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
 
-    - name: Add Inno Setup to PATH
-      run: echo "C:\innosetup" | Out-File -Append -FilePath $env:GITHUB_PATH
+      - name: Resolve semantic version
+        id: version
+        shell: pwsh
+        run: |
+          $tagRef = "${{ github.ref }}"
+          if ($tagRef.StartsWith("refs/tags/v")) {
+            $appVersion = $tagRef.Replace("refs/tags/v", "")
+          }
+          else {
+            [xml]$csproj = Get-Content "EZPos.csproj"
+            $appVersion = $csproj.Project.PropertyGroup.Version
+          }
 
-    - name: Build Inno Setup installer
-      run: |
-        New-Item -ItemType Directory -Force -Path installer
-        & "C:\innosetup\ISCC.exe" "InnoSetup-EZPos.iss"
+          if ([string]::IsNullOrWhiteSpace($appVersion)) {
+            throw "Unable to resolve app version."
+          }
 
-    - name: Upload installer to Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
-        files: installer/EZPos-Setup-v1.0.0.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          "app_version=$appVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "release_tag=v$appVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish app binaries
+        run: dotnet publish --configuration Release --output ./publish
+
+      - name: Download Inno Setup
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
+          Start-Process -Wait -FilePath .\is.exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR="C:\innosetup"'
+
+      - name: Add Inno Setup to PATH
+        shell: pwsh
+        run: echo "C:\innosetup" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+      - name: Build versioned installer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path installer | Out-Null
+          & "C:\innosetup\ISCC.exe" "/DAppVersion=${{ steps.version.outputs.app_version }}" "InnoSetup-EZPos.iss"
+
+      - name: Generate update manifest (latest.json)
+        id: manifest
+        shell: pwsh
+        run: |
+          $appVersion = "${{ steps.version.outputs.app_version }}"
+          $installerPath = "installer/EZPos-Setup-v$appVersion.exe"
+
+          if (-not (Test-Path $installerPath)) {
+            throw "Installer not found at $installerPath"
+          }
+
+          $sha = (Get-FileHash -Path $installerPath -Algorithm SHA256).Hash.ToLower()
+          $published = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+          $downloadUrl = "https://github.com/${{ github.repository }}/releases/download/v$appVersion/EZPos-Setup-v$appVersion.exe"
+
+          $manifest = [ordered]@{
+            version = $appVersion
+            name = "EZPos v$appVersion"
+            publishedDate = $published
+            releaseNotes = "Automated release for v$appVersion"
+            downloadUrl = $downloadUrl
+            checksum = [ordered]@{
+              algorithm = "sha256"
+              value = $sha
+            }
+            mandatory = $false
+            minimumVersion = "1.0.0"
+            targetFramework = "net6.0-windows7.0"
+            updatedComponents = [ordered]@{
+              binaries = $true
+              schema = $false
+            }
+          }
+
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content -Path "latest.json" -Encoding utf8
+          "sha256=$sha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Upload GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.release_tag }}
+          name: Release ${{ steps.version.outputs.release_tag }}
+          files: |
+            installer/EZPos-Setup-v${{ steps.version.outputs.app_version }}.exe
+            latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync latest.json to manifest repository
+        if: ${{ secrets.UPDATE_MANIFEST_REPO_TOKEN != '' }}
+        shell: pwsh
+        env:
+          UPDATE_TOKEN: ${{ secrets.UPDATE_MANIFEST_REPO_TOKEN }}
+        run: |
+          git clone "https://x-access-token:$env:UPDATE_TOKEN@github.com/$env:MANIFEST_REPO.git" manifest-repo
+          Copy-Item "latest.json" "manifest-repo/latest.json" -Force
+
+          Push-Location manifest-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ((git status --porcelain).Length -eq 0) {
+            Write-Host "No manifest changes to commit."
+          }
+          else {
+            git add latest.json
+            git commit -m "Update latest.json for v${{ steps.version.outputs.app_version }}"
+            git push
+          }
+          Pop-Location
