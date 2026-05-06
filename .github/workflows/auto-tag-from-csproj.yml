@@ -3,8 +3,6 @@ name: Auto Tag from csproj Version
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'EZPos.csproj'
   workflow_dispatch:
     inputs:
       force_version:
@@ -53,7 +51,7 @@ jobs:
           $tag = "${{ steps.version.outputs.tag }}"
 
           if (git tag -l $tag) {
-            Write-Host "Tag $tag already exists — skipping tag creation."
+            Write-Host "Tag $tag already exists - skipping tag creation."
           } else {
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
