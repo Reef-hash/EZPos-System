@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v6.0": {
-      "EZPos/1.0.1": {
+      "EZPos/1.0.4": {
         "dependencies": {
           "ClosedXML": "0.102.2",
           "FontAwesome.Sharp": "6.3.0",
@@ -245,7 +245,7 @@
     }
   },
   "libraries": {
-    "EZPos/1.0.1": {
+    "EZPos/1.0.4": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

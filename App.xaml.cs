@@ -39,20 +39,33 @@ namespace EZPos
                 Database.Initialize();
 
                 // 4. License check — runs before any UI is shown.
-                //    LicenseService is currently MOCK: always returns Valid,
-                //    so this block never blocks the app in development.
-                //    TODO: when real API is ready, remove the mock comment below.
-                var licenseStorage = new FileLicenseStorage();
-                var licenseService = new LicenseService(licenseStorage);
+                //
+                //    Current mode: TRIAL (TrialLicenseService)
+                //    Grants a 30-day evaluation period from first install.
+                //    trial.dat in %ProgramData%\EZPos\ is written by the Inno Setup installer.
+                //
+                //    MIGRATION: when HWID / online licensing is ready, replace the one line:
+                //      Before:  ILicenseService licenseService = new TrialLicenseService();
+                //      After:   ILicenseService licenseService = new LicenseService(new FileLicenseStorage(), ...);
+                //    Everything else below remains unchanged.
+                ILicenseService licenseService = new TrialLicenseService();
                 licenseService.LoadAndValidate();
-                if (!licenseService.IsLicensed)
+
+                switch (licenseService.Current.Status)
                 {
-                    var licenseWindow = new LicenseRequiredWindow(licenseService);
-                    if (licenseWindow.ShowDialog() != true)
-                    {
+                    case LicenseStatus.Valid:
+                        break; // continue startup normally
+
+                    case LicenseStatus.Expired:
+                        new TrialExpiredWindow(licenseService.Current).ShowDialog();
                         Shutdown(1);
                         return;
-                    }
+
+                    default:
+                        // Unexpected status in trial mode — fail safe rather than crash.
+                        new TrialExpiredWindow(licenseService.Current).ShowDialog();
+                        Shutdown(1);
+                        return;
                 }
 
                 // 3. Create shared state store and load products from DB

@@ -1,0 +1,111 @@
+<Window x:Class="EZPos.UI.Licensing.TrialExpiredWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+        Title="EZPos — Trial Period Ended"
+        Width="460" Height="430"
+        MinWidth="400" MinHeight="380"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        Background="{StaticResource ContentBrush}">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome ResizeBorderThickness="0" CaptionHeight="0"
+                      GlassFrameThickness="0" NonClientFrameEdges="None" />
+    </WindowChrome.WindowChrome>
+
+    <Border BorderBrush="{StaticResource ErrorBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />   <!-- title bar -->
+                <RowDefinition Height="*" />       <!-- content  -->
+            </Grid.RowDefinitions>
+
+            <!-- ── Custom title bar ── -->
+            <Grid Grid.Row="0" Background="{StaticResource SidebarBrush}"
+                  Height="44" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
+                    <fa:IconBlock Icon="TriangleExclamation" FontSize="14"
+                                  Foreground="{StaticResource ErrorBrush}" Margin="0,0,8,0" />
+                    <TextBlock Text="EZPos — Trial Period Ended"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+            </Grid>
+
+            <!-- ── Content ── -->
+            <StackPanel Grid.Row="1" Margin="36,24,36,24" VerticalAlignment="Center">
+
+                <!-- Icon + heading -->
+                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,18">
+                    <fa:IconBlock Icon="HourglassEnd" FontSize="44"
+                                  Foreground="{StaticResource ErrorBrush}"
+                                  HorizontalAlignment="Center" Margin="0,0,0,12" />
+                    <TextBlock Text="Your Trial Has Expired"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="18" FontWeight="Bold"
+                               HorizontalAlignment="Center" />
+                    <TextBlock x:Name="ExpiryDateText"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                </StackPanel>
+
+                <!-- Divider -->
+                <Separator Background="{StaticResource DividerBrush}" Margin="0,0,0,18" />
+
+                <!-- Message body -->
+                <TextBlock TextWrapping="Wrap" TextAlignment="Center"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="12" LineHeight="20"
+                           Text="Thank you for evaluating EZPos. To continue using the application, please contact the developer to purchase a full license." />
+
+                <!-- Developer contact card -->
+                <Border Background="{StaticResource CardBackgroundBrush}"
+                        CornerRadius="8" Margin="0,14,0,0" Padding="16,12">
+                    <StackPanel>
+
+                        <!-- Organisation -->
+                        <TextBlock Text="Catalysm Inc"
+                                   Foreground="{StaticResource PrimaryBrush}"
+                                   FontSize="13" FontWeight="Bold"
+                                   HorizontalAlignment="Center" />
+
+                        <!-- Developer name -->
+                        <TextBlock Text="Zarif El-Mansour"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="12" HorizontalAlignment="Center"
+                                   Margin="0,2,0,10" />
+
+                        <!-- WhatsApp row -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <fa:IconBlock Icon="Whatsapp" FontSize="16"
+                                          Foreground="#FF25D366"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,7,0" />
+                            <TextBlock Text="019-5778954"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <TextBlock Text="WhatsApp only"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontSize="10" HorizontalAlignment="Center"
+                                   Margin="0,3,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Close button -->
+                <Button x:Name="CloseBtn"
+                        Content="Close Application"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Background="{StaticResource ErrorBrush}"
+                        Height="40" Margin="0,22,0,0"
+                        FontSize="13"
+                        Click="CloseBtn_Click" />
+
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

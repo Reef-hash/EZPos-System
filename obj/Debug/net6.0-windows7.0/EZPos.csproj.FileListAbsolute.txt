@@ -81,3 +81,5 @@ D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\bin\Debug\net6.0-windows7.0\de\PdfSharpCore.resources.dll
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\UpdateAvailableDialog.baml
 D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Dialogs\UpdateAvailableDialog.g.cs
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Licensing\TrialExpiredWindow.baml
+D:\#_Programming\#_Github_Repo\Production-Repository\EZPos-System\obj\Debug\net6.0-windows7.0\src\UI\Licensing\TrialExpiredWindow.g.cs

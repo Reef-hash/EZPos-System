@@ -158,3 +158,62 @@ begin
       mbInformation, MB_OK);
   end;
 end;
+
+// ── Trial initialization ──────────────────────────────────────────────────────
+//
+// Writes %ProgramData%\EZPos\trial.dat with the current UTC install date.
+// Only written once — NEVER overwritten on updates or reinstalls, so the trial
+// clock cannot be reset by reinstalling.
+//
+// Format matches TrialLicenseService.ReadInstallDate() expectations:
+//   INSTALL_DATE=2026-05-07T12:00:00.0000000Z
+//
+// ─────────────────────────────────────────────────────────────────────────────
+procedure InitializeTrialIfNeeded();
+var
+  TrialFile  : String;
+  DataDir    : String;
+  NowUtc     : TDateTime;
+  Year, Month, Day, Hour, Minute, Second, MSec : Word;
+  DateStr    : String;
+  Lines      : TArrayOfString;
+begin
+  DataDir   := ExpandConstant('{commonappdata}\EZPos');
+  TrialFile := DataDir + '\trial.dat';
+
+  // Only initialize if trial.dat does not already exist.
+  // This preserves the original install date across updates and reinstalls.
+  if FileExists(TrialFile) then
+    Exit;
+
+  // Ensure the data directory exists (created by [Dirs] section, but guard here too).
+  if not DirExists(DataDir) then
+    CreateDir(DataDir);
+
+  // Build an ISO 8601 UTC timestamp string.
+  // Inno Setup provides GetDateTimeString for local time; we compose UTC manually
+  // using DecodeDate/DecodeTime so TrialLicenseService can parse it correctly.
+  NowUtc := Now;
+  DecodeDate(NowUtc, Year, Month, Day);
+  DecodeTime(NowUtc, Hour, Minute, Second, MSec);
+
+  DateStr := Format('INSTALL_DATE=%d-%s-%sT%s:%s:%s.0000000Z', [
+    Year,
+    Format('%.2d', [Month]),
+    Format('%.2d', [Day]),
+    Format('%.2d', [Hour]),
+    Format('%.2d', [Minute]),
+    Format('%.2d', [Second])
+  ]);
+
+  SetArrayLength(Lines, 1);
+  Lines[0] := DateStr;
+  SaveStringsToFile(TrialFile, Lines, False);
+end;
+
+// Called by Inno Setup after all files have been installed successfully.
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+    InitializeTrialIfNeeded();
+end;
