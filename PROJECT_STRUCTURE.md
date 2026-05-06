@@ -831,9 +831,25 @@ AutoCheckUpdates=true         ; check on app startup
 UpdateNotificationStyle=popup ; popup or notification
 
 [UpdateServer]
-ManifestUrl=https://updates.ezpos.my/latest.json
+ManifestUrl=https://reef-hash.github.io/EZPos-Update-System/latest.json
 ; Leave blank to disable auto-update and hide "Check for Updates" button
 ```
+
+Current hosted manifest in use for development/testing:
+
+```text
+GitHub Pages URL:
+https://reef-hash.github.io/EZPos-Update-System/latest.json
+
+GitHub blob URL (DO NOT use in app config):
+https://github.com/Reef-hash/EZPos-Update-System/blob/main/latest.json
+```
+
+Why the Pages URL is preferred:
+- The updater downloads JSON directly with `HttpClient`
+- GitHub `blob` URLs return an HTML page, not raw JSON
+- GitHub Pages gives a stable public manifest URL that is cleaner for production use
+- `raw.githubusercontent.com` is acceptable as a temporary fallback, but Pages is the intended hosted endpoint
 
 ### Important Notes for Developers
 
@@ -848,6 +864,97 @@ ManifestUrl=https://updates.ezpos.my/latest.json
 5. **Mandatory Update Logic** — `minimumVersion` field blocks old clients from running if they fall below a security threshold. Use sparingly, only for critical bugs.
 
 6. **No Updates During Active Sale** — In the update dialog, check `SalesPage` state. If active, show "Finish current sale before updating" and block Update button.
+
+### Release & Update SOP (After Push / After Update)
+
+Use this checklist every time you push release-related code.
+
+#### A) After Any Push to `main`
+
+1. Confirm local quality gates before push:
+  - `dotnet restore`
+  - `dotnet build --configuration Debug`
+  - `dotnet build --configuration Release`
+
+2. Push your branch and verify GitHub Actions passed:
+  - Open Actions tab and confirm workflow succeeded
+  - Confirm installer artifact/release was created
+
+3. Verify release metadata is correct:
+  - Confirm tag/version naming matches intended release
+  - Confirm release title/changelog is readable for clients
+  - Confirm installer filename and version are aligned
+
+4. Update hosted `latest.json` manifest (required for in-app updater):
+  - Set `version` to new app version
+  - Set `downloadUrl` to the new installer asset URL
+  - Set `releaseNotes` to user-facing change notes
+  - Set `minimumVersion` only if update is mandatory
+  - Set `mandatory` true only for critical/security cases
+
+5. Generate and publish checksum:
+  - Compute installer SHA256
+  - Put checksum into `latest.json`
+  - Re-check checksum string matches exactly
+
+6. Smoke-test updater end-to-end on one staging machine:
+  - Launch current old version
+  - Click Settings -> About -> Check for Updates
+  - Verify update dialog appears with correct version/notes
+  - Click Update Now and complete install
+  - Verify app restarts and data is preserved
+
+#### B) Client Update Procedure (Ops / Support)
+
+1. Before update:
+  - Ensure cashier is not in an active sale
+  - Trigger manual backup: Settings -> Database Maintenance -> Backup Database
+  - Confirm backup file exists in a safe location
+
+2. Run update:
+  - Open Settings -> About -> Check for Updates
+  - Review release notes
+  - Click Update Now
+  - App downloads installer, creates pre-update backup, and exits
+  - Installer runs and updates binaries only
+
+3. After update:
+  - Re-open app and verify login/startup is normal
+  - Verify product list loads
+  - Create a test sale and complete payment
+  - Verify receipt/print flow
+  - Verify reports page can load today's data
+
+4. Data integrity checks:
+  - Confirm `%ProgramData%\EZPos\EZPos.db` still exists and timestamp is valid
+  - Confirm `%ProgramData%\EZPos\Backups\EZPos_PreUpdate_*.db` was created
+  - Confirm store settings still present (`StoreName`, `TaxRate`, printer)
+
+5. Rollback procedure (if issue found):
+  - Close EZPos
+  - Use Settings -> Database Maintenance -> Restore from Backup
+  - Select latest pre-update backup
+  - Re-launch app and verify restored state
+
+#### C) Developer Checklist After Any Update Implementation
+
+1. Update version in installer/config/docs consistently.
+2. If schema changed, add migration script and test with real old database.
+3. Confirm Inno Setup still uses `onlyifdoesntexist` for DB seed.
+4. Confirm updater checksum verification is not bypassed.
+5. Add release notes entry in project docs/changelog.
+6. Push only after staging verification passes.
+
+#### D) Current Workflow Note (Important)
+
+Current GitHub Actions workflow uses `github.run_number` for tag naming and currently uploads installer as `EZPos-Setup-v1.0.0.exe`. Before production rollout, align CI to real semantic versioning so:
+
+1. Release tag = app semantic version (example: `v1.0.1`)
+2. Installer filename = matching semantic version
+3. `latest.json` version = same semantic version
+4. App's local version string = same semantic version
+
+If any of these differ, in-app update checks can become inconsistent.
 
 ---
 
