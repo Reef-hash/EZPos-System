@@ -6,64 +6,153 @@ on:
     paths:
       - 'EZPos.csproj'
   workflow_dispatch:
+    inputs:
+      force_version:
+        description: 'Override version to release (e.g. 1.0.2). Leave empty to read from EZPos.csproj.'
+        required: false
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  auto-tag:
+  tag-and-release:
     runs-on: windows-latest
+    env:
+      MANIFEST_REPO: Reef-hash/EZPos-Update-System
+      MANIFEST_URL: https://reef-hash.github.io/EZPos-Update-System/latest.json
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Resolve version from EZPos.csproj
+      - name: Resolve version
         id: version
         shell: pwsh
         run: |
-          [xml]$csproj = Get-Content "EZPos.csproj"
-          $version = $csproj.Project.PropertyGroup.Version
-
-          if ([string]::IsNullOrWhiteSpace($version)) {
-            throw "Version not found in EZPos.csproj"
+          $forced = "${{ github.event.inputs.force_version }}"
+          if (-not [string]::IsNullOrWhiteSpace($forced)) {
+            $version = $forced.TrimStart('v')
+          } else {
+            [xml]$csproj = Get-Content "EZPos.csproj"
+            $version = $csproj.Project.PropertyGroup.Version
           }
 
-          $tag = "v$version"
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Version could not be resolved."
+          }
 
-      - name: Check whether tag already exists
-        id: tagcheck
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "tag=v$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Create tag if not exists
         shell: pwsh
         run: |
           git fetch --tags --force
           $tag = "${{ steps.version.outputs.tag }}"
-          $exists = git tag -l $tag
 
-          if ([string]::IsNullOrWhiteSpace($exists)) {
-            "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          }
-          else {
-            "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          if (git tag -l $tag) {
+            Write-Host "Tag $tag already exists — skipping tag creation."
+          } else {
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a $tag -m "Release $tag"
+            git push origin $tag
+            Write-Host "Tag $tag created and pushed."
           }
 
-      - name: Create and push tag
-        if: steps.tagcheck.outputs.exists == 'false'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish app binaries
+        run: dotnet publish --configuration Release --output ./publish
+
+      - name: Download Inno Setup
         shell: pwsh
         run: |
-          $tag = "${{ steps.version.outputs.tag }}"
-          $version = "${{ steps.version.outputs.version }}"
+          Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
+          Start-Process -Wait -FilePath .\is.exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR="C:\innosetup"'
 
+      - name: Add Inno Setup to PATH
+        shell: pwsh
+        run: echo "C:\innosetup" | Out-File -Append -FilePath $env:GITHUB_PATH
+
+      - name: Build versioned installer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path installer | Out-Null
+          & "C:\innosetup\ISCC.exe" "/DAppVersion=${{ steps.version.outputs.version }}" "InnoSetup-EZPos.iss"
+
+      - name: Generate update manifest (latest.json)
+        shell: pwsh
+        run: |
+          $appVersion = "${{ steps.version.outputs.version }}"
+          $installerPath = "installer/EZPos-Setup-v$appVersion.exe"
+
+          if (-not (Test-Path $installerPath)) {
+            throw "Installer not found at $installerPath"
+          }
+
+          $sha = (Get-FileHash -Path $installerPath -Algorithm SHA256).Hash.ToLower()
+          $published = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+          $downloadUrl = "https://github.com/${{ github.repository }}/releases/download/v$appVersion/EZPos-Setup-v$appVersion.exe"
+
+          $manifest = [ordered]@{
+            version = $appVersion
+            name = "EZPos v$appVersion"
+            publishedDate = $published
+            releaseNotes = "Automated release for v$appVersion"
+            downloadUrl = $downloadUrl
+            checksum = [ordered]@{
+              algorithm = "sha256"
+              value = $sha
+            }
+            mandatory = $false
+            minimumVersion = "1.0.0"
+            targetFramework = "net6.0-windows7.0"
+            updatedComponents = [ordered]@{
+              binaries = $true
+              schema = $false
+            }
+          }
+
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content -Path "latest.json" -Encoding utf8
+
+      - name: Upload GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          files: |
+            installer/EZPos-Setup-v${{ steps.version.outputs.version }}.exe
+            latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync latest.json to manifest repository
+        if: ${{ secrets.UPDATE_MANIFEST_REPO_TOKEN != '' }}
+        shell: pwsh
+        env:
+          UPDATE_TOKEN: ${{ secrets.UPDATE_MANIFEST_REPO_TOKEN }}
+        run: |
+          git clone "https://x-access-token:$env:UPDATE_TOKEN@github.com/$env:MANIFEST_REPO.git" manifest-repo
+          Copy-Item "latest.json" "manifest-repo/latest.json" -Force
+
+          Push-Location manifest-repo
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git tag -a $tag -m "Release $tag (from EZPos.csproj version $version)"
-          git push origin $tag
-
-      - name: Tag already exists
-        if: steps.tagcheck.outputs.exists == 'true'
-        shell: pwsh
-        run: |
-          Write-Host "Tag ${{ steps.version.outputs.tag }} already exists. Nothing to do."
+          if ((git status --porcelain).Length -eq 0) {
+            Write-Host "No manifest changes to commit."
+          } else {
+            git add latest.json
+            git commit -m "Update latest.json for v${{ steps.version.outputs.version }}"
+            git push
+          }
+          Pop-Location
