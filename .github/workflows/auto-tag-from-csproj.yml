@@ -134,11 +134,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sync latest.json to manifest repository
-        if: ${{ secrets.UPDATE_MANIFEST_REPO_TOKEN != '' }}
         shell: pwsh
         env:
           UPDATE_TOKEN: ${{ secrets.UPDATE_MANIFEST_REPO_TOKEN }}
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:UPDATE_TOKEN)) {
+            Write-Host "No UPDATE_MANIFEST_REPO_TOKEN configured - skipping manifest sync."
+            exit 0
+          }
           git clone "https://x-access-token:$env:UPDATE_TOKEN@github.com/$env:MANIFEST_REPO.git" manifest-repo
           Copy-Item "latest.json" "manifest-repo/latest.json" -Force
 
