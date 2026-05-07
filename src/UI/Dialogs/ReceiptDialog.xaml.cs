@@ -68,6 +68,9 @@ namespace EZPos.UI.Dialogs
         private void ReceiptDialog_Loaded(object sender, RoutedEventArgs e)
         {
             NewSaleBtn.Focus();
+
+            if (ConfigHelper.Get("AutoPrint", "false") == "true")
+                TriggerPrint();
         }
 
         private void RegisterShortcut(string configKey, string defaultKey, Action action)

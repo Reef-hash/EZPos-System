@@ -28,6 +28,18 @@ namespace EZPos.Business.Services
             product.LastUpdated = DateTime.Now;
             product.Id = ProductRepository.Add(product);
             _store.AddProduct(product);
+
+            if (product.Stock > 0)
+            {
+                StockMovementRepository.Insert(new StockMovement
+                {
+                    ProductId = product.Id,
+                    ChangeQty = product.Stock,
+                    Reason    = "OPENING_BALANCE",
+                    DateTime  = DateTime.Now
+                });
+            }
+
             return product.Id;
         }
 

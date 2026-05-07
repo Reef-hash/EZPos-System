@@ -115,6 +115,11 @@
                                Text="Leave blank to disable receipt printing."
                                Foreground="{StaticResource TextMutedBrush}"
                                FontSize="11" Margin="220,6,0,0" />
+
+                    <CheckBox x:Name="AutoPrintCheckBox"
+                              Content="Auto-print receipt after checkout"
+                              Foreground="{StaticResource TextSecondaryBrush}"
+                              FontSize="13" Margin="220,10,0,0" />
                 </StackPanel>
             </Border>
 

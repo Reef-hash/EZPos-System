@@ -40,6 +40,7 @@ namespace EZPos.UI.Pages
             PaymentChequeHotkeyBox.Text  = ConfigHelper.Get("PaymentHotkeyCheque", "F4");
             ReceiptNewSaleHotkeyBox.Text = ConfigHelper.Get("ReceiptHotkeyNewSale", "PageUp");
             ReceiptPrintHotkeyBox.Text   = ConfigHelper.Get("ReceiptHotkeyPrint", "PageDown");
+            AutoPrintCheckBox.IsChecked  = ConfigHelper.Get("AutoPrint", "false") == "true";
 
             // Select matching TaxMode item
             var savedMode = ConfigHelper.Get("TaxMode", "PerReceipt");
@@ -106,6 +107,7 @@ namespace EZPos.UI.Pages
             ConfigHelper.SetKey("PaymentHotkeyCheque", paymentChequeKey);
             ConfigHelper.SetKey("ReceiptHotkeyNewSale", receiptNewSaleKey);
             ConfigHelper.SetKey("ReceiptHotkeyPrint", receiptPrintKey);
+            ConfigHelper.Set("AutoPrint", AutoPrintCheckBox.IsChecked == true ? "true" : "false");
 
             var taxMode = (TaxModeCombo.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "PerReceipt";
             ConfigHelper.Set("TaxMode", taxMode);

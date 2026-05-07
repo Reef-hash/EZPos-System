@@ -3,8 +3,10 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using EZPos.Business.Services;
 using EZPos.Models.Domain;
+using EZPos.UI.Input;
 
 namespace EZPos.UI.Dialogs
 {
@@ -19,6 +21,7 @@ namespace EZPos.UI.Dialogs
         private readonly ProductService  _productService;
         private readonly CategoryService _categoryService;
         private readonly Product? _editingProduct;
+        private SalesKeyboardInputService? _barcodeScanner;
 
         /// <summary>The saved product after a successful Save. Null if dialog was cancelled.</summary>
         public Product? Product { get; private set; }
@@ -34,6 +37,16 @@ namespace EZPos.UI.Dialogs
             TitleText.Text = "Add Product";
             UnitTypeCombo.SelectedIndex = 0;
             Loaded += (_, _) => { LoadCategories(null); PopulateParentProductCombo(); };
+
+            // Wire barcode scanner: scanning while dialog is open fills BarcodeBox
+            _barcodeScanner = new SalesKeyboardInputService();
+            _barcodeScanner.BarcodeCompleted += barcode =>
+            {
+                BarcodeBox.Text = barcode;
+                NameBox.Focus();
+            };
+            PreviewTextInput += (_, e) => _barcodeScanner.RegisterTextInput(e.Text);
+            PreviewKeyDown   += (_, e) => _barcodeScanner.TryHandleKeyDown(e.Key);
         }
 
         // ── Constructor: Scan mode (new product with barcode pre-filled) ──────
