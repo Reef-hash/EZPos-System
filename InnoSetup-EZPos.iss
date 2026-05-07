@@ -62,6 +62,9 @@ Source: "publish\*"; Excludes: "EZPos.db,Config\config.ini,license.dat"; DestDir
 ; This preserves all user data across updates and follows Windows app data conventions.
 Source: "publish\EZPos.db"; DestDir: "{commonappdata}\EZPos"; Flags: onlyifdoesntexist uninsneveruninstall
 
+; Seed config.ini — only on FIRST install so user settings are never overwritten on update
+Source: "Config\config.ini"; DestDir: "{commonappdata}\EZPos"; Flags: onlyifdoesntexist uninsneveruninstall
+
 ; ============================================================
 ;  Directories — grant write permission so the app can read/write data files
 ; ============================================================
