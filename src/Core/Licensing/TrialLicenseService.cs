@@ -101,10 +101,18 @@ namespace EZPos.Core.Licensing
                     {
                         var value = line[prefix.Length..].Trim();
 
+                        // Try round-trip (ISO 8601 with Z) — written by app self-init on dev machines.
                         if (DateTime.TryParse(value, CultureInfo.InvariantCulture,
                                               DateTimeStyles.RoundtripKind, out var dt))
                         {
                             return dt.ToUniversalTime();
+                        }
+
+                        // Fallback: local-time string written by Inno Setup (e.g. '2026-05-07 14:30:00').
+                        if (DateTime.TryParse(value, CultureInfo.InvariantCulture,
+                                              DateTimeStyles.AssumeLocal, out var dtLocal))
+                        {
+                            return dtLocal.ToUniversalTime();
                         }
                     }
                 }

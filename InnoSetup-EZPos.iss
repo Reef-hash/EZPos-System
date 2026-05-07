@@ -161,22 +161,19 @@ end;
 
 // ── Trial initialization ──────────────────────────────────────────────────────
 //
-// Writes %ProgramData%\EZPos\trial.dat with the current UTC install date.
+// Writes %ProgramData%\EZPos\trial.dat with the install date (local time).
 // Only written once — NEVER overwritten on updates or reinstalls, so the trial
 // clock cannot be reset by reinstalling.
 //
-// Format matches TrialLicenseService.ReadInstallDate() expectations:
-//   INSTALL_DATE=2026-05-07T12:00:00.0000000Z
+// Format: INSTALL_DATE=2026-05-07 14:30:00
+// Parsed by TrialLicenseService.ReadInstallDate() as local time → converted to UTC.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 procedure InitializeTrialIfNeeded();
 var
-  TrialFile  : String;
-  DataDir    : String;
-  NowUtc     : TDateTime;
-  Year, Month, Day, Hour, Minute, Second, MSec : Word;
-  DateStr    : String;
-  Lines      : TArrayOfString;
+  TrialFile : String;
+  DataDir   : String;
+  Lines     : TArrayOfString;
 begin
   DataDir   := ExpandConstant('{commonappdata}\EZPos');
   TrialFile := DataDir + '\trial.dat';
@@ -190,24 +187,11 @@ begin
   if not DirExists(DataDir) then
     CreateDir(DataDir);
 
-  // Build an ISO 8601 UTC timestamp string.
-  // Inno Setup provides GetDateTimeString for local time; we compose UTC manually
-  // using DecodeDate/DecodeTime so TrialLicenseService can parse it correctly.
-  NowUtc := Now;
-  DecodeDate(NowUtc, Year, Month, Day);
-  DecodeTime(NowUtc, Hour, Minute, Second, MSec);
-
-  DateStr := Format('INSTALL_DATE=%d-%s-%sT%s:%s:%s.0000000Z', [
-    Year,
-    Format('%.2d', [Month]),
-    Format('%.2d', [Day]),
-    Format('%.2d', [Hour]),
-    Format('%.2d', [Minute]),
-    Format('%.2d', [Second])
-  ]);
-
+  // GetDateTimeString is the standard Inno Setup date function.
+  // 'yyyy/mm/dd hh:nn:ss' with '-' as date separator produces e.g. '2026-05-07 14:30:00'.
+  // C# TrialLicenseService parses this as local time and converts to UTC.
   SetArrayLength(Lines, 1);
-  Lines[0] := DateStr;
+  Lines[0] := 'INSTALL_DATE=' + GetDateTimeString('yyyy/mm/dd hh:nn:ss', '-', ':');
   SaveStringsToFile(TrialFile, Lines, False);
 end;
 

@@ -142,7 +142,7 @@ namespace EZPos.UI.Pages {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/EZPos;V1.0.5.0;component/src/ui/pages/reportspage.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/EZPos;V1.0.6.0;component/src/ui/pages/reportspage.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\..\src\UI\Pages\ReportsPage.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
