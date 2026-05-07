@@ -27,6 +27,10 @@ namespace EZPos.UI.Pages
 
         private void SettingsPage_Loaded(object sender, RoutedEventArgs e)
         {
+            var asm = System.Reflection.Assembly.GetEntryAssembly() ?? System.Reflection.Assembly.GetExecutingAssembly();
+            var ver = (asm.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? asm.GetName().Version?.ToString() ?? "1.0").Split('+')[0];
+            VersionRun.Text = $"Version {ver}  \u2022  Built with .NET 6 + WPF";
+
             StoreNameBox.Text     = ConfigHelper.Get("StoreName",      "EZPos Store");
             PrinterNameBox.Text   = ConfigHelper.Get("PrinterName",    "");
             TaxRateBox.Text       = ConfigHelper.Get("TaxRate",        "6");

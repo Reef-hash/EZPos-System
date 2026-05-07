@@ -314,7 +314,7 @@
                     <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" Margin="0,0,0,12">
                         <Run Text="EZPos Point of Sale System" FontWeight="SemiBold" />
                         <LineBreak />
-                        <Run Text="Version 1.0  •  Built with .NET 6 + WPF" />
+                        <Run x:Name="VersionRun" Text="Version ..." />
                     </TextBlock>
                     
                     <Button Style="{StaticResource SecondaryButtonStyle}"
