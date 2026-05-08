@@ -13,6 +13,13 @@ namespace EZPos.Business.Services
         public int     TotalOrders     { get; set; }
         public decimal AverageOrder    { get; set; }
         public int     TotalItemsSold  { get; set; }
+        /// <summary>
+        /// Estimated gross profit for the period.
+        /// Null when no products in the date range have a cost price set.
+        /// </summary>
+        public decimal? EstimatedProfit   { get; set; }
+        /// <summary>Profit margin as a percentage of revenue. Null when EstimatedProfit is null.</summary>
+        public decimal? ProfitMarginPct   { get; set; }
     }
 
     public class DailySales
@@ -62,13 +69,14 @@ namespace EZPos.Business.Services
 
     public class StockSnapshot
     {
-        public string  Barcode      { get; set; } = string.Empty;
-        public string  Name         { get; set; } = string.Empty;
-        public string  Category     { get; set; } = string.Empty;
-        public decimal Price        { get; set; }
-        public int     Stock        { get; set; }
-        public int     ReorderLevel { get; set; }
-        public string  Status       { get; set; } = string.Empty; // OK / Low / Out
+        public string   Barcode      { get; set; } = string.Empty;
+        public string   Name         { get; set; } = string.Empty;
+        public string   Category     { get; set; } = string.Empty;
+        public decimal  Price        { get; set; }
+        public decimal? CostPrice    { get; set; }
+        public int      Stock        { get; set; }
+        public int      ReorderLevel { get; set; }
+        public string   Status       { get; set; } = string.Empty; // OK / Low / Out
     }
 
     // ── Service ───────────────────────────────────────────────────────────────
@@ -109,6 +117,30 @@ namespace EZPos.Business.Services
                     result.AverageOrder   = result.TotalOrders > 0
                         ? result.TotalRevenue / result.TotalOrders
                         : 0;
+                }
+
+                // Estimated profit — only for products that have a cost price set
+                var profitCmd = conn.CreateCommand();
+                profitCmd.CommandText = @"
+                    SELECT
+                        COALESCE(SUM((si.Price - p.CostPrice) * si.Quantity), 0) AS Profit,
+                        COUNT(DISTINCT si.Id) AS ItemsWithCost
+                    FROM SaleItems si
+                    JOIN Products p  ON p.Id  = si.ProductId
+                    JOIN Sales    s  ON s.Id  = si.SaleId
+                    WHERE DATE(s.DateTime) BETWEEN @from AND @to
+                      AND p.CostPrice IS NOT NULL";
+                profitCmd.Parameters.AddWithValue("@from", from.ToString("yyyy-MM-dd"));
+                profitCmd.Parameters.AddWithValue("@to",   to.ToString("yyyy-MM-dd"));
+
+                using var pr = profitCmd.ExecuteReader();
+                if (pr.Read() && pr.GetInt32(1) > 0)
+                {
+                    var profit = pr.GetDecimal(0);
+                    result.EstimatedProfit  = profit;
+                    result.ProfitMarginPct  = result.TotalRevenue > 0
+                        ? Math.Round(profit / result.TotalRevenue * 100m, 1)
+                        : 0m;
                 }
             }
             catch { /* return empty defaults on any DB error */ }
@@ -372,21 +404,22 @@ namespace EZPos.Business.Services
 
                 var cmd = conn.CreateCommand();
                 cmd.CommandText = @"
-                    SELECT Barcode, Name, Category, Price, Stock, ReorderLevel
+                    SELECT Barcode, Name, Category, Price, CostPrice, Stock, ReorderLevel
                     FROM Products
                     ORDER BY Category ASC, Name ASC";
 
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    int stock  = reader.GetInt32(4);
-                    int reorder = reader.GetInt32(5);
+                    int stock   = reader.GetInt32(5);
+                    int reorder = reader.GetInt32(6);
                     result.Add(new StockSnapshot
                     {
                         Barcode      = reader.GetString(0),
                         Name         = reader.GetString(1),
                         Category     = reader.GetString(2),
                         Price        = reader.GetDecimal(3),
+                        CostPrice    = reader.IsDBNull(4) ? (decimal?)null : reader.GetDecimal(4),
                         Stock        = stock,
                         ReorderLevel = reorder,
                         Status       = stock == 0 ? "Out of Stock" : stock <= reorder ? "Low Stock" : "OK"

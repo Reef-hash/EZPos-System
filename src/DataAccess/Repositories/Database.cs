@@ -120,6 +120,9 @@ namespace EZPos.DataAccess.Repositories
             TryAddColumn(conn, "Products", "UnitType",        "TEXT NOT NULL DEFAULT 'Unit'");
             TryAddColumn(conn, "Products", "ConversionRate",  "REAL NOT NULL DEFAULT 1");
             TryAddColumn(conn, "Products", "ParentProductId", "INTEGER NULL");
+
+            // v3: optional cost price for profit tracking
+            TryAddColumn(conn, "Products", "CostPrice", "REAL NULL DEFAULT NULL");
         }
 
         private static void TryAddColumn(SQLiteConnection conn, string table, string column, string definition)

@@ -69,6 +69,15 @@
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="RefreshProducts_Click">Refresh</Button>
+                    <Button x:Name="ToggleCostColumnBtn"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="12,8" Margin="0,0,8,8"
+                            Click="ToggleCostColumn_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconBlock Icon="EyeSlash" x:Name="ToggleCostIcon" FontSize="12" Margin="0,0,6,0" />
+                            <TextBlock x:Name="ToggleCostText" Text="Show Cost" />
+                        </StackPanel>
+                    </Button>
 
                     <TextBlock x:Name="TotalProductsText" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="8,0,0,8" />
                 </WrapPanel>
@@ -87,6 +96,11 @@
                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2.4*" />
                         <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="1.4*" />
                         <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat='RM {0:F2}'}" Width="1*" />
+                        <DataGridTextColumn x:Name="CostPriceColumn"
+                                            Header="Cost Price"
+                                            Binding="{Binding CostPrice, StringFormat='RM {0:F2}', TargetNullValue=''}"
+                                            Width="1*"
+                                            Visibility="Collapsed" />
                         <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="0.8*" />
 
                         <DataGridTemplateColumn Header="Status" Width="1.2*">

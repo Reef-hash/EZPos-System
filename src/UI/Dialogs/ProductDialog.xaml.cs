@@ -47,6 +47,10 @@ namespace EZPos.UI.Dialogs
             };
             PreviewTextInput += (_, e) => _barcodeScanner.RegisterTextInput(e.Text);
             PreviewKeyDown   += (_, e) => _barcodeScanner.TryHandleKeyDown(e.Key);
+
+            // Wire live profit calculator
+            PriceBox.TextChanged    += (_, _) => UpdateProfitPanel();
+            CostPriceBox.TextChanged += (_, _) => UpdateProfitPanel();
         }
 
         // ── Constructor: Scan mode (new product with barcode pre-filled) ──────
@@ -70,6 +74,10 @@ namespace EZPos.UI.Dialogs
                 PopulateParentProductCombo();
                 NameBox.Focus();
             };
+
+            // Wire live profit calculator
+            PriceBox.TextChanged     += (_, _) => UpdateProfitPanel();
+            CostPriceBox.TextChanged += (_, _) => UpdateProfitPanel();
         }
 
         // ── Constructor: Edit mode ─────────────────────────────────────────────
@@ -89,6 +97,8 @@ namespace EZPos.UI.Dialogs
             PriceBox.Text   = existingProduct.Price.ToString("F2");
             StockBox.Text   = existingProduct.Stock.ToString("G");
             ReorderBox.Text = existingProduct.ReorderLevel.ToString();
+            if (existingProduct.CostPrice.HasValue)
+                CostPriceBox.Text = existingProduct.CostPrice.Value.ToString("F2");
 
             // Select unit type
             var utMatch = UnitTypeCombo.Items
@@ -117,6 +127,7 @@ namespace EZPos.UI.Dialogs
                 }
 
                 UpdatePackPanelVisibility();
+                UpdateProfitPanel();
             };
         }
 
@@ -134,6 +145,68 @@ namespace EZPos.UI.Dialogs
             }
             if (CategoryCombo.SelectedItem == null && CategoryCombo.Items.Count > 0)
                 CategoryCombo.SelectedIndex = 0;
+        }
+
+        // ── Live profit calculator ────────────────────────────────────────────
+        private void UpdateProfitPanel()
+        {
+            if (ProfitPanel is null) return;
+
+            var priceOk = decimal.TryParse(PriceBox.Text.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var price)
+                          && price > 0;
+            var costOk  = decimal.TryParse(CostPriceBox.Text.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var cost)
+                          && cost > 0;
+
+            if (!priceOk || !costOk || string.IsNullOrWhiteSpace(CostPriceBox.Text))
+            {
+                ProfitPanel.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            ProfitPanel.Visibility = Visibility.Visible;
+
+            var profit = price - cost;
+            var margin = price  != 0 ? profit / price * 100m : 0m;
+            var markup = cost   != 0 ? profit / cost  * 100m : 0m;
+
+            ProfitAmountText.Text = $"RM {profit:F2}";
+            MarginText.Text       = $"{margin:F1}%";
+            MarkupText.Text       = $"{markup:F1}%";
+
+            // Colour the numbers based on sign
+            var numberColor = profit >= 0
+                ? System.Windows.Media.Brushes.LightGreen
+                : System.Windows.Media.Brushes.OrangeRed;
+            ProfitAmountText.Foreground = numberColor;
+            MarginText.Foreground       = numberColor;
+            MarkupText.Foreground       = numberColor;
+
+            // Status text + colour
+            if (profit < 0)
+            {
+                ProfitStatusText.Text       = $"\u26a0\ufe0f Selling below cost! Loss of RM {Math.Abs(profit):F2} per unit.";
+                ProfitStatusText.Foreground = System.Windows.Media.Brushes.OrangeRed;
+            }
+            else if (margin < 15m)
+            {
+                ProfitStatusText.Text       = "Very tight profit margin";
+                ProfitStatusText.Foreground = System.Windows.Media.Brushes.OrangeRed;
+            }
+            else if (margin < 40m)
+            {
+                ProfitStatusText.Text       = "Healthy profit margin";
+                ProfitStatusText.Foreground = System.Windows.Media.Brushes.LightGreen;
+            }
+            else if (margin < 70m)
+            {
+                ProfitStatusText.Text       = "Strong profit margin";
+                ProfitStatusText.Foreground = System.Windows.Media.Brushes.Cyan;
+            }
+            else
+            {
+                ProfitStatusText.Text       = "Premium pricing detected";
+                ProfitStatusText.Foreground = System.Windows.Media.Brushes.Orchid;
+            }
         }
 
         // ── Pack panel visibility ─────────────────────────────────────────────
@@ -175,6 +248,9 @@ namespace EZPos.UI.Dialogs
             var price    = decimal.Parse(PriceBox.Text.Trim(), CultureInfo.InvariantCulture);
             var stock    = decimal.Parse(StockBox.Text.Trim(), CultureInfo.InvariantCulture);
             var reorder  = int.Parse(ReorderBox.Text.Trim());
+            decimal? costPrice = decimal.TryParse(CostPriceBox.Text.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out var cp) && cp > 0
+                ? cp
+                : (decimal?)null;
             var category = CategoryCombo.SelectedItem switch
             {
                 string value => value,
@@ -207,6 +283,7 @@ namespace EZPos.UI.Dialogs
                     Name            = name,
                     Barcode         = barcode,
                     Price           = price,
+                    CostPrice       = costPrice,
                     Stock           = stock,
                     ReorderLevel    = reorder,
                     Category        = category,
@@ -235,6 +312,7 @@ namespace EZPos.UI.Dialogs
                 _editingProduct.Name            = name;
                 _editingProduct.Barcode         = barcode;
                 _editingProduct.Price           = price;
+                _editingProduct.CostPrice       = costPrice;
                 _editingProduct.Stock           = stock;
                 _editingProduct.ReorderLevel    = reorder;
                 _editingProduct.Category        = category;

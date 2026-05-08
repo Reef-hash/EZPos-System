@@ -45,6 +45,7 @@ namespace EZPos.UI.Pages
         private readonly CategoryService categoryService;
         private ICollectionView? productsView;
         private bool isInitialized;
+        private bool _costColumnVisible;
 
         // Barcode scanner detection — same 150 ms threshold as SalesPage
         private DateTime _firstKeyTime = DateTime.MinValue;
@@ -209,6 +210,14 @@ namespace EZPos.UI.Pages
             UpdateCounters();
         }
 
+        private void ToggleCostColumn_Click(object sender, RoutedEventArgs e)
+        {
+            _costColumnVisible = !_costColumnVisible;
+            CostPriceColumn.Visibility = _costColumnVisible ? Visibility.Visible : Visibility.Collapsed;
+            ToggleCostText.Text = _costColumnVisible ? "Hide Cost" : "Show Cost";
+            ToggleCostIcon.Icon = _costColumnVisible ? FontAwesome.Sharp.IconChar.Eye : FontAwesome.Sharp.IconChar.EyeSlash;
+        }
+
         private void ManageCategories_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new CategoryManagementDialog(categoryService) { Owner = Window.GetWindow(this) };
@@ -243,6 +252,7 @@ namespace EZPos.UI.Pages
                 Name            = selected.Name,
                 Category        = selected.Category,
                 Price           = selected.Price,
+                CostPrice       = selected.CostPrice,
                 Stock           = selected.Stock,
                 ReorderLevel    = selected.ReorderLevel,
                 MaxStock        = selected.MaxStock,

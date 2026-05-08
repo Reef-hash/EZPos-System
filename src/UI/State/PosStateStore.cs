@@ -93,6 +93,7 @@ namespace EZPos.UI.State
                 Name            = p.Name,
                 Category        = p.Category,
                 Price           = p.Price,
+                CostPrice       = p.CostPrice,
                 Stock           = p.Stock,
                 ReorderLevel    = p.ReorderLevel,
                 MaxStock        = p.MaxStock,
@@ -112,6 +113,7 @@ namespace EZPos.UI.State
             existing.Name            = p.Name;
             existing.Category        = p.Category;
             existing.Price           = p.Price;
+            existing.CostPrice       = p.CostPrice;
             existing.Stock           = p.Stock;
             existing.ReorderLevel    = p.ReorderLevel;
             existing.MaxStock        = p.MaxStock;
@@ -355,6 +357,7 @@ namespace EZPos.UI.State
         private string name = string.Empty;
         private string category = string.Empty;
         private decimal price;
+        private decimal? costPrice;
         private decimal stock;
         private int reorderLevel;
         private int maxStock;
@@ -387,6 +390,13 @@ namespace EZPos.UI.State
         {
             get => price;
             set => SetProperty(ref price, value);
+        }
+
+        /// <summary>Optional cost price per unit. Null if not set by the owner.</summary>
+        public decimal? CostPrice
+        {
+            get => costPrice;
+            set => SetProperty(ref costPrice, value);
         }
 
         public decimal Stock

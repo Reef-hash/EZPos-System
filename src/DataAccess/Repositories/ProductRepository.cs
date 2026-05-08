@@ -33,7 +33,10 @@ namespace EZPos.DataAccess.Repositories
                 ConversionRate = reader.IsDBNull(reader.GetOrdinal("ConversionRate"))
                                      ? 1m
                                      : (decimal)reader.GetDouble(reader.GetOrdinal("ConversionRate")),
-                ParentProductId = parentProductId
+                ParentProductId = parentProductId,
+                CostPrice = reader.IsDBNull(reader.GetOrdinal("CostPrice"))
+                                ? (decimal?)null
+                                : (decimal)reader.GetDouble(reader.GetOrdinal("CostPrice"))
             };
         }
 
@@ -79,9 +82,9 @@ namespace EZPos.DataAccess.Repositories
                 var cmd = conn.CreateCommand();
                 cmd.CommandText = @"
                     INSERT INTO Products (Barcode, Name, Price, Stock, Category, ReorderLevel, MaxStock, LastUpdated,
-                                         UnitType, ConversionRate, ParentProductId)
+                                         UnitType, ConversionRate, ParentProductId, CostPrice)
                     VALUES (@barcode, @name, @price, @stock, @category, @reorderLevel, @maxStock, @lastUpdated,
-                            @unitType, @conversionRate, @parentProductId);
+                            @unitType, @conversionRate, @parentProductId, @costPrice);
                     SELECT last_insert_rowid();";
                 cmd.Parameters.AddWithValue("@barcode",         product.Barcode);
                 cmd.Parameters.AddWithValue("@name",            product.Name);
@@ -94,6 +97,7 @@ namespace EZPos.DataAccess.Repositories
                 cmd.Parameters.AddWithValue("@unitType",        product.UnitType.ToString());
                 cmd.Parameters.AddWithValue("@conversionRate",  (double)product.ConversionRate);
                 cmd.Parameters.AddWithValue("@parentProductId", (object?)product.ParentProductId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@costPrice",       product.CostPrice.HasValue ? (object)(double)product.CostPrice.Value : DBNull.Value);
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
@@ -110,7 +114,7 @@ namespace EZPos.DataAccess.Repositories
                         Category = @category, ReorderLevel = @reorderLevel,
                         MaxStock = @maxStock, LastUpdated = @lastUpdated,
                         UnitType = @unitType, ConversionRate = @conversionRate,
-                        ParentProductId = @parentProductId
+                        ParentProductId = @parentProductId, CostPrice = @costPrice
                     WHERE Id = @id";
                 cmd.Parameters.AddWithValue("@id",             product.Id);
                 cmd.Parameters.AddWithValue("@barcode",        product.Barcode);
@@ -124,6 +128,7 @@ namespace EZPos.DataAccess.Repositories
                 cmd.Parameters.AddWithValue("@unitType",       product.UnitType.ToString());
                 cmd.Parameters.AddWithValue("@conversionRate", (double)product.ConversionRate);
                 cmd.Parameters.AddWithValue("@parentProductId", (object?)product.ParentProductId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@costPrice",       product.CostPrice.HasValue ? (object)(double)product.CostPrice.Value : DBNull.Value);
                 cmd.ExecuteNonQuery();
             }
         }

@@ -60,6 +60,20 @@ namespace EZPos.UI.Pages
             AvgOrderValue.Text      = $"RM {summary.AverageOrder:N2}";
             TransactionsValue.Text  = summary.TotalOrders.ToString();
 
+            // Estimated profit KPI cards — only shown when at least one product has cost price data
+            if (summary.EstimatedProfit.HasValue)
+            {
+                EstProfitCard.Visibility     = Visibility.Visible;
+                EstProfitValue.Text          = $"RM {summary.EstimatedProfit.Value:N2}";
+                EstMarginValue.Text          = $"{summary.ProfitMarginPct:F1}%";
+                EstProfitNote.Visibility     = Visibility.Visible;
+            }
+            else
+            {
+                EstProfitCard.Visibility     = Visibility.Collapsed;
+                EstProfitNote.Visibility     = Visibility.Collapsed;
+            }
+
             // Bar chart — daily breakdown
             var daily = _reportService.GetDailyBreakdown(from, to);
             salesTrendData.Clear();
@@ -300,6 +314,31 @@ namespace EZPos.UI.Pages
                 r++;
             }
 
+            // Profit KPIs — only when cost data exists
+            if (summary.EstimatedProfit.HasValue)
+            {
+                var profitKpis = new[]
+                {
+                    ("Est. Gross Profit", $"RM {summary.EstimatedProfit.Value:N2}"),
+                    ("Profit Margin",     $"{summary.ProfitMarginPct:F1}%"),
+                };
+                foreach (var (i, (metric, value)) in profitKpis.Select((k, i) => (i, k)))
+                {
+                    var fill = i % 2 == 0 ? whiteFill : altFill;
+                    ws1.Cell(r, 1).Value = metric;
+                    ws1.Cell(r, 1).Style.Font.FontColor = XLColor.FromHtml("#22C55E");
+                    ws1.Cell(r, 2).Value = value;
+                    ws1.Cell(r, 2).Style.Font.Bold = true;
+                    ws1.Cell(r, 2).Style.Font.FontColor = XLColor.FromHtml("#22C55E");
+                    ApplyDataRowStyle(ws1.Range(r, 1, r, 2), fill, borderClr);
+                    r++;
+                }
+                ws1.Cell(r, 1).Value = "* Estimated profit based only on products with cost price set";
+                ws1.Cell(r, 1).Style.Font.Italic = true;
+                ws1.Cell(r, 1).Style.Font.FontColor = XLColor.FromHtml("#94A3B8");
+                r++;
+            }
+
             // Payment breakdown sub-table
             r++;
             ws1.Cell(r, 1).Value = "PAYMENT METHOD BREAKDOWN";
@@ -495,7 +534,7 @@ namespace EZPos.UI.Pages
             // ─────────────────────────────────────────────────────────────
             var ws6 = SetupSheet(workbook, "Stock Snapshot");
             r = 1;
-            WriteHeaderRow(ws6, r, hdrFill, hdrFont, borderClr, "Barcode", "Product Name", "Category", "Price (RM)", "Current Stock", "Reorder Level", "Status");
+            WriteHeaderRow(ws6, r, hdrFill, hdrFont, borderClr, "Barcode", "Product Name", "Category", "Price (RM)", "Cost Price (RM)", "Profit/Unit (RM)", "Margin %", "Current Stock", "Reorder Level", "Status");
             r++;
 
             var stock = _reportService.GetStockSnapshot();
@@ -508,19 +547,38 @@ namespace EZPos.UI.Pages
                                 : s.Status == "Low Stock"    ? lowColor
                                 : okColor;
 
+                decimal? profitPerUnit = s.CostPrice.HasValue ? s.Price - s.CostPrice.Value : (decimal?)null;
+                decimal? marginPct     = (s.CostPrice.HasValue && s.Price > 0) ? Math.Round((s.Price - s.CostPrice.Value) / s.Price * 100m, 1) : (decimal?)null;
+
                 ws6.Cell(r, 1).Value = s.Barcode;
                 ws6.Cell(r, 2).Value = s.Name;
                 ws6.Cell(r, 3).Value = s.Category;
                 ws6.Cell(r, 4).Value = (double)s.Price;
                 ws6.Cell(r, 4).Style.NumberFormat.Format = "#,##0.00";
-                ws6.Cell(r, 5).Value = s.Stock;
-                ws6.Cell(r, 6).Value = s.ReorderLevel;
-                ws6.Cell(r, 7).Value = s.Status;
-                ws6.Cell(r, 7).Style.Font.Bold = true;
-                ws6.Cell(r, 7).Style.Font.FontColor = statusColor;
+                if (s.CostPrice.HasValue)
+                {
+                    ws6.Cell(r, 5).Value = (double)s.CostPrice.Value;
+                    ws6.Cell(r, 5).Style.NumberFormat.Format = "#,##0.00";
+                    ws6.Cell(r, 6).Value = (double)profitPerUnit!.Value;
+                    ws6.Cell(r, 6).Style.NumberFormat.Format = "#,##0.00";
+                    ws6.Cell(r, 6).Style.Font.FontColor = profitPerUnit.Value >= 0 ? XLColor.FromHtml("#22C55E") : XLColor.FromHtml("#EF4444");
+                    ws6.Cell(r, 7).Value = $"{marginPct:F1}%";
+                    ws6.Cell(r, 7).Style.Font.FontColor = marginPct >= 0 ? XLColor.FromHtml("#22C55E") : XLColor.FromHtml("#EF4444");
+                }
+                else
+                {
+                    ws6.Cell(r, 5).Value = "N/A";
+                    ws6.Cell(r, 6).Value = "N/A";
+                    ws6.Cell(r, 7).Value = "N/A";
+                }
+                ws6.Cell(r, 8).Value = s.Stock;
+                ws6.Cell(r, 9).Value = s.ReorderLevel;
+                ws6.Cell(r, 10).Value = s.Status;
+                ws6.Cell(r, 10).Style.Font.Bold = true;
+                ws6.Cell(r, 10).Style.Font.FontColor = statusColor;
 
-                SetRowFontColor(ws6.Range(r, 1, r, 6), bodyFont);
-                ApplyDataRowStyle(ws6.Range(r, 1, r, 7), rowFill, borderClr);
+                SetRowFontColor(ws6.Range(r, 1, r, 9), bodyFont);
+                ApplyDataRowStyle(ws6.Range(r, 1, r, 10), rowFill, borderClr);
                 r++;
             }
 
@@ -529,8 +587,11 @@ namespace EZPos.UI.Pages
             ws6.Column(3).Width = 16;
             ws6.Column(4).Width = 14;
             ws6.Column(5).Width = 16;
-            ws6.Column(6).Width = 16;
-            ws6.Column(7).Width = 14;
+            ws6.Column(6).Width = 18;
+            ws6.Column(7).Width = 12;
+            ws6.Column(8).Width = 16;
+            ws6.Column(9).Width = 16;
+            ws6.Column(10).Width = 14;
             ws6.SheetView.FreezeRows(1);
 
             workbook.SaveAs(filePath);

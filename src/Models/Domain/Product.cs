@@ -33,5 +33,11 @@ namespace EZPos.Models.Domain
 
         /// <summary>For Pack: the Id of the base Unit product whose stock is deducted on sale.</summary>
         public int? ParentProductId { get; set; }
+
+        /// <summary>
+        /// Optional cost price (purchase / landed cost) per unit.
+        /// Null means the owner has not entered a cost price — profit calculations are skipped.
+        /// </summary>
+        public decimal? CostPrice { get; set; }
     }
 }

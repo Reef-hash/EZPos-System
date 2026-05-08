@@ -35,6 +35,8 @@
             <RowDefinition Height="Auto"/>
             <!-- KPI Cards -->
             <RowDefinition Height="Auto"/>
+            <!-- Estimated Profit Band (hidden when no cost data) -->
+            <RowDefinition Height="Auto"/>
             <!-- Charts Section -->
             <RowDefinition Height="*"/>
             <!-- Additional Analytics -->
@@ -179,10 +181,51 @@
             </Grid>
         </Border>
 
+        <!-- Estimated Profit KPI row — only visible when cost price data exists -->
+        <Border x:Name="EstProfitCard" Grid.Row="2" Padding="0,8,0,0" Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Est. Gross Profit -->
+                <Border Grid.Column="0" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0" BorderBrush="#3D22C55E" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <fa:IconBlock Icon="Coins" FontSize="14" Foreground="#22C55E" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Est. Gross Profit" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="EstProfitValue" Text="RM 0.00" Foreground="#22C55E" FontSize="22" FontWeight="Bold"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Profit Margin % -->
+                <Border Grid.Column="1" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0" BorderBrush="#3D22C55E" BorderThickness="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <fa:IconBlock Icon="Percent" FontSize="14" Foreground="#22C55E" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Profit Margin" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="EstMarginValue" Text="0.0%" Foreground="#22C55E" FontSize="22" FontWeight="Bold"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Note -->
+                <Border Grid.Column="2" Style="{StaticResource PosCardStyle}" Margin="0" BorderBrush="#3D22C55E" BorderThickness="1">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="EstProfitNote" Text="&#9432; Estimated based on products with cost price set. Products without a cost price are excluded." 
+                                   Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- ============================================ -->
         <!-- CHARTS SECTION                              -->
         <!-- ============================================ -->
-        <Border Grid.Row="2" Padding="0,0,0,12">
+        <Border Grid.Row="3" Padding="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
@@ -302,7 +345,7 @@
         <!-- ============================================ -->
         <!-- TOP PRODUCTS & ADDITIONAL INFO              -->
         <!-- ============================================ -->
-        <Border Grid.Row="3" Style="{StaticResource PosCardStyle}" Margin="0">
+        <Border Grid.Row="4" Style="{StaticResource PosCardStyle}" Margin="0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

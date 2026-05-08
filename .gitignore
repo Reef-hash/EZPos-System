@@ -37,3 +37,6 @@ Thumbs.db
 # ==================== NuGet ====================
 packages/
 *.nupkg
+
+# ==================== Development ====================
+EZPos-System\docs
