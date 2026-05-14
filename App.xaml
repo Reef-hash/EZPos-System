@@ -1,8 +1,25 @@
 <Application x:Class="EZPos.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
     <Application.Resources>
         <ResourceDictionary>
+
+            <!-- ================== MERGED LIBRARIES ================== -->
+            <ResourceDictionary.MergedDictionaries>
+                <!-- MaterialDesign Theme — Dark mode, Cyan primary -->
+                <materialDesign:BundledTheme BaseTheme="Dark"
+                    PrimaryColor="Cyan" SecondaryColor="Cyan" />
+
+                <!-- MahApps.Metro — Window chrome and controls -->
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Cyan.xaml" />
+
+                <!-- EZPos Themes — Cyber Violet color tokens and component styles -->
+                <ResourceDictionary Source="pack://application:,,,/src/UI/Themes/DashboardTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
             <!-- ===================== COLORS ===================== -->
             <Color x:Key="PrimaryColor">#FF00D9FF</Color>

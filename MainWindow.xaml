@@ -1,8 +1,8 @@
-<Window x:Class="EZPos.UI.MainWindow"
+<mah:MetroWindow x:Class="EZPos.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
-        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         Title="EZPos"
         Icon="/Resources/Icons/app.ico"
         MinHeight="700"
@@ -10,63 +10,37 @@
         Height="800"
         Width="1280"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
         ResizeMode="CanResize"
-        Background="{StaticResource SidebarBrush}">
+        Background="{StaticResource DashboardBackgroundBrush}"
+        GlowBrush="{StaticResource DashboardPrimaryBrush}"
+        BorderBrush="{StaticResource DashboardBorderBrush}"
+        BorderThickness="1"
+        WindowTitleBrush="{StaticResource DashboardSurfaceBrush}"
+        NonActiveWindowTitleBrush="{StaticResource DashboardSurfaceBrush}"
+        NonActiveBorderBrush="{StaticResource DashboardBorderBrush}"
+        TitleCharacterCasing="Normal">
 
-    <WindowChrome.WindowChrome>
-        <WindowChrome ResizeBorderThickness="5" CaptionHeight="0" GlassFrameThickness="0" NonClientFrameEdges="None" />
-    </WindowChrome.WindowChrome>
+    <mah:MetroWindow.TitleTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
+                <Image Source="/Resources/Icons/app.ico" Width="20" Height="20" Margin="0,0,10,0"
+                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                <TextBlock Text="EZPos" FontWeight="Bold" FontSize="13"
+                           Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text=" — Point of Sale" FontSize="12"
+                           Foreground="{StaticResource DashboardTextMutedBrush}" VerticalAlignment="Center" Margin="2,0,0,0"/>
+            </StackPanel>
+        </DataTemplate>
+    </mah:MetroWindow.TitleTemplate>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="52" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- ══ Custom Title Bar ══ -->
-        <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="{StaticResource SidebarBrush}"
-              MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <!-- App branding (left) -->
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0"
-                        IsHitTestVisible="False">
-                <Image Source="/Resources/Icons/app.ico" Width="42" Height="42" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock Text="EZPos" FontFamily="{StaticResource AppFont}" FontWeight="Bold" FontSize="14"
-                           Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
-                <TextBlock Text=" — Point of Sale" FontSize="12"
-                           Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="2,0,0,0" />
-            </StackPanel>
-
-            <!-- Window controls (right) -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
-                        WindowChrome.IsHitTestVisibleInChrome="True">
-                <Button x:Name="MinimizeBtn" Width="46" Height="52"
-                        Click="MinimizeBtn_Click"
-                        ToolTip="Minimize"
-                        Style="{StaticResource WinCtrlButtonStyle}" >
-                    <fa:IconBlock Icon="Minus" FontSize="14" />
-                </Button>
-                <Button x:Name="MaximizeBtn" Width="46" Height="52"
-                        Click="MaximizeBtn_Click"
-                        ToolTip="Maximize"
-                        Style="{StaticResource WinCtrlButtonStyle}">
-                    <fa:IconBlock x:Name="MaximizeIcon" Icon="Expand" FontSize="14" />
-                </Button>
-                <Button x:Name="CloseBtn" Width="46" Height="52"
-                        Click="CloseBtn_Click"
-                        ToolTip="Close"
-                        Style="{StaticResource WinCloseButtonStyle}">
-                    <fa:IconBlock Icon="Xmark" FontSize="16" />
-                </Button>
-            </StackPanel>
-        </Grid>
-
         <!-- ══ Sidebar ══ -->
-        <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource SidebarBrush}" Padding="14,10,14,14">
+        <Border Grid.Column="0" Background="{StaticResource DashboardSurfaceBrush}" Padding="14,10,14,14">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -101,10 +75,8 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Grid.Column="1" Background="{StaticResource ContentBrush}" Padding="14">
-            <Border Style="{StaticResource PosCardStyle}" Padding="12" Margin="0" BorderThickness="0">
-                <ContentControl x:Name="MainContent" />
-            </Border>
+        <Border Grid.Column="1" Background="{StaticResource DashboardBackgroundBrush}" Padding="14">
+            <ContentControl x:Name="MainContent" />
         </Border>
     </Grid>
-</Window>
+</mah:MetroWindow>

@@ -10,10 +10,11 @@ using EZPos.DataAccess.Repositories;
 using EZPos.UI.Dialogs;
 using EZPos.UI.Navigation;
 using EZPos.UI.State;
+using MahApps.Metro.Controls;
 
 namespace EZPos.UI
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         private const string DefaultRoute = "Dashboard";
         private readonly PosStateStore stateStore;
@@ -199,10 +200,10 @@ namespace EZPos.UI
 
         private void HighlightNavButton(string pageName)
         {
-            var activeBackground = FindResource("PrimaryBrush") as Brush;
+            var activeBackground   = FindResource("DashboardPrimaryBrush") as Brush;
             var inactiveBackground = Brushes.Transparent;
-            var activeForeground = FindResource("SidebarBrush") as Brush;
-            var inactiveForeground = FindResource("TextSecondaryBrush") as Brush;
+            var activeForeground   = Brushes.White;
+            var inactiveForeground = FindResource("DashboardTextSecondaryBrush") as Brush;
 
             ApplyNavState(DashboardNavBtn, pageName == "Dashboard", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(SalesNavBtn,      pageName == "Sales",     activeBackground, inactiveBackground, activeForeground, inactiveForeground);
@@ -231,44 +232,6 @@ namespace EZPos.UI
         private void AboutButton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("EZPos System v1.0\nModern Point of Sale Application", "About", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        // ── Custom title bar ──────────────────────────────────────────────
-        private void TitleBar_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (e.ClickCount == 2)
-                ToggleMaximize();
-            else
-                DragMove();
-        }
-
-        private void MinimizeBtn_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
-
-        private void MaximizeBtn_Click(object sender, RoutedEventArgs e)
-        {
-            ToggleMaximize();
-        }
-
-        private void CloseBtn_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private void ToggleMaximize()
-        {
-            if (WindowState == WindowState.Maximized)
-            {
-                WindowState = WindowState.Normal;
-                MaximizeIcon.Icon = FontAwesome.Sharp.IconChar.Expand;
-            }
-            else
-            {
-                WindowState = WindowState.Maximized;
-                MaximizeIcon.Icon = FontAwesome.Sharp.IconChar.Compress;
-            }
         }
     }
 }
