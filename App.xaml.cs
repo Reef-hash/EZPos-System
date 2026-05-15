@@ -85,8 +85,7 @@ namespace EZPos
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error starting application: {ex.Message}\n\n{ex.StackTrace}",
-                    "EZPos - Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Startup error: {ex.Message}", "EZPos", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
             }
         }

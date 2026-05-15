@@ -7,6 +7,7 @@ using System.Windows.Input;
 using EZPos.Business.Services;
 using EZPos.Models.Domain;
 using EZPos.UI.Input;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Dialogs
 {
@@ -16,7 +17,7 @@ namespace EZPos.UI.Dialogs
     /// Pass an existing product to open in Edit mode.
     /// After ShowDialog() == true, read the saved product from the Product property.
     /// </summary>
-    public partial class ProductDialog : Window
+    public partial class ProductDialog : UserControl
     {
         private readonly ProductService  _productService;
         private readonly CategoryService _categoryService;
@@ -298,6 +299,7 @@ namespace EZPos.UI.Dialogs
                 {
                     _productService.Add(product);
                     Product = product;
+                    DialogHost.CloseDialogCommand.Execute(product, this);
                 }
                 catch (Exception ex)
                 {
@@ -325,6 +327,7 @@ namespace EZPos.UI.Dialogs
                 {
                     _productService.Update(_editingProduct);
                     Product = _editingProduct;
+                    DialogHost.CloseDialogCommand.Execute(_editingProduct, this);
                 }
                 catch (Exception ex)
                 {
@@ -333,14 +336,12 @@ namespace EZPos.UI.Dialogs
                     return;
                 }
             }
-
-            DialogResult = true;
         }
 
         // ── Cancel ────────────────────────────────────────────────────────────
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
+            DialogHost.CloseDialogCommand.Execute(null, this);
         }
 
         // ── Validation ────────────────────────────────────────────────────────

@@ -7,20 +7,22 @@
 
 ---
 
-## Current Status (13 May 2026)
+## Current Status (14 May 2026)
 
 | Component | Status | Notes |
 |---|---|---|
 | NuGet packages (MahApps + MD) | ✅ Done | MahApps 2.4.10, MaterialDesignThemes 5.1.0 |
-| `App.xaml` ResourceDictionaries | ✅ Done | BundledTheme Dark+Cyan + MahApps Controls/Fonts/Themes |
-| `DashboardTheme.xaml` | ✅ Done | Cyber Violet palette, DashboardCardStyle, DashboardDataGrid |
+| `App.xaml` ResourceDictionaries | ✅ Done | BundledTheme Dark+DeepPurple + MahApps + MaterialDesign2.Defaults |
+| `DashboardTheme.xaml` | ✅ Done | Cyber Violet palette + all component styles + dialog form styles |
 | `DashboardPage.xaml` | ✅ Done | Page entrance animation, KPI cards, hover lift, count-up numbers |
 | `DashboardPage.xaml.cs` | ✅ Done | AnimateCurrency + AnimateInt (DispatcherTimer count-up) |
 | `MainWindow.xaml` | ✅ Done | MetroWindow migration — Phase 3 complete |
 | `MainWindow.xaml.cs` | ✅ Done | Base class MetroWindow, brush keys, removed title bar handlers |
-| Remaining pages (5 pages) | ⬜ Not started | Phase 4 — follow Dashboard style reference |
-| Dialogs (6 dialogs) | ⬜ Not started | Phase 5 (visual) + Phase 6 (DialogHost overlay) |
-| Snackbar system | ⬜ Not started | Phase 7 |
+| Remaining pages (5 pages) | ✅ Done | ProductsPage, SalesPage, StockPage, ReportsPage, SettingsPage |
+| All dialogs (8 dialogs) | ✅ Done | Cyber Violet styling applied, all missing resources defined |
+| Runtime crashes (3 fixed) | ✅ Done | Dark.Violet theme, MaterialDesign2.Defaults, SidebarBrush |
+| Missing dialog resources | ✅ Done | ContentBrush, AppFont, PrimaryButtonStyle, FieldLabel, ErrorLabel, FieldGroup, MonoFont, WinCloseButtonStyle |
+| Snackbar system | ⬜ Deferred | Phase 7 — post-stabilisation |
 
 ---
 
@@ -224,11 +226,11 @@ SalesPage, ProductsPage, etc.
 |---|---|---|---|
 | **P1** | Foundation — packages + App.xaml | ✅ COMPLETE | — |
 | **P2** | Dashboard POC — Cyber Violet style reference | ✅ COMPLETE | P1 |
-| **P3** | MainWindow → MetroWindow chrome | ⬜ NOT STARTED | P1 |
-| **P4** | Pages migration (5 remaining pages) | ⬜ NOT STARTED | P2, P3 |
-| **P5** | Dialogs — Cyber Violet styling | ⬜ NOT STARTED | P2 |
-| **P6** | Dialogs → DialogHost overlay system | ⬜ NOT STARTED | P5 |
-| **P7** | Snackbar notification system | ⬜ NOT STARTED | P3, P6 |
+| **P3** | MainWindow → MetroWindow chrome | ✅ COMPLETE | P1 |
+| **P4** | Pages migration (5 remaining pages) | ✅ COMPLETE | P2, P3 |
+| **P5** | Dialogs — Cyber Violet styling | ✅ COMPLETE | P2 |
+| **P6** | Dialogs → DialogHost overlay system | ⬜ DEFERRED | P5 |
+| **P7** | Snackbar notification system | ⬜ DEFERRED | P3, P6 |
 
 ---
 

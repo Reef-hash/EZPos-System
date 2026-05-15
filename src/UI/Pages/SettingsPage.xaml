@@ -1,48 +1,80 @@
-<UserControl x:Class="EZPos.UI.Pages.SettingsPage"
+﻿<UserControl x:Class="EZPos.UI.Pages.SettingsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
-             Background="{StaticResource ContentBrush}">
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="{StaticResource DashboardBackgroundBrush}">
+
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard><Storyboard>
+                <DoubleAnimation Storyboard.TargetName="PageRoot"
+                                 Storyboard.TargetProperty="Opacity"
+                                 From="0" To="1" Duration="0:0:0.3"/>
+                <DoubleAnimation Storyboard.TargetName="PageTranslate"
+                                 Storyboard.TargetProperty="Y"
+                                 From="16" To="0" Duration="0:0:0.35">
+                    <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+            </Storyboard></BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+
+    <Grid x:Name="PageRoot">
+        <Grid.RenderTransform>
+            <TranslateTransform x:Name="PageTranslate" Y="0"/>
+        </Grid.RenderTransform>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="0">
 
-            <!-- ── Page header ── -->
-            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+            <!-- Header -->
+            <materialDesign:Card Padding="22,18" Margin="0,0,0,16"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Settings" FontSize="22" FontWeight="Bold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text="Configure store information, printer, and system preferences."
-                                   FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="4" Height="26" CornerRadius="2" Margin="0,0,14,0">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#7C3AED" Offset="0"/>
+                                    <GradientStop Color="#A78BFA" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <StackPanel>
+                            <TextBlock Text="Settings" FontSize="20" FontWeight="Bold"
+                                       Foreground="{StaticResource DashboardTextPrimaryBrush}" />
+                            <TextBlock Text="Configure store information, printer, and system preferences."
+                                       FontSize="12" Foreground="{StaticResource DashboardTextSecondaryBrush}" Margin="0,4,0,0" />
+                        </StackPanel>
                     </StackPanel>
                     <Button Grid.Column="1"
                             x:Name="SaveButton"
-                            Style="{StaticResource PrimaryButtonStyle}"
-                            Padding="20,8" Height="40"
+                            Style="{StaticResource DashboardRaisedButton}"
+                            Padding="20,8"
                             Click="SaveButton_Click">
                         <StackPanel Orientation="Horizontal">
-                            <fa:IconBlock Icon="Save" Foreground="{StaticResource SidebarBrush}" Margin="0,0,8,0" />
-                            <TextBlock Text="Save Changes" Foreground="{StaticResource SidebarBrush}" />
+                            <fa:IconBlock Icon="Save" Margin="0,0,8,0" />
+                            <TextBlock Text="Save Changes" />
                         </StackPanel>
                     </Button>
                 </Grid>
-            </Border>
+            </materialDesign:Card>
 
-            <!-- ── Store Information ── -->
-            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+            <!-- Store Information -->
+            <materialDesign:Card Padding="22,18" Margin="0,0,0,16"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <fa:IconBlock Icon="Store" FontSize="16"
-                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                      Foreground="{StaticResource DashboardPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="Store Information" FontSize="15" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="220" />
@@ -53,86 +85,67 @@
                             <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-
-                        <!-- Store Name -->
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Store Name"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="13" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="0" Grid.Column="1"
-                                 x:Name="StoreNameBox"
-                                 Height="36" VerticalContentAlignment="Center" />
-
-                        <!-- Receipt Footer -->
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="StoreNameBox"
+                                 materialDesign:HintAssist.Hint="Store name" />
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Receipt Footer Message"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="13" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="2" Grid.Column="1"
-                                 x:Name="ReceiptFooterBox"
-                                 Height="36" VerticalContentAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="2" Grid.Column="1" x:Name="ReceiptFooterBox"
+                                 materialDesign:HintAssist.Hint="Printed at the bottom of receipts" />
                     </Grid>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <!-- ── Printer ── -->
-            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+            <!-- Printer -->
+            <materialDesign:Card Padding="22,18" Margin="0,0,0,16"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <fa:IconBlock Icon="Print" FontSize="16"
-                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                      Foreground="{StaticResource DashboardPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="Receipt Printer" FontSize="15" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="220" />
                             <ColumnDefinition Width="*" MaxWidth="420" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
                         <TextBlock Grid.Column="0" Text="Printer Name"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="13" VerticalAlignment="Center" />
-                        <TextBox Grid.Column="1"
-                                 x:Name="PrinterNameBox"
-                                 Height="36" VerticalContentAlignment="Center"
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" x:Name="PrinterNameBox"
+                                 materialDesign:HintAssist.Hint="Printer name (leave blank to disable)"
                                  Margin="0,0,8,0" />
-                        <Button Grid.Column="2"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Height="36" Padding="12,0"
-                                Click="DetectPrinters_Click">
+                        <Button Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}"
+                                Padding="12,8" Click="DetectPrinters_Click">
                             <StackPanel Orientation="Horizontal">
                                 <fa:IconBlock Icon="Search" Margin="0,0,6,0" />
                                 <TextBlock Text="Detect" />
                             </StackPanel>
                         </Button>
                     </Grid>
-
                     <TextBlock x:Name="PrinterHintText"
                                Text="Leave blank to disable receipt printing."
-                               Foreground="{StaticResource TextMutedBrush}"
-                               FontSize="11" Margin="220,6,0,0" />
-
+                               Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11" Margin="220,6,0,0" />
                     <CheckBox x:Name="AutoPrintCheckBox"
                               Content="Auto-print receipt after checkout"
-                              Foreground="{StaticResource TextSecondaryBrush}"
+                              Foreground="{StaticResource DashboardTextSecondaryBrush}"
                               FontSize="13" Margin="220,10,0,0" />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <!-- ── Sales & Tax ── -->
-            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+            <!-- Sales and Tax -->
+            <materialDesign:Card Padding="22,18" Margin="0,0,0,16"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <fa:IconBlock Icon="Percent" FontSize="16"
-                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                      Foreground="{StaticResource DashboardPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="Sales &amp; Tax" FontSize="15" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="220" />
@@ -145,52 +158,37 @@
                             <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-
-                        <!-- Tax Rate -->
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Tax Rate (%)"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="13" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="0" Grid.Column="1"
-                                 x:Name="TaxRateBox"
-                                 Height="36" VerticalContentAlignment="Center" />
-
-                        <!-- Tax Mode -->
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="0" Grid.Column="1" x:Name="TaxRateBox"
+                                 materialDesign:HintAssist.Hint="e.g. 7" />
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Tax Mode"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="13" VerticalAlignment="Center" />
-                        <ComboBox Grid.Row="2" Grid.Column="1"
-                                  x:Name="TaxModeCombo"
-                                  Height="36">
-                            <ComboBoxItem Tag="PerReceipt">Per Receipt — tax on total (default)</ComboBoxItem>
-                            <ComboBoxItem Tag="PerItem">Per Item — tax per line item</ComboBoxItem>
-                            <ComboBoxItem Tag="Fake">Display Only — shown on receipt, not charged</ComboBoxItem>
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <ComboBox Grid.Row="2" Grid.Column="1" x:Name="TaxModeCombo">
+                            <ComboBoxItem Tag="PerReceipt">Per Receipt - tax on total (default)</ComboBoxItem>
+                            <ComboBoxItem Tag="PerItem">Per Item - tax per line item</ComboBoxItem>
+                            <ComboBoxItem Tag="Fake">Display Only - shown on receipt, not charged</ComboBoxItem>
                         </ComboBox>
-
-                        <!-- Currency Symbol -->
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Currency Symbol"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="13" VerticalAlignment="Center" />
-                        <TextBox Grid.Row="4" Grid.Column="1"
-                                 x:Name="CurrencyBox"
-                                 Height="36" VerticalContentAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBox Grid.Row="4" Grid.Column="1" x:Name="CurrencyBox"
+                                 materialDesign:HintAssist.Hint="e.g. $" />
                     </Grid>
-
-                    <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11"
-                               Margin="220,6,0,0"
-                               Text="Tax rate change takes effect on the next sale." />
+                    <TextBlock Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11"
+                               Margin="220,6,0,0" Text="Tax rate change takes effect on the next sale." />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <!-- ── Keyboard Shortcuts ── -->
-            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+            <!-- Keyboard Shortcuts -->
+            <materialDesign:Card Padding="22,18" Margin="0,0,0,16"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <fa:IconBlock Icon="Keyboard" FontSize="16"
-                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                      Foreground="{StaticResource DashboardPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="Keyboard Shortcuts" FontSize="15" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="220" />
@@ -210,53 +208,46 @@
                             <RowDefinition Height="10" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Payment: Cash"
-                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
                         <TextBox Grid.Row="0" Grid.Column="1" x:Name="PaymentCashHotkeyBox"
-                                 Height="36" VerticalContentAlignment="Center" />
-
+                                 materialDesign:HintAssist.Hint="e.g. F1" />
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Payment: QR"
-                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
                         <TextBox Grid.Row="2" Grid.Column="1" x:Name="PaymentQrHotkeyBox"
-                                 Height="36" VerticalContentAlignment="Center" />
-
+                                 materialDesign:HintAssist.Hint="e.g. F2" />
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Payment: Card"
-                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
                         <TextBox Grid.Row="4" Grid.Column="1" x:Name="PaymentCardHotkeyBox"
-                                 Height="36" VerticalContentAlignment="Center" />
-
+                                 materialDesign:HintAssist.Hint="e.g. F3" />
                         <TextBlock Grid.Row="6" Grid.Column="0" Text="Payment: Cheque"
-                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
                         <TextBox Grid.Row="6" Grid.Column="1" x:Name="PaymentChequeHotkeyBox"
-                                 Height="36" VerticalContentAlignment="Center" />
-
+                                 materialDesign:HintAssist.Hint="e.g. F4" />
                         <TextBlock Grid.Row="8" Grid.Column="0" Text="Receipt: New Sale"
-                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
                         <TextBox Grid.Row="8" Grid.Column="1" x:Name="ReceiptNewSaleHotkeyBox"
-                                 Height="36" VerticalContentAlignment="Center" />
-
+                                 materialDesign:HintAssist.Hint="e.g. PageUp" />
                         <TextBlock Grid.Row="10" Grid.Column="0" Text="Receipt: Print"
-                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
                         <TextBox Grid.Row="10" Grid.Column="1" x:Name="ReceiptPrintHotkeyBox"
-                                 Height="36" VerticalContentAlignment="Center" />
+                                 materialDesign:HintAssist.Hint="e.g. PageDown" />
                     </Grid>
-
-                    <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="220,8,0,0"
+                    <TextBlock Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11" Margin="220,8,0,0"
                                Text="Use key names like F1, F2, F3, F4, PageUp, PageDown, Insert, Home." />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <!-- ── Database Maintenance ── -->
-            <Border Style="{StaticResource PosCardStyle}" Margin="0,0,0,16">
+            <!-- Database Maintenance -->
+            <materialDesign:Card Padding="22,18" Margin="0,0,0,16"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <fa:IconBlock Icon="Database" FontSize="16"
-                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                      Foreground="{StaticResource DashboardPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="Database Maintenance" FontSize="15" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="220" />
@@ -267,27 +258,20 @@
                             <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Active Database"
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   FontSize="13" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
                         <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DatabasePathText"
-                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                   FontSize="12" TextWrapping="Wrap" />
-
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" FontSize="12" TextWrapping="Wrap" />
                         <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
                             <Button Style="{StaticResource SecondaryButtonStyle}"
-                                    Height="36" Padding="12,8" Margin="0,0,8,0"
-                                    Click="BackupDatabase_Click">
+                                    Padding="12,8" Margin="0,0,8,0" Click="BackupDatabase_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <fa:IconBlock Icon="Download" Margin="0,0,6,0" />
                                     <TextBlock Text="Backup Database" />
                                 </StackPanel>
                             </Button>
-
                             <Button Style="{StaticResource SecondaryButtonStyle}"
-                                    Height="36" Padding="12,8"
-                                    Click="RestoreDatabase_Click">
+                                    Padding="12,8" Click="RestoreDatabase_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <fa:IconBlock Icon="Upload" Margin="0,0,6,0" />
                                     <TextBlock Text="Restore Backup" />
@@ -295,40 +279,38 @@
                             </Button>
                         </StackPanel>
                     </Grid>
-
-                    <TextBlock Foreground="{StaticResource TextMutedBrush}" FontSize="11" Margin="220,8,0,0"
+                    <TextBlock Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11" Margin="220,8,0,0"
                                Text="Restore replaces the live database. EZPos will close after a successful restore so the restored data loads cleanly on next launch." />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <!-- ── About ── -->
-            <Border Style="{StaticResource PosCardStyle}">
+            <!-- About -->
+            <materialDesign:Card Padding="22,18" Margin="0,0,0,4"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <fa:IconBlock Icon="InfoCircle" FontSize="16"
-                                      Foreground="{StaticResource PrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                      Foreground="{StaticResource DashboardPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
                         <TextBlock Text="About" FontSize="15" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center" />
                     </StackPanel>
-                    
-                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="13" Margin="0,0,0,12">
+                    <TextBlock Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" Margin="0,0,0,12">
                         <Run Text="EZPos Point of Sale System" FontWeight="SemiBold" />
                         <LineBreak />
                         <Run x:Name="VersionRun" Text="Version ..." />
                     </TextBlock>
-                    
                     <Button Style="{StaticResource SecondaryButtonStyle}"
-                            Height="36" Padding="12,8" MaxWidth="200" HorizontalAlignment="Left"
-                            Click="CheckForUpdates_Click"
-                            x:Name="CheckForUpdatesButton">
+                            Padding="12,8" MaxWidth="200" HorizontalAlignment="Left"
+                            Click="CheckForUpdates_Click" x:Name="CheckForUpdatesButton">
                         <StackPanel Orientation="Horizontal">
                             <fa:IconBlock Icon="Download" Margin="0,0,6,0" />
                             <TextBlock Text="Check for Updates" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
         </StackPanel>
     </ScrollViewer>
+    </Grid>
 </UserControl>

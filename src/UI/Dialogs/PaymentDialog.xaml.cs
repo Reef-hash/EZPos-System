@@ -6,10 +6,11 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using EZPos.DataAccess.Repositories;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Dialogs
 {
-    public partial class PaymentDialog : Window
+    public partial class PaymentDialog : UserControl
     {
         private readonly decimal _baseTotal;
         private readonly decimal _subtotal;
@@ -459,10 +460,12 @@ namespace EZPos.UI.Dialogs
                 TenderedAmount = PayableTotal;
             }
 
-            DialogResult = true;
+            DialogHost.CloseDialogCommand.Execute(
+                new PaymentResult(SelectedPaymentMethod, TenderedAmount, RoundingAdjustment, PayableTotal),
+                this);
         }
 
-        private void CancelBtn_Click(object sender, RoutedEventArgs e) => DialogResult = false;
+        private void CancelBtn_Click(object sender, RoutedEventArgs e) => DialogHost.CloseDialogCommand.Execute(null, this);
         private void AmountPaidBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshChange();
 
         private void CashBtn_Click(object sender, RoutedEventArgs e) => SetPaymentMethod("Cash");

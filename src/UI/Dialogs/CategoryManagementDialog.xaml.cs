@@ -1,10 +1,13 @@
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using EZPos.Business.Services;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Dialogs
 {
-    public partial class CategoryManagementDialog : Window
+    public partial class CategoryManagementDialog : UserControl
     {
         private readonly CategoryService _categoryService;
 
@@ -52,10 +55,6 @@ namespace EZPos.UI.Dialogs
 
         // ── Event handlers ────────────────────────────────────────────────────
 
-        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => DragMove();
-
-        private void CloseBtn_Click(object sender, RoutedEventArgs e) => Close();
-
         private void CategoryList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             var selected = CategoryList.SelectedItem as string;
@@ -95,16 +94,13 @@ namespace EZPos.UI.Dialogs
             }
         }
 
-        private void RenameBtn_Click(object sender, RoutedEventArgs e)
+        private async void RenameBtn_Click(object sender, RoutedEventArgs e)
         {
             var selected = CategoryList.SelectedItem as string;
             if (selected == null) return;
 
-            var dialog = new RenameDialog(selected) { Owner = this };
-            if (dialog.ShowDialog() != true) return;
-
-            var newName = dialog.NewName;
-            if (newName == selected) return;
+            var newName = (string?)await DialogHost.Show(new RenameDialog(selected), "InnerCategoryDialog");
+            if (newName == null || newName == selected) return;
 
             bool ok = _categoryService.Rename(selected, newName);
             if (ok)

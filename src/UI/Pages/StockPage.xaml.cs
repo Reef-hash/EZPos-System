@@ -8,6 +8,7 @@ using System.Windows.Media;
 using EZPos.Business.Services;
 using EZPos.UI.Dialogs;
 using EZPos.UI.State;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Pages
 {
@@ -154,7 +155,7 @@ namespace EZPos.UI.Pages
             CategoryFilterCombo.SelectedIndex = 0;
         }
 
-        private void StockIn_Click(object sender, RoutedEventArgs e)
+        private async void StockIn_Click(object sender, RoutedEventArgs e)
         {
             if (InventoryGrid.SelectedItem is not ProductRecord selected)
             {
@@ -162,19 +163,20 @@ namespace EZPos.UI.Pages
                 return;
             }
 
-            var dialog = new StockAdjustDialog(stockService, selected) { Owner = Window.GetWindow(this) };
+            var view = new StockAdjustDialog(stockService, selected);
             // Pre-select Stock In type
-            if (dialog.TypeCombo.Items.Count > 0)
-                dialog.TypeCombo.SelectedIndex = 0;
+            if (view.TypeCombo.Items.Count > 0)
+                view.TypeCombo.SelectedIndex = 0;
 
-            if (dialog.ShowDialog() == true)
+            var result = await DialogHost.Show(view, "RootDialog");
+            if ((bool?)result == true)
             {
                 stockView?.Refresh();
                 UpdateSummary();
             }
         }
 
-        private void StockOut_Click(object sender, RoutedEventArgs e)
+        private async void StockOut_Click(object sender, RoutedEventArgs e)
         {
             if (InventoryGrid.SelectedItem is not ProductRecord selected)
             {
@@ -182,12 +184,13 @@ namespace EZPos.UI.Pages
                 return;
             }
 
-            var dialog = new StockAdjustDialog(stockService, selected) { Owner = Window.GetWindow(this) };
+            var view = new StockAdjustDialog(stockService, selected);
             // Pre-select Stock Out type
-            if (dialog.TypeCombo.Items.Count > 1)
-                dialog.TypeCombo.SelectedIndex = 1;
+            if (view.TypeCombo.Items.Count > 1)
+                view.TypeCombo.SelectedIndex = 1;
 
-            if (dialog.ShowDialog() == true)
+            var result = await DialogHost.Show(view, "RootDialog");
+            if ((bool?)result == true)
             {
                 stockView?.Refresh();
                 UpdateSummary();

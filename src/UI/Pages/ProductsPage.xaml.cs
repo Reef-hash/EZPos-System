@@ -10,6 +10,7 @@ using EZPos.Business.Services;
 using EZPos.Models.Domain;
 using EZPos.UI.Dialogs;
 using EZPos.UI.State;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Pages
 {
@@ -131,7 +132,7 @@ namespace EZPos.UI.Pages
             UpdateCounters();
         }
 
-        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        private async void SearchBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter || !isInitialized)
                 return;
@@ -175,8 +176,9 @@ namespace EZPos.UI.Pages
                 // New barcode — open Add Product dialog pre-filled
                 SearchBox.Text = string.Empty;
                 productsView?.Refresh();
-                var dialog = new ProductDialog(productService, categoryService, input) { Owner = Window.GetWindow(this) };
-                if (dialog.ShowDialog() == true)
+                var view = new ProductDialog(productService, categoryService, input);
+                var result = (Product?)await DialogHost.Show(view, "RootDialog");
+                if (result != null)
                 {
                     productsView?.Refresh();
                     UpdateCounters();
@@ -218,25 +220,24 @@ namespace EZPos.UI.Pages
             ToggleCostIcon.Icon = _costColumnVisible ? FontAwesome.Sharp.IconChar.Eye : FontAwesome.Sharp.IconChar.EyeSlash;
         }
 
-        private void ManageCategories_Click(object sender, RoutedEventArgs e)
+        private async void ManageCategories_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new CategoryManagementDialog(categoryService) { Owner = Window.GetWindow(this) };
-            dialog.ShowDialog();
+            await DialogHost.Show(new CategoryManagementDialog(categoryService), "RootDialog");
             // After managing categories, reload products view (category names may have changed)
             productsView?.Refresh();
         }
 
-        private void AddProduct_Click(object sender, RoutedEventArgs e)
+        private async void AddProduct_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new ProductDialog(productService, categoryService) { Owner = Window.GetWindow(this) };
-            if (dialog.ShowDialog() == true)
+            var result = (Product?)await DialogHost.Show(new ProductDialog(productService, categoryService), "RootDialog");
+            if (result != null)
             {
                 productsView?.Refresh();
                 UpdateCounters();
             }
         }
 
-        private void EditProduct_Click(object sender, RoutedEventArgs e)
+        private async void EditProduct_Click(object sender, RoutedEventArgs e)
         {
             if (ProductsGrid.SelectedItem is not ProductRecord selected)
             {
@@ -262,8 +263,9 @@ namespace EZPos.UI.Pages
                 ParentProductId = selected.ParentProductId
             };
 
-            var dialog = new ProductDialog(productService, categoryService, domainProduct) { Owner = Window.GetWindow(this) };
-            if (dialog.ShowDialog() == true)
+            var view = new ProductDialog(productService, categoryService, domainProduct);
+            var result = (Product?)await DialogHost.Show(view, "RootDialog");
+            if (result != null)
             {
                 productsView?.Refresh();
                 UpdateCounters();

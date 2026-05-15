@@ -1,8 +1,6 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
-
-    <!-- MaterialDesign resources already loaded globally via App.xaml BundledTheme -->
 
     <!-- ═══════════════ CYBER VIOLET PALETTE ═══════════════ -->
     <SolidColorBrush x:Key="DashboardPrimaryBrush"       Color="#7C3AED" />
@@ -16,59 +14,102 @@
     <SolidColorBrush x:Key="DashboardTextMutedBrush"     Color="#6B7280" />
     <SolidColorBrush x:Key="DashboardBorderBrush"        Color="#2D2B55" />
 
-    <!-- ═══════════════ BUTTON — Cyber Violet ═══════════════ -->
-    <Style x:Key="DashboardRaisedButton" TargetType="Button">
-        <Setter Property="FontFamily"      Value="{StaticResource AppFont}" />
-        <Setter Property="FontSize"        Value="12" />
-        <Setter Property="FontWeight"      Value="SemiBold" />
-        <Setter Property="Foreground"      Value="White" />
-        <Setter Property="Background"      Value="{StaticResource DashboardPrimaryBrush}" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Padding"         Value="14,8" />
-        <Setter Property="Cursor"          Value="Hand" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Root" CornerRadius="8" SnapsToDevicePixels="True">
-                        <Border.Background>
-                            <SolidColorBrush x:Name="BtnBg" Color="#7C3AED"/>
-                        </Border.Background>
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Margin="{TemplateBinding Padding}" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <EventTrigger RoutedEvent="MouseEnter">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="BtnBg"
-                                                    Storyboard.TargetProperty="Color"
-                                                    To="#9F67FF" Duration="0:0:0.15"/>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                        <EventTrigger RoutedEvent="MouseLeave">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <ColorAnimation Storyboard.TargetName="BtnBg"
-                                                    Storyboard.TargetProperty="Color"
-                                                    To="#7C3AED" Duration="0:0:0.15"/>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Root" Property="Opacity" Value="0.8" />
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Root" Property="Opacity" Value="0.4" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <!-- Backward-compat aliases (used by pages/MainWindow with old names) -->
+    <SolidColorBrush x:Key="PrimaryBrush"         Color="#7C3AED" />
+    <SolidColorBrush x:Key="AccentBrush"          Color="#A78BFA" />
+    <SolidColorBrush x:Key="TextPrimaryBrush"     Color="#F1F5F9" />
+    <SolidColorBrush x:Key="TextSecondaryBrush"   Color="#94A3B8" />
+    <SolidColorBrush x:Key="TextMutedBrush"       Color="#6B7280" />
+    <SolidColorBrush x:Key="BorderBrush"          Color="#2D2B55" />
+    <SolidColorBrush x:Key="SidebarBrush"         Color="#FFFFFF" />
+    <SolidColorBrush x:Key="DividerBrush"         Color="#1E2D2B55" />
+    <SolidColorBrush x:Key="CardBackgroundBrush"  Color="#1A1A35" />
+    <SolidColorBrush x:Key="HoverBackgroundBrush" Color="#1A7C3AED" />
+    <SolidColorBrush x:Key="SuccessBrush"         Color="#10B981" />
+    <SolidColorBrush x:Key="WarningBrush"         Color="#F59E0B" />
+    <SolidColorBrush x:Key="ErrorBrush"           Color="#EF4444" />
+    <SolidColorBrush x:Key="InfoBrush"            Color="#7C3AED" />
+
+    <!-- ═══════════════ FONT RESOURCES ═══════════════ -->
+    <FontFamily x:Key="AppFont">Segoe UI</FontFamily>
+    <FontFamily x:Key="MonoFont">Consolas, Courier New</FontFamily>
+
+    <!-- ═══════════════ ALIAS BRUSHES (used by dialogs) ═══════════════ -->
+    <!-- ContentBrush: window/panel background for popup windows -->
+    <SolidColorBrush x:Key="ContentBrush" Color="#13132A" />
+
+    <!-- ═══════════════ BUTTONS (MaterialDesign-based) ═══════════════ -->
+
+    <!-- Primary action — Cyber Violet filled, rounded -->
+    <Style x:Key="DashboardRaisedButton" TargetType="Button"
+           BasedOn="{StaticResource MaterialDesignRaisedButton}">
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+        <Setter Property="Foreground" Value="White" />
     </Style>
 
-    <!-- ═══════════════ HEADER CARD ═══════════════ -->
+    <!-- Secondary / outlined -->
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button"
+           BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+        <Setter Property="Foreground"   Value="{StaticResource DashboardTextPrimaryBrush}" />
+        <Setter Property="BorderBrush"  Value="{StaticResource DashboardBorderBrush}" />
+    </Style>
+
+    <!-- Sidebar nav — flat, full-width, left-aligned -->
+    <Style x:Key="NavButtonStyle" TargetType="Button"
+           BasedOn="{StaticResource MaterialDesignFlatButton}">
+        <Setter Property="Height"                     Value="42" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="HorizontalAlignment"        Value="Stretch" />
+        <Setter Property="Margin"                     Value="0,2" />
+        <Setter Property="Padding"                    Value="14,0" />
+        <Setter Property="FontSize"                   Value="13" />
+        <Setter Property="Foreground"                 Value="{StaticResource DashboardTextSecondaryBrush}" />
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="8" />
+    </Style>
+
+    <!-- Alias — PrimaryButtonStyle == DashboardRaisedButton -->
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button"
+           BasedOn="{StaticResource DashboardRaisedButton}" />
+
+    <!-- Window close button — flat, red on hover -->
+    <Style x:Key="WinCloseButtonStyle" TargetType="Button"
+           BasedOn="{StaticResource MaterialDesignFlatButton}">
+        <Setter Property="Width"   Value="28" />
+        <Setter Property="Height"  Value="28" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource DashboardTextSecondaryBrush}" />
+        <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="6" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ═══════════════ DIALOG FORM STYLES ═══════════════ -->
+
+    <!-- Field label — small muted caption above each input -->
+    <Style x:Key="FieldLabel" TargetType="TextBlock">
+        <Setter Property="Foreground"  Value="{StaticResource DashboardTextSecondaryBrush}" />
+        <Setter Property="FontSize"    Value="12" />
+        <Setter Property="Margin"      Value="0,0,0,4" />
+    </Style>
+
+    <!-- Validation error message below a field -->
+    <Style x:Key="ErrorLabel" TargetType="TextBlock">
+        <Setter Property="Foreground"  Value="{StaticResource ErrorBrush}" />
+        <Setter Property="FontSize"    Value="11" />
+        <Setter Property="Margin"      Value="0,2,0,0" />
+        <Setter Property="Visibility"  Value="Collapsed" />
+    </Style>
+
+    <!-- Field group — vertical spacing between form fields -->
+    <Style x:Key="FieldGroup" TargetType="StackPanel">
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+
+    <!-- ═══════════════ CARD (Border wrapper) ═══════════════ -->
     <Style x:Key="DashboardCardStyle" TargetType="Border">
         <Setter Property="Background"      Value="{StaticResource DashboardSurfaceBrush}" />
         <Setter Property="BorderBrush"     Value="{StaticResource DashboardBorderBrush}" />
@@ -78,17 +119,28 @@
         <Setter Property="Margin"          Value="0,0,0,16" />
     </Style>
 
+    <!-- POS cart list item -->
+    <Style x:Key="PosListItemStyle" TargetType="Border">
+        <Setter Property="Background"      Value="Transparent" />
+        <Setter Property="BorderBrush"     Value="{StaticResource DashboardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding"         Value="8,10" />
+        <Setter Property="Margin"          Value="0" />
+    </Style>
+
     <!-- ═══════════════ DATAGRID — Violet Theme ═══════════════ -->
     <Style x:Key="DashboardDataGrid" TargetType="DataGrid">
-        <Setter Property="Background"              Value="Transparent" />
-        <Setter Property="BorderBrush"             Value="{StaticResource DashboardBorderBrush}" />
-        <Setter Property="BorderThickness"         Value="0" />
-        <Setter Property="RowBackground"           Value="Transparent" />
+        <Setter Property="Background"               Value="Transparent" />
+        <Setter Property="BorderThickness"          Value="0" />
+        <Setter Property="RowBackground"            Value="Transparent" />
         <Setter Property="AlternatingRowBackground" Value="#06A78BFA" />
-        <Setter Property="Foreground"              Value="{StaticResource DashboardTextPrimaryBrush}" />
-        <Setter Property="GridLinesVisibility"     Value="Horizontal" />
+        <Setter Property="Foreground"               Value="{StaticResource DashboardTextPrimaryBrush}" />
+        <Setter Property="GridLinesVisibility"      Value="Horizontal" />
         <Setter Property="HorizontalGridLinesBrush" Value="#1A2D2B55" />
-        <Setter Property="VerticalGridLinesBrush"  Value="Transparent" />
+        <Setter Property="VerticalGridLinesBrush"   Value="Transparent" />
+        <Setter Property="SelectionMode"            Value="Single" />
+        <Setter Property="SelectionUnit"            Value="FullRow" />
+        <Setter Property="CanUserResizeRows"        Value="False" />
         <Setter Property="ColumnHeaderStyle">
             <Setter.Value>
                 <Style TargetType="DataGridColumnHeader">

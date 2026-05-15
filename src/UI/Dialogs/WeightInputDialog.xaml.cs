@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Dialogs
 {
@@ -8,7 +10,7 @@ namespace EZPos.UI.Dialogs
     /// Prompts the cashier to enter a weight in kg for a weight-based product.
     /// After ShowDialog() == true, read <see cref="WeightKg"/> for the confirmed value.
     /// </summary>
-    public partial class WeightInputDialog : Window
+    public partial class WeightInputDialog : UserControl
     {
         private readonly decimal _pricePerKg;
 
@@ -48,12 +50,12 @@ namespace EZPos.UI.Dialogs
         private void AddToCart_Click(object sender, RoutedEventArgs e)
         {
             if (!Validate()) return;
-            DialogResult = true;
+            DialogHost.CloseDialogCommand.Execute(WeightKg, this);
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
+            DialogHost.CloseDialogCommand.Execute(null, this);
         }
 
         private void WeightBox_KeyDown(object sender, KeyEventArgs e)
@@ -61,7 +63,7 @@ namespace EZPos.UI.Dialogs
             if (e.Key == Key.Enter)
             {
                 if (!Validate()) return;
-                DialogResult = true;
+                DialogHost.CloseDialogCommand.Execute(WeightKg, this);
                 e.Handled = true;
             }
         }

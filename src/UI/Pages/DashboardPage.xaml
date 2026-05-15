@@ -3,14 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             Background="{DynamicResource DashboardBackgroundBrush}">
-    <UserControl.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="../Themes/DashboardTheme.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
+             Background="{StaticResource DashboardBackgroundBrush}">
 
     <!-- ── Page load: slide-up + fade-in, KPI cards staggered ── -->
     <UserControl.Triggers>
@@ -67,7 +60,7 @@
         </EventTrigger>
     </UserControl.Triggers>
 
-    <Grid x:Name="PageRoot" Opacity="0">
+    <Grid x:Name="PageRoot">
         <Grid.RenderTransform>
             <TranslateTransform x:Name="PageTranslate" Y="0"/>
         </Grid.RenderTransform>
@@ -81,7 +74,7 @@
         <!-- ══════════════════════════════════════════════════
              HEADER
         ══════════════════════════════════════════════════ -->
-        <Border Grid.Row="0" Style="{StaticResource DashboardCardStyle}">
+        <materialDesign:Card Grid.Row="0" Padding="22,18" Margin="0,0,0,16" Background="{StaticResource DashboardSurfaceBrush}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -117,7 +110,7 @@
                     </StackPanel>
                 </Button>
             </Grid>
-        </Border>
+        </materialDesign:Card>
 
         <!-- ══════════════════════════════════════════════════
              KPI CARDS  (4 columns, hover lift + border glow)

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using EZPos.Business.Services;
 using EZPos.UI.State;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Dialogs
 {
@@ -10,7 +11,7 @@ namespace EZPos.UI.Dialogs
     /// Adjust stock for a single product.
     /// Opens over the selected ProductRecord. Calls StockService.AdjustStock() on save.
     /// </summary>
-    public partial class StockAdjustDialog : Window
+    public partial class StockAdjustDialog : UserControl
     {
         private readonly StockService _stockService;
         private readonly ProductRecord _product;
@@ -104,7 +105,7 @@ namespace EZPos.UI.Dialogs
             try
             {
                 _stockService.AdjustStock(_product.Id, change, dbReason);
-                DialogResult = true;
+                DialogHost.CloseDialogCommand.Execute(true, this);
             }
             catch (Exception ex)
             {
@@ -115,7 +116,7 @@ namespace EZPos.UI.Dialogs
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
+            DialogHost.CloseDialogCommand.Execute(null, this);
         }
 
         // ── Validation ────────────────────────────────────────────────────────

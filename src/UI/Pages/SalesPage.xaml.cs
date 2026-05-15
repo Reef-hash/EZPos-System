@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -12,6 +13,7 @@ using EZPos.DataAccess.Repositories;
 using EZPos.UI.Dialogs;
 using EZPos.UI.Input;
 using EZPos.UI.State;
+using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Pages
 {
@@ -56,7 +58,7 @@ namespace EZPos.UI.Pages
 
             keyboardInput = new SalesKeyboardInputService();
             keyboardInput.BarcodeCompleted += HandleBarcodeCompleted;
-            keyboardInput.CheckoutRequested += () => BeginCheckout(showEmptyCartMessage: false);
+            keyboardInput.CheckoutRequested += async () => await BeginCheckout(showEmptyCartMessage: false);
 
             productsView = new ListCollectionView(this.stateStore.Products);
             this.stateStore.PropertyChanged += StateStore_PropertyChanged;
@@ -418,7 +420,7 @@ namespace EZPos.UI.Pages
         private void ProductItem_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button { DataContext: ProductRecord product }) return;
-            AddProductToCart(product);
+            _ = AddProductToCart(product);
         }
 
         private void QuantityPlus_Click(object sender, RoutedEventArgs e)
@@ -545,19 +547,17 @@ namespace EZPos.UI.Pages
         /// Unit/Pack → add directly; Weight → prompt for weight first.
         /// Returns true if an item was successfully added.
         /// </summary>
-        private bool AddProductToCart(ProductRecord product)
+        private async Task<bool> AddProductToCart(ProductRecord product)
         {
             if (product.UnitType == EZPos.Models.Domain.UnitType.Weight)
             {
-                var dialog = new EZPos.UI.Dialogs.WeightInputDialog(product.Name, product.Price)
-                {
-                    Owner = Window.GetWindow(this)
-                };
+                var view = new EZPos.UI.Dialogs.WeightInputDialog(product.Name, product.Price);
+                var weightResult = (decimal?)await DialogHost.Show(view, "RootDialog");
 
-                if (dialog.ShowDialog() != true)
+                if (weightResult == null)
                     return false;
 
-                if (!stateStore.AddWeightToCart(product.Id, dialog.WeightKg))
+                if (!stateStore.AddWeightToCart(product.Id, weightResult.Value))
                 {
                     MessageBox.Show("Insufficient stock for the entered weight.",
                         "Stock Limit", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -580,10 +580,10 @@ namespace EZPos.UI.Pages
 
         private void Checkout_Click(object sender, RoutedEventArgs e)
         {
-            BeginCheckout(showEmptyCartMessage: true);
+            _ = BeginCheckout(showEmptyCartMessage: true);
         }
 
-        private void BeginCheckout(bool showEmptyCartMessage)
+        private async Task BeginCheckout(bool showEmptyCartMessage)
         {
             if (isCheckoutInProgress)
                 return;
@@ -602,18 +602,16 @@ namespace EZPos.UI.Pages
             isCheckoutInProgress = true;
             try
             {
-                var payDialog = new PaymentDialog(stateStore.Subtotal, stateStore.Tax, stateStore.Total)
-                {
-                    Owner = Window.GetWindow(this)
-                };
+                var payView = new PaymentDialog(stateStore.Subtotal, stateStore.Tax, stateStore.Total);
+                var payResult = (PaymentResult?)await DialogHost.Show(payView, "RootDialog");
 
-                if (payDialog.ShowDialog() != true)
+                if (payResult == null)
                     return;
 
                 var result = saleService.ProcessSale(
-                    payDialog.SelectedPaymentMethod,
-                    payDialog.TenderedAmount,
-                    payDialog.RoundingAdjustment);
+                    payResult.SelectedPaymentMethod,
+                    payResult.TenderedAmount,
+                    payResult.RoundingAdjustment);
 
                 if (!result.Success)
                 {
@@ -637,7 +635,7 @@ namespace EZPos.UI.Pages
             }
         }
 
-        private void HandleBarcodeCompleted(string barcode)
+        private async void HandleBarcodeCompleted(string barcode)
         {
             var match = stateStore.Products
                 .FirstOrDefault(p => string.Equals(p.Barcode, barcode, StringComparison.OrdinalIgnoreCase));
@@ -649,7 +647,7 @@ namespace EZPos.UI.Pages
                 return;
             }
 
-            AddProductToCart(match);
+            await AddProductToCart(match);
         }
 
         // ══════════════════════════════════════════════════════════════════════

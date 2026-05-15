@@ -2,21 +2,51 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:EZPos.UI.Pages"
-             Background="{StaticResource ContentBrush}">
-    <Grid>
+             Background="{StaticResource DashboardBackgroundBrush}">
+
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard><Storyboard>
+                <DoubleAnimation Storyboard.TargetName="PageRoot"
+                                 Storyboard.TargetProperty="Opacity"
+                                 From="0" To="1" Duration="0:0:0.3"/>
+                <DoubleAnimation Storyboard.TargetName="PageTranslate"
+                                 Storyboard.TargetProperty="Y"
+                                 From="16" To="0" Duration="0:0:0.35">
+                    <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+            </Storyboard></BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
+
+    <Grid x:Name="PageRoot">
+        <Grid.RenderTransform>
+            <TranslateTransform x:Name="PageTranslate" Y="0"/>
+        </Grid.RenderTransform>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Style="{StaticResource PosCardStyle}">
-            <StackPanel>
-                <TextBlock Text="Stock" FontSize="22" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
-                <TextBlock Text="Monitor stock levels and reorder risk from a single inventory view." FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0" />
+        <materialDesign:Card Grid.Row="0" Padding="22,18" Margin="0,0,0,16" Background="{StaticResource DashboardSurfaceBrush}">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Width="4" Height="26" CornerRadius="2" Margin="0,0,14,0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#7C3AED" Offset="0"/>
+                            <GradientStop Color="#A78BFA" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <StackPanel>
+                    <TextBlock Text="Stock" FontSize="20" FontWeight="Bold" Foreground="{StaticResource DashboardTextPrimaryBrush}" />
+                    <TextBlock Text="Monitor stock levels and reorder risk from a single inventory view." FontSize="12" Foreground="{StaticResource DashboardTextSecondaryBrush}" Margin="0,4,0,0" />
+                </StackPanel>
             </StackPanel>
-        </Border>
+        </materialDesign:Card>
 
         <Grid Grid.Row="1" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
@@ -26,36 +56,36 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0">
+            <materialDesign:Card Grid.Column="0" Padding="22,18" Margin="0,0,8,0" Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
-                    <TextBlock Text="In Stock" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                    <TextBlock x:Name="InStockValue" Foreground="{StaticResource SuccessBrush}" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
+                    <TextBlock Text="In Stock" Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="12" />
+                    <TextBlock x:Name="InStockValue" Foreground="#34D399" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <Border Grid.Column="1" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0">
+            <materialDesign:Card Grid.Column="1" Padding="22,18" Margin="0,0,8,0" Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
-                    <TextBlock Text="Low Stock" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                    <TextBlock x:Name="LowStockValue" Foreground="{StaticResource WarningBrush}" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
+                    <TextBlock Text="Low Stock" Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="12" />
+                    <TextBlock x:Name="LowStockValue" Foreground="#FCD34D" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <Border Grid.Column="2" Style="{StaticResource PosCardStyle}" Margin="0,0,8,0">
+            <materialDesign:Card Grid.Column="2" Padding="22,18" Margin="0,0,8,0" Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
-                    <TextBlock Text="Out of Stock" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                    <TextBlock x:Name="OutOfStockValue" Foreground="{StaticResource ErrorBrush}" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
+                    <TextBlock Text="Out of Stock" Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="12" />
+                    <TextBlock x:Name="OutOfStockValue" Foreground="#EF4444" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
-            <Border Grid.Column="3" Style="{StaticResource PosCardStyle}" Margin="0">
+            <materialDesign:Card Grid.Column="3" Padding="22,18" Margin="0" Background="{StaticResource DashboardSurfaceBrush}">
                 <StackPanel>
-                    <TextBlock Text="Total Units" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
-                    <TextBlock x:Name="TotalUnitsValue" Foreground="{StaticResource PrimaryBrush}" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
+                    <TextBlock Text="Total Units" Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="12" />
+                    <TextBlock x:Name="TotalUnitsValue" Foreground="{StaticResource DashboardAccentBrush}" FontWeight="Bold" FontSize="24" Margin="0,8,0,0" />
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
         </Grid>
 
-        <Border Grid.Row="2" Style="{StaticResource PosCardStyle}" Margin="0">
+        <materialDesign:Card Grid.Row="2" Padding="22,18" Margin="0" Background="{StaticResource DashboardSurfaceBrush}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -89,13 +119,14 @@
                         <!-- Items populated dynamically from CategoryService -->
                     </ComboBox>
 
-                    <Button Style="{StaticResource PrimaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="StockIn_Click">Stock In</Button>
+                    <Button Style="{StaticResource DashboardRaisedButton}" Padding="12,8" Margin="0,0,8,8" Click="StockIn_Click">Stock In</Button>
                     <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="StockOut_Click">Stock Out</Button>
                     <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="Refresh_Click">Refresh</Button>
                 </WrapPanel>
 
                 <DataGrid x:Name="InventoryGrid"
                           Grid.Row="1"
+                          Style="{StaticResource DashboardDataGrid}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           CanUserDeleteRows="False"
@@ -150,6 +181,6 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </Grid>
-        </Border>
+        </materialDesign:Card>
     </Grid>
 </UserControl>

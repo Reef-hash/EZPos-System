@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
         xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="EZPos"
         Icon="/Resources/Icons/app.ico"
         MinHeight="700"
@@ -33,6 +34,8 @@
         </DataTemplate>
     </mah:MetroWindow.TitleTemplate>
 
+    <Grid>
+    <materialDesign:DialogHost Identifier="RootDialog" DialogTheme="Dark">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240" />
@@ -78,5 +81,7 @@
         <Border Grid.Column="1" Background="{StaticResource DashboardBackgroundBrush}" Padding="14">
             <ContentControl x:Name="MainContent" />
         </Border>
+    </Grid>
+    </materialDesign:DialogHost>
     </Grid>
 </mah:MetroWindow>
