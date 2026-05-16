@@ -1,8 +1,8 @@
-# UI Modernization Plan — MahApps.Metro + MaterialDesign + Cyber Violet
+# UI Modernization Plan — MahApps.Metro + MaterialDesign + Graphite Amber
 
 > **Status:** POC COMPLETE — Dashboard approved, full migration in progress  
 > **Target:** Migrate all pages and dialogs from custom WPF styles to MahApps.Metro + MaterialDesignInXamlToolkit  
-> **Theme:** Cyber Violet Dark (`#0D0D1A` bg, `#7C3AED` primary, `#A78BFA` accent)  
+> **Theme:** Graphite + Amber Dark (`#111014` bg, `#F59E0B` primary, `#FCD34D` accent)  
 > **Approach:** Dashboard serves as POC and style reference — all other pages must follow the same pattern
 
 ---
@@ -13,13 +13,13 @@
 |---|---|---|
 | NuGet packages (MahApps + MD) | ✅ Done | MahApps 2.4.10, MaterialDesignThemes 5.1.0 |
 | `App.xaml` ResourceDictionaries | ✅ Done | BundledTheme Dark+DeepPurple + MahApps + MaterialDesign2.Defaults |
-| `DashboardTheme.xaml` | ✅ Done | Cyber Violet palette + all component styles + dialog form styles |
+| `DashboardTheme.xaml` | ✅ Done | Graphite + Amber palette + all component styles + dialog form styles |
 | `DashboardPage.xaml` | ✅ Done | Page entrance animation, KPI cards, hover lift, count-up numbers |
 | `DashboardPage.xaml.cs` | ✅ Done | AnimateCurrency + AnimateInt (DispatcherTimer count-up) |
 | `MainWindow.xaml` | ✅ Done | MetroWindow migration — Phase 3 complete |
 | `MainWindow.xaml.cs` | ✅ Done | Base class MetroWindow, brush keys, removed title bar handlers |
 | Remaining pages (5 pages) | ✅ Done | ProductsPage, SalesPage, StockPage, ReportsPage, SettingsPage |
-| All dialogs (8 dialogs) | ✅ Done | Cyber Violet styling applied, all missing resources defined |
+| All dialogs (8 dialogs) | ✅ Done | Graphite + Amber styling applied, all missing resources defined |
 | Runtime crashes (3 fixed) | ✅ Done | Dark.Violet theme, MaterialDesign2.Defaults, SidebarBrush |
 | Missing dialog resources | ✅ Done | ContentBrush, AppFont, PrimaryButtonStyle, FieldLabel, ErrorLabel, FieldGroup, MonoFont, WinCloseButtonStyle |
 | Snackbar system | ⬜ Deferred | Phase 7 — post-stabilisation |
@@ -32,38 +32,38 @@
 
 EZPos originally used a fully custom WPF theme defined in `App.xaml` — dark navy sidebar (`#0F172A`), dark content area (`#1E293B`), cyan accent (`#00D9FF`), and all component styles written by hand.
 
-After completing the Dashboard POC with MahApps.Metro + MaterialDesign, the **Cyber Violet** theme has been approved as the official style for the entire application. All pages being migrated must follow the patterns demonstrated in DashboardPage.
+After completing the Dashboard POC with MahApps.Metro + MaterialDesign, the **Graphite + Amber** theme has been approved as the official style for the entire application. All pages being migrated must follow the patterns demonstrated in DashboardPage.
 
 ---
 
-## Cyber Violet — Official Color Tokens
+## Graphite + Amber — Official Color Tokens
 
 Defined in `DashboardTheme.xaml`. These tokens **must be used** in all migrated pages:
 
 ```xml
 <!-- Backgrounds -->
-DashboardBackgroundBrush   = #0D0D1A   (main page background)
-DashboardSurfaceBrush      = #13132A   (cards, panels, tables)
-DashboardSurface2Brush     = #1A1A35   (row hover, nested surface)
+DashboardBackgroundBrush   = #111014   (main page background)
+DashboardSurfaceBrush      = #1C1B22   (cards, panels, tables)
+DashboardSurface2Brush     = #232229   (row hover, nested surface)
 
 <!-- Text -->
-DashboardTextPrimaryBrush  = #F1F5F9   (headings, primary values)
-DashboardTextSecondaryBrush= #94A3B8   (labels, subtitles)
-DashboardTextMutedBrush    = #6B7280   (hints, placeholders)
+DashboardTextPrimaryBrush  = #FAFAFA   (headings, primary values)
+DashboardTextSecondaryBrush= #A1A1AA   (labels, subtitles)
+DashboardTextMutedBrush    = #71717A   (hints, placeholders)
 
 <!-- Accent -->
-DashboardPrimaryBrush      = #7C3AED   (primary button, highlights)
-DashboardAccentBrush       = #A78BFA   (icons, violet KPI values)
-DashboardHoverBrush        = #9F67FF   (button hover state)
-DashboardBorderBrush       = #2D2B55   (card borders, table borders)
+DashboardPrimaryBrush      = #F59E0B   (primary button, highlights, amber)
+DashboardAccentBrush       = #FCD34D   (icons, gold KPI values)
+DashboardHoverBrush        = #E88E07   (button hover state)
+DashboardBorderBrush       = #2E2D38   (card borders, table borders)
 ```
 
 **Per-card KPI accent colors** (icon, top accent strip, value text):
 | Card | Color | Hex |
 |---|---|---|
-| Revenue / primary metric | Violet | `#A78BFA` / `#7C3AED` |
+| Revenue / primary metric | Amber | `#FCD34D` / `#F59E0B` |
 | Transactions / count | Sky Blue | `#38BDF8` / `#0EA5E9` |
-| Warnings / low stock | Amber | `#FCD34D` / `#F59E0B` |
+| Warnings / low stock | Orange | `#FB923C` / `#F97316` |
 | Averages / performance | Emerald | `#34D399` / `#10B981` |
 
 ---
@@ -106,13 +106,13 @@ DashboardBorderBrush       = #2D2B55   (card borders, table borders)
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <!-- Left violet accent bar + title -->
+        <!-- Left amber accent bar + title -->
         <StackPanel Orientation="Horizontal">
             <Border Width="4" Height="26" CornerRadius="2" Margin="0,0,14,0">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#7C3AED" Offset="0"/>
-                        <GradientStop Color="#A78BFA" Offset="1"/>
+                        <GradientStop Color="#F59E0B" Offset="0"/>
+                        <GradientStop Color="#FCD34D" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
             </Border>
@@ -130,7 +130,7 @@ DashboardBorderBrush       = #2D2B55   (card borders, table borders)
 ```xml
 <Border CornerRadius="12" Background="{StaticResource DashboardSurfaceBrush}"
         BorderThickness="1">
-    <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+    <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
     <!-- Content inside with Padding="20,16" -->
 </Border>
 ```

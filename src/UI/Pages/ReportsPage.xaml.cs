@@ -88,7 +88,7 @@ namespace EZPos.UI.Pages
                     Label     = d.Label,
                     Value     = d.Revenue,
                     BarHeight = Math.Max(4, (double)d.Revenue / maxRevenue * 220),
-                    BarColor  = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00D9FF"))
+                    BarColor  = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFF59E0B"))
                 });
             }
 

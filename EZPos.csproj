@@ -11,8 +11,8 @@
     <Product>EZPos Point of Sale</Product>
     <Company>EZPos</Company>
     <Copyright>Copyright © 2026 EZPos</Copyright>
-    <Version>1.2.7</Version>
-    <FileVersion>1.2.7.0</FileVersion>
+    <Version>1.3.7</Version>
+    <FileVersion>1.3.7.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

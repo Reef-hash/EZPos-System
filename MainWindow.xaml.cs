@@ -150,12 +150,13 @@ namespace EZPos.UI
 
         private void RegisterRoutes()
         {
-            navigationService.Register("Dashboard", () => new UI.Pages.DashboardPage(reportService));
-            navigationService.Register("Sales",     () => new UI.Pages.SalesPage(stateStore, saleService, categoryService));
-            navigationService.Register("Products",  () => new UI.Pages.ProductsPage(stateStore, productService, categoryService));
-            navigationService.Register("Stock",     () => new UI.Pages.StockPage(stateStore, stockService, categoryService));
-            navigationService.Register("Reports",   () => new UI.Pages.ReportsPage());
-            navigationService.Register("Settings",  () => new UI.Pages.SettingsPage(stateStore));
+            navigationService.Register("Dashboard",  () => new UI.Pages.DashboardPage(reportService));
+            navigationService.Register("Sales",      () => new UI.Pages.SalesPage(stateStore, saleService, categoryService));
+            navigationService.Register("Products",   () => new UI.Pages.ProductsPage(stateStore, productService, categoryService));
+            navigationService.Register("Stock",      () => new UI.Pages.StockPage(stateStore, stockService, categoryService));
+            navigationService.Register("Reports",    () => new UI.Pages.ReportsPage());
+            navigationService.Register("Settings",   () => new UI.Pages.SettingsPage(stateStore));
+            navigationService.Register("CashDrawer", () => new UI.Pages.CashDrawerPage());
         }
 
         private void NavButton_Click(object sender, RoutedEventArgs e)
@@ -205,12 +206,13 @@ namespace EZPos.UI
             var activeForeground   = Brushes.White;
             var inactiveForeground = FindResource("DashboardTextSecondaryBrush") as Brush;
 
-            ApplyNavState(DashboardNavBtn, pageName == "Dashboard", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
-            ApplyNavState(SalesNavBtn,      pageName == "Sales",     activeBackground, inactiveBackground, activeForeground, inactiveForeground);
-            ApplyNavState(ProductsNavBtn,   pageName == "Products",  activeBackground, inactiveBackground, activeForeground, inactiveForeground);
-            ApplyNavState(StockNavBtn,      pageName == "Stock",     activeBackground, inactiveBackground, activeForeground, inactiveForeground);
-            ApplyNavState(ReportsNavBtn,    pageName == "Reports",   activeBackground, inactiveBackground, activeForeground, inactiveForeground);
-            ApplyNavState(SettingsNavBtn,   pageName == "Settings",  activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(DashboardNavBtn,  pageName == "Dashboard",  activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(SalesNavBtn,       pageName == "Sales",      activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(ProductsNavBtn,    pageName == "Products",   activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(StockNavBtn,       pageName == "Stock",      activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(ReportsNavBtn,     pageName == "Reports",    activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(CashDrawerNavBtn,  pageName == "CashDrawer", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(SettingsNavBtn,    pageName == "Settings",   activeBackground, inactiveBackground, activeForeground, inactiveForeground);
         }
 
         private static void ApplyNavState(Button button, bool isActive, Brush? activeBackground, Brush inactiveBackground, Brush? activeForeground, Brush? inactiveForeground)

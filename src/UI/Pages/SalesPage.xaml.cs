@@ -74,6 +74,7 @@ namespace EZPos.UI.Pages
         private void SalesPage_Loaded(object sender, RoutedEventArgs e)
         {
             AttachWindowInputHandlers();
+            CheckShiftStatus();
 
             if (isInitialized) return;
 
@@ -90,6 +91,12 @@ namespace EZPos.UI.Pages
 
             RefreshSummary();
             isInitialized = true;
+        }
+
+        private void CheckShiftStatus()
+        {
+            var hasOpenShift = CashSessionRepository.GetOpenSession() != null;
+            NoShiftOverlay.Visibility = hasOpenShift ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void SalesPage_Unloaded(object sender, RoutedEventArgs e)
@@ -587,6 +594,16 @@ namespace EZPos.UI.Pages
         {
             if (isCheckoutInProgress)
                 return;
+
+            // Shift guard — re-check in case shift was closed in another session
+            if (CashSessionRepository.GetOpenSession() == null)
+            {
+                MessageBox.Show(
+                    "No shift is currently open.\nPlease open a shift from the Cash Drawer page before processing sales.",
+                    "Shift Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                CheckShiftStatus();
+                return;
+            }
 
             if (stateStore.CartItems.Count == 0)
             {

@@ -1,0 +1,245 @@
+<UserControl x:Class="EZPos.UI.Pages.CashDrawerPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="{StaticResource DashboardBackgroundBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── Page header ── -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+            <fa:IconBlock Icon="CashRegister" Foreground="{StaticResource DashboardAccentBrush}"
+                          FontSize="26" Margin="0,0,12,0" VerticalAlignment="Center"/>
+            <TextBlock Text="Cash Drawer Reconciliation"
+                       Foreground="{StaticResource DashboardTextPrimaryBrush}"
+                       FontSize="26" FontWeight="Bold" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- ── Active shift status card + action buttons ── -->
+        <Border Grid.Row="1" Background="{StaticResource DashboardSurfaceBrush}"
+                BorderBrush="{StaticResource DashboardBorderBrush}"
+                BorderThickness="1" CornerRadius="10" Padding="20" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status panel -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <fa:IconBlock x:Name="StatusIcon" Icon="Circle" FontSize="12"
+                                      Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="StatusLabel"
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}"
+                                   FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel x:Name="ActiveSessionDetails" Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Shift #"
+                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                       FontSize="12" Margin="0,2,16,2"/>
+                            <TextBlock x:Name="ActiveShiftId" Grid.Row="0" Grid.Column="1"
+                                       Foreground="{StaticResource DashboardTextSecondaryBrush}"
+                                       FontSize="12" Margin="0,2,0,2"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Opened by"
+                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                       FontSize="12" Margin="0,2,16,2"/>
+                            <TextBlock x:Name="ActiveOpenedBy" Grid.Row="1" Grid.Column="1"
+                                       Foreground="{StaticResource DashboardTextSecondaryBrush}"
+                                       FontSize="12" Margin="0,2,0,2"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Opened at"
+                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                       FontSize="12" Margin="0,2,16,2"/>
+                            <TextBlock x:Name="ActiveOpenedAt" Grid.Row="2" Grid.Column="1"
+                                       Foreground="{StaticResource DashboardTextSecondaryBrush}"
+                                       FontSize="12" Margin="0,2,0,2"/>
+                        </Grid>
+
+                        <!-- Expected cash live indicator -->
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="Expected Cash:"
+                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                       FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ActiveExpectedCash"
+                                       Foreground="#34D399" FontSize="18" FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Action buttons -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
+                    <Button x:Name="OpenShiftBtn" Height="44" Width="160" Margin="0,0,0,10"
+                            Style="{StaticResource PrimaryButtonStyle}" Click="OpenShift_Click">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <fa:IconBlock Icon="DoorOpen" Margin="0,0,8,0"/>
+                            <TextBlock Text="Open Shift"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="CloseShiftBtn" Height="44" Width="160"
+                            Click="CloseShift_Click">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <fa:IconBlock Icon="DoorClosed" Margin="0,0,8,0"/>
+                            <TextBlock Text="Close Shift"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── Session history ── -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                <fa:IconBlock Icon="ClockRotateLeft" Foreground="{StaticResource DashboardTextMutedBrush}"
+                              FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                <TextBlock Text="Shift History"
+                           Foreground="{StaticResource DashboardTextSecondaryBrush}"
+                           FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <Border Grid.Row="1" Background="{StaticResource DashboardSurfaceBrush}"
+                    BorderBrush="{StaticResource DashboardBorderBrush}"
+                    BorderThickness="1" CornerRadius="10">
+                <DataGrid x:Name="HistoryGrid"
+                          Style="{StaticResource DashboardDataGrid}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserSortColumns="False"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+
+                    <!-- Active (open) row gets a green tint; hover + select use amber -->
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsOpen}" Value="True">
+                                    <Setter Property="Background" Value="#1A34D399"/>
+                                </DataTrigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#0EF59E0B"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#18F59E0B"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+
+                    <!-- Date group headers: TODAY · 3 shift(s) -->
+                    <DataGrid.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.ContainerStyle>
+                                <Style TargetType="{x:Type GroupItem}">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                <StackPanel>
+                                                    <Border Padding="16,8,16,7" Margin="0,4,0,0"
+                                                            BorderThickness="0,0,0,1"
+                                                            BorderBrush="{StaticResource DashboardBorderBrush}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       Foreground="{StaticResource DashboardAccentBrush}"
+                                                                       FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                            <TextBlock Text=" · "
+                                                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                                                       FontSize="11" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding ItemCount}"
+                                                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                                                       FontSize="11" VerticalAlignment="Center"/>
+                                                            <TextBlock Text=" shift(s)"
+                                                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                                                       FontSize="11" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ItemsPresenter/>
+                                                </StackPanel>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </GroupStyle.ContainerStyle>
+                        </GroupStyle>
+                    </DataGrid.GroupStyle>
+
+                    <DataGrid.Columns>
+                        <!-- Status badge: ● OPEN (green) or Closed (muted) -->
+                        <DataGridTemplateColumn Header="Status" Width="95">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="5" Padding="8,3" HorizontalAlignment="Left" Margin="0,8">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#14A1A1AA"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsOpen}" Value="True">
+                                                        <Setter Property="Background" Value="#1A34D399"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontSize="11" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text"       Value="Closed"/>
+                                                    <Setter Property="Foreground" Value="#A1A1AA"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsOpen}" Value="True">
+                                                            <Setter Property="Text"       Value="● OPEN"/>
+                                                            <Setter Property="Foreground" Value="#34D399"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Cashier"       Binding="{Binding OpenedByUser}"          Width="110" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Opened At"     Binding="{Binding OpenedAtDisplay}"       Width="155" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Closed At"     Binding="{Binding ClosedAtDisplay}"       Width="155" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Opening (RM)"  Binding="{Binding OpeningBalanceDisplay}" Width="110" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Expected (RM)" Binding="{Binding ExpectedCashDisplay}"   Width="115" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Actual (RM)"   Binding="{Binding ActualCashDisplay}"     Width="110" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Discrepancy"   Binding="{Binding DiscrepancyDisplay}"    Width="*"   ElementStyle="{StaticResource DgCellText}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

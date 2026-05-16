@@ -84,6 +84,20 @@ namespace EZPos.DataAccess.Repositories
                     Id   INTEGER PRIMARY KEY AUTOINCREMENT,
                     Name TEXT    NOT NULL UNIQUE
                 );
+                CREATE TABLE IF NOT EXISTS CashSessions (
+                    Id                INTEGER PRIMARY KEY AUTOINCREMENT,
+                    OpenedAt          TEXT    NOT NULL,
+                    ClosedAt          TEXT    NULL,
+                    OpenedByUser      TEXT    NOT NULL DEFAULT 'Cashier',
+                    ClosedByUser      TEXT    NULL,
+                    OpeningBalance    REAL    NOT NULL DEFAULT 0,
+                    ExpectedCash      REAL    NOT NULL DEFAULT 0,
+                    ActualCash        REAL    NULL,
+                    DiscrepancyAmount REAL    NULL,
+                    Status            TEXT    NOT NULL DEFAULT 'Open',
+                    Notes             TEXT    NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_cashsessions_status ON CashSessions(Status);
                 ";
                 cmd.ExecuteNonQuery();
 

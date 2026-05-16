@@ -86,8 +86,8 @@
                     <Border Width="4" Height="26" CornerRadius="2" Margin="0,0,14,0">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#7C3AED" Offset="0"/>
-                                <GradientStop Color="#A78BFA" Offset="1"/>
+                                <GradientStop Color="#F59E0B" Offset="0"/>
+                                <GradientStop Color="#FCD34D" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
@@ -123,12 +123,12 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- ── Card 1: Revenue (Violet) ── -->
+            <!-- ── Card 1: Revenue (Amber) ── -->
             <Border x:Name="KpiCard1" Grid.Column="0" Margin="0,0,10,0"
                     Opacity="0" CornerRadius="12" Cursor="Hand"
                     Background="{StaticResource DashboardSurfaceBrush}"
                     BorderThickness="1">
-                <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+                <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
                 <Border.RenderTransform>
                     <TranslateTransform x:Name="KpiCard1Transform" Y="0"/>
                 </Border.RenderTransform>
@@ -136,13 +136,13 @@
                     <EventTrigger RoutedEvent="MouseEnter">
                         <BeginStoryboard><Storyboard>
                             <DoubleAnimation Storyboard.TargetName="KpiCard1Transform" Storyboard.TargetProperty="Y" To="-6" Duration="0:0:0.18"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                            <ColorAnimation  Storyboard.TargetName="KpiCard1" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#7C3AED" Duration="0:0:0.18"/>
+                            <ColorAnimation  Storyboard.TargetName="KpiCard1" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#F59E0B" Duration="0:0:0.18"/>
                         </Storyboard></BeginStoryboard>
                     </EventTrigger>
                     <EventTrigger RoutedEvent="MouseLeave">
                         <BeginStoryboard><Storyboard>
                             <DoubleAnimation Storyboard.TargetName="KpiCard1Transform" Storyboard.TargetProperty="Y" To="0"  Duration="0:0:0.20"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                            <ColorAnimation  Storyboard.TargetName="KpiCard1" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2D2B55" Duration="0:0:0.20"/>
+                            <ColorAnimation  Storyboard.TargetName="KpiCard1" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2E2D38" Duration="0:0:0.20"/>
                         </Storyboard></BeginStoryboard>
                     </EventTrigger>
                 </Border.Triggers>
@@ -151,26 +151,27 @@
                         <RowDefinition Height="3"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <!-- Violet gradient accent strip -->
+                    <!-- Amber gradient accent strip -->
                     <Border Grid.Row="0" CornerRadius="12,12,0,0">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Color="#7C3AED" Offset="0"/>
-                                <GradientStop Color="#A78BFA" Offset="1"/>
+                                <GradientStop Color="#F59E0B" Offset="0"/>
+                                <GradientStop Color="#FCD34D" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
                     <StackPanel Grid.Row="1" Margin="20,16,20,18">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                            <Border Width="34" Height="34" CornerRadius="10" Background="#1A7C3AED" Margin="0,0,12,0">
+                            <Border Width="34" Height="34" CornerRadius="10" Background="#1AF59E0B" Margin="0,0,12,0">
                                 <materialDesign:PackIcon Kind="CurrencyUsd" Width="17" Height="17"
-                                                         Foreground="#A78BFA" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                         Foreground="#FCD34D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Today's Revenue" Foreground="{StaticResource DashboardTextSecondaryBrush}"
                                        FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock x:Name="TodayRevenueText" Text="RM 0.00"
-                                   Foreground="#A78BFA" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"/>
+                                   Foreground="#F59E0B" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                         <TextBlock Text="Revenue from today's sales"
                                    Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11"/>
                     </StackPanel>
@@ -182,7 +183,7 @@
                     Opacity="0" CornerRadius="12" Cursor="Hand"
                     Background="{StaticResource DashboardSurfaceBrush}"
                     BorderThickness="1">
-                <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+                <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
                 <Border.RenderTransform>
                     <TranslateTransform x:Name="KpiCard2Transform" Y="0"/>
                 </Border.RenderTransform>
@@ -196,7 +197,7 @@
                     <EventTrigger RoutedEvent="MouseLeave">
                         <BeginStoryboard><Storyboard>
                             <DoubleAnimation Storyboard.TargetName="KpiCard2Transform" Storyboard.TargetProperty="Y" To="0"  Duration="0:0:0.20"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                            <ColorAnimation  Storyboard.TargetName="KpiCard2" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2D2B55" Duration="0:0:0.20"/>
+                            <ColorAnimation  Storyboard.TargetName="KpiCard2" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2E2D38" Duration="0:0:0.20"/>
                         </Storyboard></BeginStoryboard>
                     </EventTrigger>
                 </Border.Triggers>
@@ -223,19 +224,20 @@
                                        FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock x:Name="TodayOrdersText" Text="0"
-                                   Foreground="#38BDF8" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"/>
+                                   Foreground="#38BDF8" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                         <TextBlock Text="Number of transactions"
                                    Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ── Card 3: Low Stock (Amber) ── -->
+            <!-- ── Card 3: Low Stock (Orange) ── -->
             <Border x:Name="KpiCard3" Grid.Column="2" Margin="0,0,10,0"
                     Opacity="0" CornerRadius="12" Cursor="Hand"
                     Background="{StaticResource DashboardSurfaceBrush}"
                     BorderThickness="1">
-                <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+                <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
                 <Border.RenderTransform>
                     <TranslateTransform x:Name="KpiCard3Transform" Y="0"/>
                 </Border.RenderTransform>
@@ -243,13 +245,13 @@
                     <EventTrigger RoutedEvent="MouseEnter">
                         <BeginStoryboard><Storyboard>
                             <DoubleAnimation Storyboard.TargetName="KpiCard3Transform" Storyboard.TargetProperty="Y" To="-6" Duration="0:0:0.18"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                            <ColorAnimation  Storyboard.TargetName="KpiCard3" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#F59E0B" Duration="0:0:0.18"/>
+                            <ColorAnimation  Storyboard.TargetName="KpiCard3" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#F97316" Duration="0:0:0.18"/>
                         </Storyboard></BeginStoryboard>
                     </EventTrigger>
                     <EventTrigger RoutedEvent="MouseLeave">
                         <BeginStoryboard><Storyboard>
                             <DoubleAnimation Storyboard.TargetName="KpiCard3Transform" Storyboard.TargetProperty="Y" To="0"  Duration="0:0:0.20"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                            <ColorAnimation  Storyboard.TargetName="KpiCard3" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2D2B55" Duration="0:0:0.20"/>
+                            <ColorAnimation  Storyboard.TargetName="KpiCard3" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2E2D38" Duration="0:0:0.20"/>
                         </Storyboard></BeginStoryboard>
                     </EventTrigger>
                 </Border.Triggers>
@@ -261,22 +263,23 @@
                     <Border Grid.Row="0" CornerRadius="12,12,0,0">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Color="#F59E0B" Offset="0"/>
-                                <GradientStop Color="#FCD34D" Offset="1"/>
+                                <GradientStop Color="#F97316" Offset="0"/>
+                                <GradientStop Color="#FB923C" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
                     <StackPanel Grid.Row="1" Margin="20,16,20,18">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                            <Border Width="34" Height="34" CornerRadius="10" Background="#1AF59E0B" Margin="0,0,12,0">
+                            <Border Width="34" Height="34" CornerRadius="10" Background="#1AF97316" Margin="0,0,12,0">
                                 <materialDesign:PackIcon Kind="AlertCircleOutline" Width="17" Height="17"
-                                                         Foreground="#FCD34D" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                         Foreground="#FB923C" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Low Stock Items" Foreground="{StaticResource DashboardTextSecondaryBrush}"
                                        FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock x:Name="LowStockCountText" Text="0"
-                                   Foreground="#FCD34D" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"/>
+                                   Foreground="#F97316" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                         <TextBlock Text="Items requiring restock"
                                    Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11"/>
                     </StackPanel>
@@ -288,7 +291,7 @@
                     Opacity="0" CornerRadius="12" Cursor="Hand"
                     Background="{StaticResource DashboardSurfaceBrush}"
                     BorderThickness="1">
-                <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+                <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
                 <Border.RenderTransform>
                     <TranslateTransform x:Name="KpiCard4Transform" Y="0"/>
                 </Border.RenderTransform>
@@ -302,7 +305,7 @@
                     <EventTrigger RoutedEvent="MouseLeave">
                         <BeginStoryboard><Storyboard>
                             <DoubleAnimation Storyboard.TargetName="KpiCard4Transform" Storyboard.TargetProperty="Y" To="0"  Duration="0:0:0.20"><DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction></DoubleAnimation>
-                            <ColorAnimation  Storyboard.TargetName="KpiCard4" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2D2B55" Duration="0:0:0.20"/>
+                            <ColorAnimation  Storyboard.TargetName="KpiCard4" Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#2E2D38" Duration="0:0:0.20"/>
                         </Storyboard></BeginStoryboard>
                     </EventTrigger>
                 </Border.Triggers>
@@ -329,7 +332,8 @@
                                        FontSize="12" FontWeight="Medium" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock x:Name="AvgOrderText" Text="RM 0.00"
-                                   Foreground="#34D399" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"/>
+                                   Foreground="#34D399" FontSize="26" FontWeight="Bold" Margin="0,0,0,6"
+                                   TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                         <TextBlock Text="Average per transaction"
                                    Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11"/>
                     </StackPanel>
@@ -343,7 +347,7 @@
         <Border Grid.Row="2" CornerRadius="12,12,0,0" Padding="20,14"
                 Background="{StaticResource DashboardSurfaceBrush}"
                 BorderThickness="1,1,1,0">
-            <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+            <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
             <StackPanel Orientation="Horizontal">
                 <!-- Amber accent bar -->
                 <Border Width="4" Height="18" CornerRadius="2" Margin="0,0,12,0">
@@ -369,7 +373,7 @@
         <Border Grid.Row="3" CornerRadius="0,0,12,12"
                 Background="{StaticResource DashboardSurfaceBrush}"
                 BorderThickness="1,0,1,1">
-            <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+            <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
             <DataGrid x:Name="LowStockGrid"
                       Style="{StaticResource DashboardDataGrid}"
                       AutoGenerateColumns="False" CanUserAddRows="False"
@@ -377,16 +381,16 @@
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="PRODUCT"       Binding="{Binding Name}"        Width="*"/>
-                    <DataGridTextColumn Header="CURRENT STOCK" Binding="{Binding Stock}"        Width="140"/>
-                    <DataGridTextColumn Header="REORDER LEVEL" Binding="{Binding ReorderLevel}" Width="140"/>
+                    <DataGridTextColumn Header="PRODUCT"       Binding="{Binding Name}"        Width="*"   ElementStyle="{StaticResource DgCellText}" />
+                    <DataGridTextColumn Header="CURRENT STOCK" Binding="{Binding Stock}"        Width="140" ElementStyle="{StaticResource DgCellText}" />
+                    <DataGridTextColumn Header="REORDER LEVEL" Binding="{Binding ReorderLevel}" Width="140" ElementStyle="{StaticResource DgCellText}" />
                     <DataGridTemplateColumn Header="STATUS" Width="130">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border CornerRadius="6" Padding="10,3" HorizontalAlignment="Left" Margin="0,10">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#1AF59E0B"/>
+                                            <Setter Property="Background" Value="#1AF97316"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Stock}" Value="0">
                                                     <Setter Property="Background" Value="#1AEF4444"/>
@@ -398,7 +402,7 @@
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Text" Value="Low Stock"/>
-                                                <Setter Property="Foreground" Value="#FCD34D"/>
+                                                <Setter Property="Foreground" Value="#F97316"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Stock}" Value="0">
                                                         <Setter Property="Text" Value="Out of Stock"/>
@@ -421,7 +425,7 @@
                 CornerRadius="0,0,12,12"
                 Background="{StaticResource DashboardSurfaceBrush}"
                 BorderThickness="1,0,1,1">
-            <Border.BorderBrush><SolidColorBrush Color="#2D2B55"/></Border.BorderBrush>
+            <Border.BorderBrush><SolidColorBrush Color="#2E2D38"/></Border.BorderBrush>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,50">
                 <Border Width="56" Height="56" CornerRadius="28" Background="#1A10B981"
                         HorizontalAlignment="Center" Margin="0,0,0,14">

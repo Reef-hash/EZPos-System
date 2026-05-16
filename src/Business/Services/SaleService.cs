@@ -45,6 +45,10 @@ namespace EZPos.Business.Services
         /// </param>
         public SaleResult ProcessSale(string paymentMethod, decimal tendered, decimal roundingAdj = 0m)
         {
+            // Safety net: block sales when no shift is open
+            if (EZPos.DataAccess.Repositories.CashSessionRepository.GetOpenSession() == null)
+                return new SaleResult { Success = false, ErrorMessage = "No shift is open. Open a shift from the Cash Drawer page before processing sales." };
+
             if (_store.CartItems.Count == 0)
                 return new SaleResult { Success = false, ErrorMessage = "Cart is empty." };
 

@@ -41,8 +41,8 @@
                     <Border Width="4" Height="26" CornerRadius="2" Margin="0,0,14,0">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#7C3AED" Offset="0"/>
-                                <GradientStop Color="#A78BFA" Offset="1"/>
+                                <GradientStop Color="#F59E0B" Offset="0"/>
+                                <GradientStop Color="#FCD34D" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
@@ -63,7 +63,9 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <WrapPanel Grid.Row="0" Margin="0,0,0,12">
+                <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Disabled" Margin="0,0,0,12">
+                <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="SearchBox"
                              Width="280"
                              Height="36"
@@ -110,7 +112,8 @@
                     </Button>
 
                     <TextBlock x:Name="TotalProductsText" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="8,0,0,8" />
-                </WrapPanel>
+                </StackPanel>
+                </ScrollViewer>
 
                 <DataGrid x:Name="ProductsGrid"
                           Grid.Row="1"
@@ -123,16 +126,17 @@
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Barcode" Binding="{Binding Barcode}" Width="1.4*" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2.4*" />
-                        <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="1.4*" />
-                        <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat='RM {0:F2}'}" Width="1*" />
+                        <DataGridTextColumn Header="Barcode"   Binding="{Binding Barcode}"   Width="1.4*" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Name"     Binding="{Binding Name}"     Width="2.4*" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="1.4*" ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Price"    Binding="{Binding Price, StringFormat='RM {0:F2}'}" Width="1*" ElementStyle="{StaticResource DgCellText}" />
                         <DataGridTextColumn x:Name="CostPriceColumn"
                                             Header="Cost Price"
                                             Binding="{Binding CostPrice, StringFormat='RM {0:F2}', TargetNullValue=''}"
                                             Width="1*"
-                                            Visibility="Collapsed" />
-                        <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="0.8*" />
+                                            Visibility="Collapsed"
+                                            ElementStyle="{StaticResource DgCellText}" />
+                        <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="0.8*" ElementStyle="{StaticResource DgCellText}" />
 
                         <DataGridTemplateColumn Header="Status" Width="1.2*">
                             <DataGridTemplateColumn.CellTemplate>
@@ -141,7 +145,7 @@
                                             CornerRadius="4"
                                             Padding="8,2"
                                             HorizontalAlignment="Left">
-                                        <TextBlock Text="{Binding StockStatus}" Foreground="White" FontSize="11" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding StockStatus}" Foreground="White" FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

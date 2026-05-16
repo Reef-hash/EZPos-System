@@ -75,8 +75,8 @@
                     <Border Width="4" Height="26" CornerRadius="2" Margin="0,0,14,0">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#7C3AED" Offset="0"/>
-                                <GradientStop Color="#A78BFA" Offset="1"/>
+                                <GradientStop Color="#F59E0B" Offset="0"/>
+                                <GradientStop Color="#FCD34D" Offset="1"/>
                             </LinearGradientBrush>
                         </Border.Background>
                     </Border>
@@ -145,7 +145,7 @@
         <!-- ============================================ -->
         <!-- KPI SUMMARY CARDS                           -->
         <!-- ============================================ -->
-        <Border Grid.Row="1" Padding="0,0,0,0">
+        <Border Grid.Row="1" Margin="0,0,0,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -239,7 +239,7 @@
                 <materialDesign:Card Grid.Column="2" Padding="22,18" Margin="0" Background="{StaticResource DashboardSurfaceBrush}" BorderBrush="#3D22C55E" BorderThickness="1">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock x:Name="EstProfitNote" Text="&#9432; Estimated based on products with cost price set. Products without a cost price are excluded." 
-                                   Foreground="#94A3B8" FontSize="11" TextWrapping="Wrap"/>
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="11" TextWrapping="Wrap"/>
                     </StackPanel>
                 </materialDesign:Card>
             </Grid>
@@ -248,7 +248,7 @@
         <!-- ============================================ -->
         <!-- CHARTS SECTION                              -->
         <!-- ============================================ -->
-        <Border Grid.Row="3" Padding="0,0,0,12">
+        <Border Grid.Row="3" Padding="0,16,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
@@ -280,10 +280,10 @@
                                                Width="24" Height="{Binding BarHeight}" Margin="0,0,0,20"
                                                VerticalAlignment="Bottom"/>
                                         <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextSecondaryBrush}" 
-                                                  FontSize="9" TextAlignment="Center"/>
+                                                  FontSize="9" TextAlignment="Center" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="60"/>
                                         <TextBlock Text="{Binding Value, StringFormat='RM {0}'}" 
                                                   Foreground="{StaticResource TextPrimaryBrush}"
-                                                  FontSize="10" FontWeight="SemiBold" TextAlignment="Center" Margin="0,2,0,0"/>
+                                                  FontSize="10" FontWeight="SemiBold" TextAlignment="Center" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" MaxWidth="60" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -390,9 +390,9 @@
                              Height="200"
                              RowHeight="40">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Product" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="60" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Revenue" Binding="{Binding Revenue, StringFormat='RM {0:F2}'}" Width="100" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Product" Binding="{Binding Name}"                                Width="*"   IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
+                            <DataGridTextColumn Header="Qty"     Binding="{Binding Quantity}"                         Width="60"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
+                            <DataGridTextColumn Header="Revenue" Binding="{Binding Revenue, StringFormat='RM {0:F2}'}" Width="100" IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>
@@ -412,9 +412,9 @@
                              Height="200"
                              RowHeight="40">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Time" Binding="{Binding TimeSlot}" Width="80" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Orders" Binding="{Binding Orders}" Width="70" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Sales (RM)" Binding="{Binding Sales, StringFormat='F2'}" Width="*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Time"       Binding="{Binding TimeSlot}"              Width="80"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
+                            <DataGridTextColumn Header="Orders"     Binding="{Binding Orders}"                Width="70"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
+                            <DataGridTextColumn Header="Sales (RM)" Binding="{Binding Sales, StringFormat='F2'}" Width="*"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>

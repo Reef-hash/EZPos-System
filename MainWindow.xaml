@@ -11,6 +11,7 @@
         Height="800"
         Width="1280"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         ResizeMode="CanResize"
         Background="{StaticResource DashboardBackgroundBrush}"
         GlowBrush="{StaticResource DashboardPrimaryBrush}"
@@ -59,6 +60,7 @@
                     <Button x:Name="ProductsNavBtn" Style="{StaticResource NavButtonStyle}" Content="Products" Tag="Products" Click="NavButton_Click" />
                     <Button x:Name="StockNavBtn" Style="{StaticResource NavButtonStyle}" Content="Stock" Tag="Stock" Click="NavButton_Click" />
                     <Button x:Name="ReportsNavBtn" Style="{StaticResource NavButtonStyle}" Content="Reports" Tag="Reports" Click="NavButton_Click" />
+                    <Button x:Name="CashDrawerNavBtn" Style="{StaticResource NavButtonStyle}" Content="Cash Drawer" Tag="CashDrawer" Click="NavButton_Click" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Margin="0,12,0,0">

@@ -7,17 +7,17 @@
 
             <!-- ════════════════ MERGED LIBRARIES ════════════════ -->
             <ResourceDictionary.MergedDictionaries>
-                <!-- MaterialDesign — Dark mode, Cyber Violet (DeepPurple) -->
+                <!-- MaterialDesign — Dark mode, Graphite + Amber -->
                 <materialDesign:BundledTheme BaseTheme="Dark"
-                    PrimaryColor="DeepPurple" SecondaryColor="DeepPurple" />
+                    PrimaryColor="Amber" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml" />
 
                 <!-- MahApps.Metro — Window chrome -->
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Violet.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Amber.xaml" />
 
-                <!-- EZPos — Cyber Violet palette + component styles -->
+                <!-- EZPos — Graphite + Amber palette + component styles -->
                 <ResourceDictionary Source="pack://application:,,,/src/UI/Themes/DashboardTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
