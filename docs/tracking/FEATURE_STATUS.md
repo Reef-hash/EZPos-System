@@ -19,7 +19,9 @@
 | 4.8 | Auto-update — UpdaterService, UpdateAvailableDialog, Settings check button | ✅ Complete |
 | 4.9 | Update manifest hosting — latest.json on GitHub Pages, CI/CD publishing | ✅ Complete |
 | 5 | Trial licensing — TrialLicenseService, TrialExpiredWindow, Inno Setup trial.dat | ✅ Complete |
-| 5-next | Real HWID/online licensing | 🔲 Pending |
+| 5-next | Real HWID/online licensing | ✅ Complete |
+| 6 | Web backend — Stripe payment, key generation, license validate API | ✅ Complete |
+| 6.1 | Admin panel — login, dashboard, deactivate/activate, reset device, dynamic pricing | ✅ Complete |
 
 ---
 
@@ -115,13 +117,31 @@ Status: **COMPLETE**
 - [x] trial.dat written by installer (never overwritten on reinstall)
 - [x] TrialExpiredWindow (Catalysm Inc branding)
 - [x] Startup license check in App.xaml.cs
-- [x] LicenseService (mock, wired for future API)
 - [x] FileLicenseStorage
-- [x] LicenseApiClient stub
-- [x] LicenseRequiredWindow (key-entry, ready for real licensing)
-- [ ] Real HWID/online activation
+- [x] LicenseRequiredWindow (key-entry)
+- [x] LicenseApiClient — real HTTP POST to `/api/licenses/validate` (8s timeout, static HttpClient)
+- [x] LicenseValidationCache — 7-day grace period cache (`%ProgramData%\EZPos\license-cache.dat`)
+- [x] LicenseService — real API + cache, WPF deadlock-safe (`Task.Run`)
+- [x] DeviceFingerprint — MAC address → SHA256 → 16-char hex (stable device ID)
+- [x] Device binding — first activation binds DeviceId; different device rejected
+- [x] ShutdownMode fix — `OnMainWindowClose` so license dialog close doesn't kill app
+- [x] `App:LicenseApiUrl` in config.ini (updated on deployment to production URL)
 
-Status: **TRIAL COMPLETE — Real licensing pending**
+### Web Backend (EZPos-Web)
+- [x] ASP.NET Core MVC + SQLite (EF Core)
+- [x] Stripe checkout — one-time payment, MYR, RM 499 (configurable)
+- [x] Key generation — `EZPOS-XXXX-XXXX-XXXX`, cryptographically random
+- [x] `POST /api/licenses/validate` — validates key + device binding
+- [x] Stripe webhook backup (`checkout.session.completed`)
+- [x] Admin panel — cookie auth (`AdminCookie`, 8h sliding, HttpOnly+SameSite=Strict)
+- [x] Admin dashboard — license list, stats (total/active/deactivated), search by key/email
+- [x] Admin actions — deactivate, reactivate, reset device binding
+- [x] Dynamic license pricing — stored in `SiteSettings` DB table, editable from admin panel
+- [x] Pricing page (`/Home/Pricing`) reflects current price from DB
+- [ ] FPX payment method (Stripe FPX — enable in Stripe Dashboard + add `"fpx"` to PaymentMethodTypes)
+- [ ] Alternative gateway (Toyyibpay / Billplz) for local bank transfer
+
+Status: **COMPLETE** (web + desktop + admin panel)
 
 ---
 

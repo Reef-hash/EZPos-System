@@ -46,6 +46,12 @@ _Nothing in progress currently._
 - Split payment (multiple methods per sale)
 - **QR payment auto-detection** — Billplz/DuitNow gateway, polling, live QR in PaymentDialog — see [future-features.md](../planning/future-features.md)
 - **Card payment auto-detection** — PAX EDC terminal SDK, auto-confirm on approval code — see [future-features.md](../planning/future-features.md)
+- **Stripe FPX** — enable Malaysian online banking (Maybank2u, CIMB Clicks, etc.) in existing Stripe integration:
+  - Add `"fpx"` to `PaymentMethodTypes` in `PaymentController.CreateCheckoutSession()`
+  - Enable FPX in Stripe Dashboard → Settings → Payment Methods
+  - Requires live Stripe account for MYR/Malaysia
+- **Alternative payment gateway** — Toyyibpay or Billplz for local bank transfer (requires new controller + API integration)
+- **Admin panel — sales history view** — show all purchases with Stripe session ID, refund status
 
 ---
 
@@ -58,6 +64,9 @@ _Nothing in progress currently._
 - [x] Excel export: profit rows in Summary sheet, Cost/Profit/Margin columns in Stock Snapshot sheet (May 2026)
 - [x] Auto-print receipt after checkout — `AutoPrint` in config, `ReceiptDialog_Loaded` (May 2026)
 - [x] Opening balance StockMovement on product registration — `OPENING_BALANCE` reason (May 2026)
+- [x] **Real licensing — Fasa 1**: Web backend — Stripe payment, key generation, `/api/licenses/validate` (May 2026)
+- [x] **Real licensing — Fasa 2**: Desktop — LicenseApiClient, LicenseValidationCache (7-day grace), LicenseService, DeviceFingerprint, device binding (May 2026)
+- [x] **Real licensing — Fasa 3**: Admin panel — login, dashboard, deactivate/activate, reset device, dynamic pricing (May 2026)
 - [x] Barcode scan auto-fills BarcodeBox in ProductDialog Add mode (May 2026)
 - [x] Settings About section shows dynamic version from assembly (May 2026)
 - [x] config.ini seeded by installer to fix auto-update on fresh installs (May 2026)
