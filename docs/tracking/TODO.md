@@ -52,6 +52,7 @@ _Nothing in progress currently._
   - Requires live Stripe account for MYR/Malaysia
 - **Alternative payment gateway** — Toyyibpay or Billplz for local bank transfer (requires new controller + API integration)
 - **Admin panel — sales history view** — show all purchases with Stripe session ID, refund status
+- **Promo: 7-day free trial** — bila nak buat promo, ubah `TrialDurationDays = 7` dalam `TrialLicenseService.cs` + tambah fallback dalam `LicenseService.LoadAndValidate()`: kalau tiada `license.dat`, semak `trial.dat` (3-baris change). Trial expired → `TrialExpiredWindow`. Trial valid → teruskan.
 
 ---
 

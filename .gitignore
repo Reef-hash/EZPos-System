@@ -13,6 +13,10 @@
 # Tapi EZPos.db di root project masih akan di-track (sebagai template/seed DB)
 **/EZPos.db
 
+# EZPos-Web ada repo sendiri di GitHub — ignore di sini supaya tak tersalah commit
+# atau cipta broken submodule reference.
+EZPos-Web/
+
 # ==================== Build & Publish ====================
 **/publish/
 **/Release/
