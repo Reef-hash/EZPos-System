@@ -110,6 +110,29 @@ namespace EZPos.DataAccess.Repositories
             return Convert.ToDecimal(cmd.ExecuteScalar());
         }
 
+        /// <summary>
+        /// Returns total revenue grouped by PaymentMethod for sales within the shift period.
+        /// </summary>
+        public static List<(string Method, decimal Revenue)> GetShiftPaymentBreakdown(DateTime from, DateTime to)
+        {
+            var result = new List<(string, decimal)>();
+            using var conn = Database.GetConnection();
+            conn.Open();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+                SELECT PaymentMethod, COALESCE(SUM(TotalAmount), 0)
+                FROM Sales
+                WHERE DateTime >= @from AND DateTime <= @to
+                GROUP BY PaymentMethod
+                ORDER BY SUM(TotalAmount) DESC";
+            cmd.Parameters.AddWithValue("@from", from.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@to",   to.ToString("yyyy-MM-dd HH:mm:ss"));
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+                result.Add((r.GetString(0), Convert.ToDecimal(r.GetDouble(1))));
+            return result;
+        }
+
         // ── Mapping ───────────────────────────────────────────────────────────
 
         private static CashSession MapRow(SQLiteDataReader r)

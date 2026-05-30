@@ -397,14 +397,14 @@
                     </DataGrid>
                 </StackPanel>
 
-                <!-- Hourly Summary -->
+                <!-- Payment Breakdown -->
                 <StackPanel Grid.Column="1" Orientation="Vertical">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <fa:IconBlock Icon="Clock" FontSize="13" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Peak Hours" Foreground="{StaticResource DashboardTextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <fa:IconBlock Icon="CreditCard" FontSize="13" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Payment Breakdown" Foreground="{StaticResource DashboardTextPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                     </StackPanel>
-                    
-                    <DataGrid x:Name="PeakHoursGrid" 
+
+                    <DataGrid x:Name="PaymentBreakdownGrid"
                              Style="{StaticResource DashboardDataGrid}"
                              AutoGenerateColumns="False"
                              CanUserAddRows="False"
@@ -412,9 +412,9 @@
                              Height="200"
                              RowHeight="40">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Time"       Binding="{Binding TimeSlot}"              Width="80"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
-                            <DataGridTextColumn Header="Orders"     Binding="{Binding Orders}"                Width="70"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
-                            <DataGridTextColumn Header="Sales (RM)" Binding="{Binding Sales, StringFormat='F2'}" Width="*"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
+                            <DataGridTextColumn Header="Method"      Binding="{Binding Method}"                          Width="*"   IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
+                            <DataGridTextColumn Header="Orders"      Binding="{Binding Orders}"                          Width="70"  IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
+                            <DataGridTextColumn Header="Revenue (RM)" Binding="{Binding Revenue, StringFormat='F2'}"      Width="110" IsReadOnly="True" ElementStyle="{StaticResource DgCellText}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </StackPanel>

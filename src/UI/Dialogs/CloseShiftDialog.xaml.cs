@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -18,7 +19,8 @@ namespace EZPos.UI.Dialogs
         public string? Notes         { get; private set; }
         public bool    Confirmed     { get; private set; }
 
-        public CloseShiftDialog(CashSession session, decimal expectedCash)
+        public CloseShiftDialog(CashSession session, decimal expectedCash,
+                                List<(string Method, decimal Revenue)> breakdown)
         {
             InitializeComponent();
 
@@ -32,7 +34,44 @@ namespace EZPos.UI.Dialogs
             ExpectedCashText.Text   = $"RM {expectedCash:N2}";
             ClosedByBox.Text        = session.OpenedByUser; // pre-fill with same cashier
 
+            PopulatePaymentBreakdown(breakdown);
+
             Loaded += (_, _) => ActualCashBox.Focus();
+        }
+
+        private void PopulatePaymentBreakdown(List<(string Method, decimal Revenue)> breakdown)
+        {
+            var mutedBrush   = (Brush)FindResource("DashboardTextMutedBrush");
+            var primaryBrush = (Brush)FindResource("DashboardTextPrimaryBrush");
+
+            decimal total = 0;
+            foreach (var (method, revenue) in breakdown)
+            {
+                total += revenue;
+                var row = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+                var methodText  = new TextBlock { Text = method,                Foreground = mutedBrush,   FontSize = 12 };
+                var revenueText = new TextBlock { Text = $"RM {revenue:N2}",    Foreground = primaryBrush, FontSize = 12,
+                                                  HorizontalAlignment = HorizontalAlignment.Right };
+                Grid.SetColumn(revenueText, 1);
+                row.Children.Add(methodText);
+                row.Children.Add(revenueText);
+                PaymentBreakdownPanel.Children.Add(row);
+            }
+
+            if (breakdown.Count == 0)
+            {
+                PaymentBreakdownPanel.Children.Add(new TextBlock
+                {
+                    Text       = "No sales recorded this shift.",
+                    Foreground = mutedBrush,
+                    FontSize   = 12
+                });
+            }
+
+            TotalSalesText.Text = $"RM {total:N2}";
         }
 
         private void ActualCashBox_TextChanged(object sender, TextChangedEventArgs e)

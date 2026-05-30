@@ -19,7 +19,7 @@ namespace EZPos.UI.Pages
         private readonly ReportService _reportService = new();
         private ObservableCollection<ChartData> salesTrendData = new();
         private ObservableCollection<TopProductResult> topProducts = new();
-        private ObservableCollection<HourlySales> peakHours = new();
+        private ObservableCollection<PaymentBreakdown> paymentBreakdowns = new();
         private bool isInitialized;
 
         // Local display model for the bar chart (adds BarHeight + BarColor for rendering)
@@ -106,12 +106,12 @@ namespace EZPos.UI.Pages
             TopProductsGrid.ItemsSource = null;
             TopProductsGrid.ItemsSource = topProducts;
 
-            // Hourly breakdown — only meaningful for a single day
-            var hourly = _reportService.GetHourlyBreakdown(from);
-            peakHours.Clear();
-            foreach (var h in hourly) peakHours.Add(h);
-            PeakHoursGrid.ItemsSource = null;
-            PeakHoursGrid.ItemsSource = peakHours;
+            // Payment method breakdown
+            var payments = _reportService.GetPaymentBreakdown(from, to);
+            paymentBreakdowns.Clear();
+            foreach (var p in payments) paymentBreakdowns.Add(p);
+            PaymentBreakdownGrid.ItemsSource = null;
+            PaymentBreakdownGrid.ItemsSource = paymentBreakdowns;
         }
 
         private void InitializeData()
@@ -442,7 +442,7 @@ namespace EZPos.UI.Pages
             // ─────────────────────────────────────────────────────────────
             var ws3 = SetupSheet(workbook, "Daily Breakdown");
             r = 1;
-            WriteHeaderRow(ws3, r, hdrFill, hdrFont, borderClr, "Date", "Revenue (RM)");
+            WriteHeaderRow(ws3, r, hdrFill, hdrFont, borderClr, "Date", "Orders", "Revenue (RM)");
             r++;
 
             var daily = _reportService.GetDailyBreakdown(from, to);
@@ -451,10 +451,12 @@ namespace EZPos.UI.Pages
                 var fill = i % 2 == 0 ? whiteFill : altFill;
                 ws3.Cell(r, 1).Value = d.Label;
                 ws3.Cell(r, 1).Style.Font.FontColor = bodyFont;
-                ws3.Cell(r, 2).Value = (double)d.Revenue;
-                ws3.Cell(r, 2).Style.NumberFormat.Format = "#,##0.00";
+                ws3.Cell(r, 2).Value = d.Orders;
                 ws3.Cell(r, 2).Style.Font.FontColor = bodyFont;
-                ApplyDataRowStyle(ws3.Range(r, 1, r, 2), fill, borderClr);
+                ws3.Cell(r, 3).Value = (double)d.Revenue;
+                ws3.Cell(r, 3).Style.NumberFormat.Format = "#,##0.00";
+                ws3.Cell(r, 3).Style.Font.FontColor = bodyFont;
+                ApplyDataRowStyle(ws3.Range(r, 1, r, 3), fill, borderClr);
                 r++;
             }
 
@@ -463,16 +465,20 @@ namespace EZPos.UI.Pages
                 ws3.Cell(r, 1).Value = "TOTAL";
                 ws3.Cell(r, 1).Style.Font.Bold = true;
                 ws3.Cell(r, 1).Style.Font.FontColor = bodyFont;
-                ws3.Cell(r, 2).FormulaA1 = $"=SUM(B2:B{r - 1})";
+                ws3.Cell(r, 2).Value = daily.Sum(d => d.Orders);
                 ws3.Cell(r, 2).Style.Font.Bold = true;
                 ws3.Cell(r, 2).Style.Font.FontColor = bodyFont;
-                ws3.Cell(r, 2).Style.NumberFormat.Format = "#,##0.00";
-                ws3.Range(r, 1, r, 2).Style.Fill.BackgroundColor = totalFill;
-                ApplyBorder(ws3.Range(r, 1, r, 2), borderClr);
+                ws3.Cell(r, 3).FormulaA1 = $"=SUM(C2:C{r - 1})";
+                ws3.Cell(r, 3).Style.Font.Bold = true;
+                ws3.Cell(r, 3).Style.Font.FontColor = bodyFont;
+                ws3.Cell(r, 3).Style.NumberFormat.Format = "#,##0.00";
+                ws3.Range(r, 1, r, 3).Style.Fill.BackgroundColor = totalFill;
+                ApplyBorder(ws3.Range(r, 1, r, 3), borderClr);
             }
 
             ws3.Column(1).Width = 20;
-            ws3.Column(2).Width = 18;
+            ws3.Column(2).Width = 12;
+            ws3.Column(3).Width = 18;
             ws3.SheetView.FreezeRows(1);
 
             // ─────────────────────────────────────────────────────────────
@@ -483,7 +489,7 @@ namespace EZPos.UI.Pages
             WriteHeaderRow(ws4, r, hdrFill, hdrFont, borderClr, "Rank", "Product Name", "Qty Sold", "Revenue (RM)");
             r++;
 
-            var top = _reportService.GetTopProducts(from, to, 20);
+            var top = _reportService.GetTopProducts(from, to, 999);
             foreach (var (i, p) in top.Select((p, i) => (i, p)))
             {
                 var fill = i % 2 == 0 ? whiteFill : altFill;
@@ -511,7 +517,7 @@ namespace EZPos.UI.Pages
             WriteHeaderRow(ws5, r, hdrFill, hdrFont, borderClr, "Time Slot", "Orders", "Sales (RM)");
             r++;
 
-            var hourly = _reportService.GetHourlyBreakdown(from);
+            var hourly = _reportService.GetHourlyBreakdown(from, to);
             foreach (var (i, h) in hourly.Select((h, i) => (i, h)))
             {
                 var fill = i % 2 == 0 ? whiteFill : altFill;

@@ -5,6 +5,7 @@ using System.Windows;
 using EZPos.Business.Services;
 using EZPos.Core.Licensing;
 using EZPos.DataAccess.Repositories;
+using EZPos.Infrastructure.Licensing;
 using EZPos.UI;
 using EZPos.UI.Licensing;
 using EZPos.UI.State;
@@ -40,15 +41,12 @@ namespace EZPos
 
                 // 4. License check — runs before any UI is shown.
                 //
-                //    Current mode: TRIAL (TrialLicenseService)
-                //    Grants a 30-day evaluation period from first install.
-                //    trial.dat in %ProgramData%\EZPos\ is written by the Inno Setup installer.
-                //
-                //    MIGRATION: when HWID / online licensing is ready, replace the one line:
-                //      Before:  ILicenseService licenseService = new TrialLicenseService();
-                //      After:   ILicenseService licenseService = new LicenseService(new FileLicenseStorage(), ...);
-                //    Everything else below remains unchanged.
-                ILicenseService licenseService = new TrialLicenseService();
+                //    Mode: ONLINE (LicenseService → LicenseApiClient → /api/licenses/validate)
+                //    API base URL read from config.ini: App:LicenseApiUrl
+                //    Falls back to 7-day grace period cache when API is unreachable.
+                var apiUrl    = ConfigHelper.Get("App:LicenseApiUrl", "http://localhost:5122");
+                var apiClient = new LicenseApiClient(apiUrl);
+                ILicenseService licenseService = new LicenseService(new FileLicenseStorage(), apiClient);
                 licenseService.LoadAndValidate();
 
                 switch (licenseService.Current.Status)
@@ -56,13 +54,24 @@ namespace EZPos
                     case LicenseStatus.Valid:
                         break; // continue startup normally
 
+                    case LicenseStatus.Missing:
+                    case LicenseStatus.Invalid:
+                    case LicenseStatus.NotActivated:
+                        var activationWindow = new LicenseRequiredWindow(licenseService);
+                        if (activationWindow.ShowDialog() != true)
+                        {
+                            Shutdown(0);
+                            return;
+                        }
+                        break;
+
                     case LicenseStatus.Expired:
+                        // Grace period has lapsed — cannot start without internet or a valid cache.
                         new TrialExpiredWindow(licenseService.Current).ShowDialog();
                         Shutdown(1);
                         return;
 
                     default:
-                        // Unexpected status in trial mode — fail safe rather than crash.
                         new TrialExpiredWindow(licenseService.Current).ShowDialog();
                         Shutdown(1);
                         return;

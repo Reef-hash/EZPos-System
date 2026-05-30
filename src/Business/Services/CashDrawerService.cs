@@ -116,6 +116,17 @@ namespace EZPos.Business.Services
             return session.OpeningBalance + cashSales;
         }
 
+        /// <summary>
+        /// Returns revenue grouped by payment method for the active shift.
+        /// Returns empty list if no shift is open.
+        /// </summary>
+        public List<(string Method, decimal Revenue)> GetShiftPaymentBreakdown()
+        {
+            var session = CashSessionRepository.GetOpenSession();
+            if (session == null) return new();
+            return CashSessionRepository.GetShiftPaymentBreakdown(session.OpenedAt, DateTime.Now);
+        }
+
         /// <summary>Returns recent closed/open sessions for the history view.</summary>
         public List<CashSession> GetSessionHistory(int limit = 50)
             => CashSessionRepository.GetRecentSessions(limit);

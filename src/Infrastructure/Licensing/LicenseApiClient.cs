@@ -1,90 +1,77 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// PLACEHOLDER — Infrastructure/Licensing/LicenseApiClient.cs
-// ═══════════════════════════════════════════════════════════════════════════
-//
-// PURPOSE:
-//   This file is a structural placeholder for the future HTTP client that will
-//   communicate with the EZPos licensing backend (Stripe + license key API).
-//
-// WHEN BACKEND IS READY:
-//   1. Uncomment the class below.
-//   2. Add System.Net.Http and (optionally) System.Text.Json NuGet packages.
-//   3. Implement ValidateAsync and ActivateAsync against the real API endpoints.
-//   4. Inject LicenseApiClient into LicenseService (Core/Licensing/LicenseService.cs).
-//   5. Replace the MOCK blocks in LicenseService with real API calls.
-//
-// PLANNED API ENDPOINTS:
-//   POST /api/v1/licenses/validate    — check if a key is active + not expired
-//   POST /api/v1/licenses/activate    — bind a key to a device
-//   POST /api/v1/licenses/deactivate  — release a device slot
-//
-// AUTHENTICATION: Bearer token or HMAC-signed request (TBD by backend team).
-//
-// ═══════════════════════════════════════════════════════════════════════════
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using EZPos.Core.Licensing;
 
 namespace EZPos.Infrastructure.Licensing
 {
-    // TODO: uncomment and implement when Stripe + license key backend is ready.
-
-    /*
-    using System.Net.Http;
-    using System.Net.Http.Json;
-    using System.Threading.Tasks;
-    using EZPos.Core.Licensing;
-
+    /// <summary>
+    /// HTTP client that calls the EZPos Web API to validate license keys.
+    ///
+    /// Base URL is read from config.ini: App:LicenseApiUrl
+    ///   Development : http://localhost:5122
+    ///   Production  : https://your-deployed-site.com  (update config.ini before release)
+    ///
+    /// Endpoint called: POST {baseUrl}/api/licenses/validate
+    /// Request body   : { "licenseKey": "EZPOS-XXXX-XXXX-XXXX" }
+    /// Response       : { "isValid": true|false, "message": "..." }
+    /// </summary>
     public class LicenseApiClient
     {
-        private readonly HttpClient _http;
-        private const string BaseUrl = "https://api.ezpos.io/v1";   // TODO: move to config
-
-        public LicenseApiClient(HttpClient http)
+        // Single shared HttpClient — reused across all calls (recommended practice)
+        private static readonly HttpClient _http = new()
         {
-            _http = http;
+            Timeout = TimeSpan.FromSeconds(8)
+        };
+
+        private readonly string _baseUrl;
+
+        public LicenseApiClient(string baseUrl)
+        {
+            _baseUrl = baseUrl.TrimEnd('/');
         }
 
         /// <summary>
-        /// Validates an existing key against the backend.
-        /// Returns LicenseStatus.Valid, Expired, Invalid, or NotActivated.
+        /// Calls POST /api/licenses/validate.
+        /// Returns IsOffline = true when the server cannot be reached (no internet, server down, etc.).
+        /// Never throws — all exceptions are caught and returned as IsOffline responses.
         /// </summary>
         public async Task<LicenseApiResponse> ValidateAsync(string key, string deviceId)
         {
-            var payload = new { Key = key, DeviceId = deviceId };
-            var response = await _http.PostAsJsonAsync($"{BaseUrl}/licenses/validate", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<LicenseApiResponse>()
-                   ?? new LicenseApiResponse { Status = "invalid" };
-        }
+            try
+            {
+                var response = await _http.PostAsJsonAsync(
+                    $"{_baseUrl}/api/licenses/validate",
+                    new { LicenseKey = key, DeviceId = deviceId });
 
-        /// <summary>
-        /// Activates a key for this device. Call once on first use.
-        /// </summary>
-        public async Task<LicenseApiResponse> ActivateAsync(string key, string deviceId)
-        {
-            var payload = new { Key = key, DeviceId = deviceId };
-            var response = await _http.PostAsJsonAsync($"{BaseUrl}/licenses/activate", payload);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<LicenseApiResponse>()
-                   ?? new LicenseApiResponse { Status = "invalid" };
-        }
+                if (!response.IsSuccessStatusCode)
+                    return new LicenseApiResponse { IsValid = false, Message = "Server returned an error." };
 
-        /// <summary>
-        /// Releases this device's activation slot (useful on uninstall).
-        /// </summary>
-        public async Task DeactivateAsync(string key, string deviceId)
-        {
-            var payload = new { Key = key, DeviceId = deviceId };
-            await _http.PostAsJsonAsync($"{BaseUrl}/licenses/deactivate", payload);
+                return await response.Content.ReadFromJsonAsync<LicenseApiResponse>()
+                       ?? new LicenseApiResponse { IsValid = false };
+            }
+            catch (Exception ex) when (ex is HttpRequestException
+                                           or TaskCanceledException
+                                           or OperationCanceledException)
+            {
+                // Network unreachable, DNS failure, timeout, or server refused connection
+                return new LicenseApiResponse { IsValid = false, IsOffline = true, Message = ex.Message };
+            }
         }
     }
 
-    /// <summary>Deserialized shape of the API JSON response.</summary>
-    public class LicenseApiResponse
+    /// <summary>Deserialized JSON response from POST /api/licenses/validate.</summary>
+    public sealed class LicenseApiResponse
     {
-        public string    Status      { get; set; } = string.Empty;  // "valid"|"invalid"|"expired"|"not_activated"
-        public string?   PlanName    { get; set; }
-        public string?   ExpiryDate  { get; set; }                  // ISO 8601
-        public bool      Success     { get; set; }
-        public string?   Message     { get; set; }
+        /// <summary>True when the key exists in the database and IsActive = true.</summary>
+        public bool IsValid { get; set; }
+
+        /// <summary>True when the request failed due to a network error — NOT an invalid key.</summary>
+        public bool IsOffline { get; set; }
+
+        /// <summary>Human-readable message from the server (or error description if offline).</summary>
+        public string Message { get; set; } = string.Empty;
     }
-    */
 }
+

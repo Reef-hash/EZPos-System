@@ -17,6 +17,9 @@
 # atau cipta broken submodule reference.
 EZPos-Web/
 
+# CrossxPos ada repo sendiri di GitHub — ignore di sini supaya tak tersalah commit
+CrossxPos/
+
 # ==================== Build & Publish ====================
 **/publish/
 **/Release/

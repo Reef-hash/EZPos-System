@@ -11,8 +11,8 @@
     <Product>EZPos Point of Sale</Product>
     <Company>EZPos</Company>
     <Copyright>Copyright © 2026 EZPos</Copyright>
-    <Version>1.3.7</Version>
-    <FileVersion>1.3.7.0</FileVersion>
+    <Version>1.4.7</Version>
+    <FileVersion>1.4.7.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,6 +36,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+  </ItemGroup>
+  <!-- Exclude the EZPos-Web subfolder — it is a separate ASP.NET Core project with its own build system.
+       Without this, the SDK implicit glob would include its .cs files in the WPF compilation and cause errors. -->
+  <ItemGroup>
+    <Compile Remove="EZPos-Web\**" />
+    <None Remove="EZPos-Web\**" />
+    <Content Remove="EZPos-Web\**" />
+    <EmbeddedResource Remove="EZPos-Web\**" />
   </ItemGroup>
 
 </Project>

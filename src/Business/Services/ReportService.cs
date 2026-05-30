@@ -25,6 +25,7 @@ namespace EZPos.Business.Services
     public class DailySales
     {
         public string  Label    { get; set; } = string.Empty; // e.g. "Mon", "01 May"
+        public int     Orders   { get; set; }
         public decimal Revenue  { get; set; }
     }
 
@@ -99,11 +100,15 @@ namespace EZPos.Business.Services
                 var cmd = conn.CreateCommand();
                 cmd.CommandText = @"
                     SELECT
-                        COALESCE(SUM(s.TotalAmount), 0)        AS Revenue,
-                        COUNT(DISTINCT s.Id)                   AS Orders,
-                        COALESCE(SUM(si.Quantity), 0)          AS Items
+                        COALESCE(SUM(s.TotalAmount), 0)  AS Revenue,
+                        COUNT(s.Id)                       AS Orders,
+                        COALESCE((
+                            SELECT SUM(si.Quantity)
+                            FROM SaleItems si
+                            JOIN Sales s2 ON s2.Id = si.SaleId
+                            WHERE DATE(s2.DateTime) BETWEEN @from AND @to
+                        ), 0) AS Items
                     FROM Sales s
-                    LEFT JOIN SaleItems si ON si.SaleId = s.Id
                     WHERE DATE(s.DateTime) BETWEEN @from AND @to";
                 cmd.Parameters.AddWithValue("@from", from.ToString("yyyy-MM-dd"));
                 cmd.Parameters.AddWithValue("@to",   to.ToString("yyyy-MM-dd"));
@@ -158,7 +163,7 @@ namespace EZPos.Business.Services
 
                 var cmd = conn.CreateCommand();
                 cmd.CommandText = @"
-                    SELECT DATE(DateTime) AS Day, COALESCE(SUM(TotalAmount), 0) AS Revenue
+                    SELECT DATE(DateTime) AS Day, COUNT(*) AS Orders, COALESCE(SUM(TotalAmount), 0) AS Revenue
                     FROM Sales
                     WHERE DATE(DateTime) BETWEEN @from AND @to
                     GROUP BY Day
@@ -175,7 +180,8 @@ namespace EZPos.Business.Services
                         Label   = (to - from).TotalDays <= 7
                             ? day.ToString("ddd")        // Mon, Tue … for week view
                             : day.ToString("dd MMM"),    // 01 May … for month view
-                        Revenue = reader.GetDecimal(1)
+                        Orders  = reader.GetInt32(1),
+                        Revenue = reader.GetDecimal(2)
                     });
                 }
             }
@@ -227,7 +233,7 @@ namespace EZPos.Business.Services
         }
 
         /// <summary>Returns sales grouped by hour for a single day.</summary>
-        public List<HourlySales> GetHourlyBreakdown(DateTime day)
+        public List<HourlySales> GetHourlyBreakdown(DateTime from, DateTime to)
         {
             var result = new List<HourlySales>();
             try
@@ -242,10 +248,11 @@ namespace EZPos.Business.Services
                         COUNT(*)                         AS Orders,
                         COALESCE(SUM(TotalAmount), 0)   AS Sales
                     FROM Sales
-                    WHERE DATE(DateTime) = @day
+                    WHERE DATE(DateTime) BETWEEN @from AND @to
                     GROUP BY Hour
                     ORDER BY Hour ASC";
-                cmd.Parameters.AddWithValue("@day", day.ToString("yyyy-MM-dd"));
+                cmd.Parameters.AddWithValue("@from", from.ToString("yyyy-MM-dd"));
+                cmd.Parameters.AddWithValue("@to",   to.ToString("yyyy-MM-dd"));
 
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())

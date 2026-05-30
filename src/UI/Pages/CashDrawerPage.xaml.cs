@@ -30,7 +30,7 @@ namespace EZPos.UI.Pages
                                                     ? _s.ClosedAt.Value.ToString("dd MMM yyyy  HH:mm")
                                                     : "—";
         public string  OpeningBalanceDisplay => $"RM {_s.OpeningBalance:N2}";
-        public string  ExpectedCashDisplay   => $"RM {_s.ExpectedCash:N2}";
+        public string  ExpectedCashDisplay   => _s.Status == "Open" ? "Pending..." : $"RM {_s.ExpectedCash:N2}";
         public string  ActualCashDisplay     => _s.ActualCash.HasValue
                                                     ? $"RM {_s.ActualCash.Value:N2}"
                                                     : "—";
@@ -161,7 +161,8 @@ namespace EZPos.UI.Pages
             }
 
             var expectedCash = _service.PreviewExpectedCash() ?? _activeSession.OpeningBalance;
-            var dialog = new Dialogs.CloseShiftDialog(_activeSession, expectedCash);
+            var breakdown    = _service.GetShiftPaymentBreakdown();
+            var dialog = new Dialogs.CloseShiftDialog(_activeSession, expectedCash, breakdown);
             await DialogHost.Show(dialog, "RootDialog");
 
             if (!dialog.Confirmed) return;

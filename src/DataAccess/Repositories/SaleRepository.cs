@@ -15,9 +15,10 @@ namespace EZPos.DataAccess.Repositories
                 using (var tran = conn.BeginTransaction())
                 {
                     var cmd = conn.CreateCommand();
-                    cmd.CommandText = "INSERT INTO Sales (DateTime, TotalAmount) VALUES (@dt, @total); SELECT last_insert_rowid();";
-                    cmd.Parameters.AddWithValue("@dt",    sale.DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.Parameters.AddWithValue("@total", sale.TotalAmount);
+                    cmd.CommandText = "INSERT INTO Sales (DateTime, TotalAmount, PaymentMethod) VALUES (@dt, @total, @method); SELECT last_insert_rowid();";
+                    cmd.Parameters.AddWithValue("@dt",     sale.DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                    cmd.Parameters.AddWithValue("@total",  sale.TotalAmount);
+                    cmd.Parameters.AddWithValue("@method", sale.PaymentMethod);
                     var saleId = Convert.ToInt32(cmd.ExecuteScalar());
 
                     foreach (var item in items)

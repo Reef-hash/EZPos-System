@@ -1,77 +1,85 @@
+using System.Threading.Tasks;
+using EZPos.Infrastructure.Licensing;
+
 namespace EZPos.Core.Licensing
 {
     /// <summary>
-    /// Orchestrates license loading, storage, and validation.
+    /// Orchestrates license loading, API validation, and local grace-period caching.
     ///
-    /// ── CURRENT STATE: MOCK ──────────────────────────────────────────────────
-    /// All validation is mocked — no API calls are made.
-    /// LoadAndValidate() always returns LicenseStatus.Valid so the app runs normally.
-    /// Activate() accepts any non-empty key and saves it, returning Valid.
+    /// ── LOAD &amp; VALIDATE FLOW ────────────────────────────────────────────────
+    ///   1. Load key from FileLicenseStorage (%ProgramData%\EZPos\license.dat).
+    ///   2. No key found     → Missing  → LicenseRequiredWindow shown by App.xaml.cs.
+    ///   3. Call POST /api/licenses/validate via LicenseApiClient (8-second timeout).
+    ///   4. API online + valid    → save grace-period cache → Valid → app opens.
+    ///   5. API online + invalid  → Invalid → LicenseRequiredWindow.
+    ///   6. API offline (network error):
+    ///        cache ≤ 7 days old → Valid (grace period).
+    ///        cache > 7 days / no cache → Expired → show expiry message + Shutdown.
     ///
-    /// This lets the full licensing structure be wired up without blocking the app
-    /// until the real Stripe + license-key backend is ready.
-    ///
-    /// ── WHEN BACKEND IS READY ────────────────────────────────────────────────
-    /// 1. Inject LicenseApiClient (Infrastructure/Licensing/) into this constructor.
-    /// 2. In LoadAndValidate():  call _apiClient.ValidateAsync(key, deviceId).
-    /// 3. In Activate():         call _apiClient.ActivateAsync(key, deviceId).
-    /// 4. Map the API response to LicenseStatus enum values.
-    /// 5. Remove all MOCK sections marked with TODO below.
+    /// ── ACTIVATION FLOW ─────────────────────────────────────────────────────
+    ///   1. User types key in LicenseRequiredWindow → calls Activate(key).
+    ///   2. API validates the key.
+    ///   3. Valid   → save key to disk + save grace cache → return Valid.
+    ///   4. Invalid → return Invalid (key not saved; user can retry).
+    ///   5. Offline → return Invalid with message — user must retry when online.
     /// </summary>
     public class LicenseService : ILicenseService
     {
-        private readonly ILicenseStorage _storage;
+        private readonly ILicenseStorage  _storage;
+        private readonly LicenseApiClient _apiClient;
         private LicenseInfo _current = new();
-
-        // TODO: inject LicenseApiClient here when backend is ready:
-        // private readonly LicenseApiClient _apiClient;
 
         public LicenseInfo Current    => _current;
         public bool        IsLicensed => _current.Status == LicenseStatus.Valid;
 
-        public LicenseService(ILicenseStorage storage)
+        public LicenseService(ILicenseStorage storage, LicenseApiClient apiClient)
         {
-            _storage = storage;
+            _storage   = storage;
+            _apiClient = apiClient;
         }
 
         /// <summary>
-        /// Loads stored key and validates it.
-        ///
-        /// ── MOCK ─────────────────────────────────────────────────────────────
-        /// If any key is found in storage → Valid.
-        /// If no key found                → also Valid (development bypass).
-        /// TODO: replace MOCK block with:
-        ///   var result = await _apiClient.ValidateAsync(key, GetDeviceId());
-        ///   _current   = MapApiResponse(key, result);
-        /// ─────────────────────────────────────────────────────────────────────
+        /// Loads the stored key and validates it against the web API.
+        /// Falls back to the grace-period cache when the API is unreachable.
         /// </summary>
         public LicenseInfo LoadAndValidate()
         {
             var key = _storage.LoadKey();
 
-            // ── MOCK VALIDATION ───────────────────────────────────────────────
-            // TODO: remove this block and call real API instead.
-            _current = new LicenseInfo
+            if (string.IsNullOrWhiteSpace(key))
             {
-                Key        = key ?? string.Empty,
-                Status     = LicenseStatus.Valid,   // always valid until API is wired
-                ExpiryDate = null,                  // TODO: set from API response
-                DeviceId   = string.Empty,          // TODO: generate device fingerprint
-                PlanName   = "Development"
-            };
+                _current = new LicenseInfo { Status = LicenseStatus.Missing };
+                return _current;
+            }
+
+            // Run async API call on thread pool — prevents WPF UI-thread deadlock
+            var deviceId = DeviceFingerprint.GetDeviceId();
+            var api = Task.Run(() => _apiClient.ValidateAsync(key, deviceId)).GetAwaiter().GetResult();
+
+            if (api.IsOffline)
+            {
+                _current = LicenseValidationCache.IsWithinGracePeriod(key)
+                    ? new LicenseInfo { Key = key, Status = LicenseStatus.Valid,   PlanName = "Professional" }
+                    : new LicenseInfo { Key = key, Status = LicenseStatus.Expired, PlanName = "Grace period expired" };
+                return _current;
+            }
+
+            if (api.IsValid)
+            {
+                LicenseValidationCache.SaveValid(key);
+                _current = new LicenseInfo { Key = key, Status = LicenseStatus.Valid, PlanName = "Professional" };
+            }
+            else
+            {
+                _current = new LicenseInfo { Key = key, Status = LicenseStatus.Invalid };
+            }
+
             return _current;
-            // ─────────────────────────────────────────────────────────────────
         }
 
         /// <summary>
-        /// Saves a new key and "activates" it.
-        ///
-        /// ── MOCK ─────────────────────────────────────────────────────────────
-        /// Any non-empty key is accepted immediately.
-        /// TODO: replace MOCK block with:
-        ///   var result = await _apiClient.ActivateAsync(key, GetDeviceId());
-        ///   if (!result.Success) return new LicenseInfo { Status = LicenseStatus.Invalid };
-        /// ─────────────────────────────────────────────────────────────────────
+        /// Validates a new key against the API and saves it locally if valid.
+        /// Called by LicenseRequiredWindow when the user submits a key.
         /// </summary>
         public LicenseInfo Activate(string key)
         {
@@ -81,20 +89,21 @@ namespace EZPos.Core.Licensing
                 return _current;
             }
 
-            // ── MOCK ACTIVATION ───────────────────────────────────────────────
-            // TODO: validate with API before saving.
-            _storage.SaveKey(key.Trim());
-            _current = new LicenseInfo
-            {
-                Key      = key.Trim(),
-                Status   = LicenseStatus.Valid,
-                PlanName = "Development"
-            };
-            return _current;
-            // ─────────────────────────────────────────────────────────────────
-        }
+            var trimmed  = key.Trim().ToUpperInvariant();
+            var deviceId = DeviceFingerprint.GetDeviceId();
+            var api      = Task.Run(() => _apiClient.ValidateAsync(trimmed, deviceId)).GetAwaiter().GetResult();
 
-        // TODO: implement device fingerprint generation for device-locked licenses.
-        // private static string GetDeviceId() => ...; // WMI disk serial + CPU ID hash
+            if (!api.IsValid)
+            {
+                // Covers both invalid key and offline — user must retry when online
+                _current = new LicenseInfo { Key = trimmed, Status = LicenseStatus.Invalid };
+                return _current;
+            }
+
+            _storage.SaveKey(trimmed);
+            LicenseValidationCache.SaveValid(trimmed);
+            _current = new LicenseInfo { Key = trimmed, Status = LicenseStatus.Valid, PlanName = "Professional" };
+            return _current;
+        }
     }
 }
