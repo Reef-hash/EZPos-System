@@ -21,6 +21,18 @@ namespace EZPos.Core.Licensing
         Missing,
 
         /// <summary>Key is stored but has not been activated against the API yet.</summary>
-        NotActivated
+        NotActivated,
+
+        /// <summary>License was administratively revoked or suspended by policy.</summary>
+        Revoked,
+
+        /// <summary>License exists but is for a different product family.</summary>
+        ProductMismatch,
+
+        /// <summary>License denied because device is not the bound activation target.</summary>
+        DeviceMismatch,
+
+        /// <summary>License denied because seat/device limit has been reached.</summary>
+        SeatExceeded
     }
 }

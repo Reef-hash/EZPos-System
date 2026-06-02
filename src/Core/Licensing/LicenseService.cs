@@ -59,19 +59,38 @@ namespace EZPos.Core.Licensing
             if (api.IsOffline)
             {
                 _current = LicenseValidationCache.IsWithinGracePeriod(key)
-                    ? new LicenseInfo { Key = key, Status = LicenseStatus.Valid,   PlanName = "Professional" }
-                    : new LicenseInfo { Key = key, Status = LicenseStatus.Expired, PlanName = "Grace period expired" };
+                    ? new LicenseInfo {
+                        Key = key,
+                        Status = LicenseStatus.Valid,
+                        PlanName = "Professional",
+                        ApiMessage = "Offline validation in grace period."
+                    }
+                    : new LicenseInfo {
+                        Key = key,
+                        Status = LicenseStatus.Expired,
+                        PlanName = "Grace period expired",
+                        ApiMessage = "Offline validation grace period has expired."
+                    };
                 return _current;
             }
 
             if (api.IsValid)
             {
                 LicenseValidationCache.SaveValid(key);
-                _current = new LicenseInfo { Key = key, Status = LicenseStatus.Valid, PlanName = "Professional" };
+                _current = new LicenseInfo
+                {
+                    Key = key,
+                    Status = LicenseStatus.Valid,
+                    PlanName = string.IsNullOrWhiteSpace(api.Plan) ? "Professional" : api.Plan,
+                    ExpiryDate = api.ExpiresAt,
+                    ReasonCode = api.ReasonCode,
+                    ClientAction = api.ClientAction,
+                    ApiMessage = api.Message,
+                };
             }
             else
             {
-                _current = new LicenseInfo { Key = key, Status = LicenseStatus.Invalid };
+                _current = BuildFailureInfo(key, api);
             }
 
             return _current;
@@ -91,19 +110,69 @@ namespace EZPos.Core.Licensing
 
             var trimmed  = key.Trim().ToUpperInvariant();
             var deviceId = DeviceFingerprint.GetDeviceId();
-            var api      = Task.Run(() => _apiClient.ValidateAsync(trimmed, deviceId)).GetAwaiter().GetResult();
+            var api      = Task.Run(() => _apiClient.ActivateAsync(trimmed, deviceId)).GetAwaiter().GetResult();
+
+            if (api.IsOffline)
+            {
+                _current = new LicenseInfo
+                {
+                    Key = trimmed,
+                    Status = LicenseStatus.Invalid,
+                    ApiMessage = "Activation requires online connection.",
+                    ReasonCode = "OFFLINE_ACTIVATION_BLOCKED",
+                    ClientAction = "retry_when_online",
+                };
+                return _current;
+            }
 
             if (!api.IsValid)
             {
-                // Covers both invalid key and offline — user must retry when online
-                _current = new LicenseInfo { Key = trimmed, Status = LicenseStatus.Invalid };
+                _current = BuildFailureInfo(trimmed, api);
                 return _current;
             }
 
             _storage.SaveKey(trimmed);
             LicenseValidationCache.SaveValid(trimmed);
-            _current = new LicenseInfo { Key = trimmed, Status = LicenseStatus.Valid, PlanName = "Professional" };
+            _current = new LicenseInfo
+            {
+                Key = trimmed,
+                Status = LicenseStatus.Valid,
+                PlanName = string.IsNullOrWhiteSpace(api.Plan) ? "Professional" : api.Plan,
+                ExpiryDate = api.ExpiresAt,
+                ReasonCode = api.ReasonCode,
+                ClientAction = api.ClientAction,
+                ApiMessage = api.Message,
+            };
             return _current;
+        }
+
+        private static LicenseInfo BuildFailureInfo(string key, LicenseApiResponse api)
+        {
+            return new LicenseInfo
+            {
+                Key = key,
+                Status = MapStatus(api.Status),
+                PlanName = string.IsNullOrWhiteSpace(api.Plan) ? string.Empty : api.Plan,
+                ExpiryDate = api.ExpiresAt,
+                ReasonCode = api.ReasonCode,
+                ClientAction = api.ClientAction,
+                ApiMessage = api.Message,
+            };
+        }
+
+        private static LicenseStatus MapStatus(string status)
+        {
+            return status?.Trim().ToLowerInvariant() switch
+            {
+                "valid" => LicenseStatus.Valid,
+                "expired" => LicenseStatus.Expired,
+                "revoked" => LicenseStatus.Revoked,
+                "product_mismatch" => LicenseStatus.ProductMismatch,
+                "device_mismatch" => LicenseStatus.DeviceMismatch,
+                "seat_exceeded" => LicenseStatus.SeatExceeded,
+                "not_found" => LicenseStatus.Invalid,
+                _ => LicenseStatus.Invalid,
+            };
         }
     }
 }

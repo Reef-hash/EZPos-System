@@ -41,6 +41,15 @@ namespace EZPos.Core.Licensing
         /// </summary>
         public string PlanName { get; set; } = string.Empty;
 
+        /// <summary>Stable machine-readable reason code from licensing API.</summary>
+        public string ReasonCode { get; set; } = string.Empty;
+
+        /// <summary>Recommended client next action from licensing API.</summary>
+        public string ClientAction { get; set; } = string.Empty;
+
+        /// <summary>Last message received from licensing API for diagnostics.</summary>
+        public string ApiMessage { get; set; } = string.Empty;
+
         /// <summary>True when the status allows the app to operate normally.</summary>
         public bool IsLicensed => Status == LicenseStatus.Valid;
     }

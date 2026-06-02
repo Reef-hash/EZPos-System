@@ -83,10 +83,16 @@ namespace EZPos.UI.Licensing
                 var message = info.Status switch
                 {
                     LicenseStatus.Expired     => "This license key has expired. Please renew your subscription.",
+                    LicenseStatus.Revoked     => "This license has been revoked. Please contact support.",
+                    LicenseStatus.ProductMismatch => "This key is for a different product. Please use an EZPos license key.",
+                    LicenseStatus.DeviceMismatch => "This key is already bound to another device. Request a transfer from support.",
+                    LicenseStatus.SeatExceeded => "Seat/device limit reached. Release a device or upgrade your plan.",
                     LicenseStatus.Invalid     => "Invalid license key. Please check the key and try again.",
                     LicenseStatus.NotActivated => "Key found but not activated. Please contact support.",
                     _                          => "Activation failed. Please try again or contact support."
                 };
+                if (!string.IsNullOrWhiteSpace(info.ApiMessage))
+                    message = info.ApiMessage;
                 ShowError(message);
             }
         }

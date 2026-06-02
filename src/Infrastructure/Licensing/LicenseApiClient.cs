@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -13,9 +14,10 @@ namespace EZPos.Infrastructure.Licensing
     ///   Development : http://localhost:5122
     ///   Production  : https://your-deployed-site.com  (update config.ini before release)
     ///
-    /// Endpoint called: POST {baseUrl}/api/licenses/validate
-    /// Request body   : { "licenseKey": "EZPOS-XXXX-XXXX-XXXX" }
-    /// Response       : { "isValid": true|false, "message": "..." }
+    /// Primary endpoint: POST {baseUrl}/api/v1/licensing/validate
+    /// Legacy fallback : POST {baseUrl}/api/licenses/validate
+    ///
+    /// During migration we prefer V1 contract and gracefully fall back to legacy.
     /// </summary>
     public class LicenseApiClient
     {
@@ -33,7 +35,7 @@ namespace EZPos.Infrastructure.Licensing
         }
 
         /// <summary>
-        /// Calls POST /api/licenses/validate.
+        /// Calls V1 validate endpoint first, then falls back to legacy validate endpoint.
         /// Returns IsOffline = true when the server cannot be reached (no internet, server down, etc.).
         /// Never throws — all exceptions are caught and returned as IsOffline responses.
         /// </summary>
@@ -41,15 +43,12 @@ namespace EZPos.Infrastructure.Licensing
         {
             try
             {
-                var response = await _http.PostAsJsonAsync(
-                    $"{_baseUrl}/api/licenses/validate",
-                    new { LicenseKey = key, DeviceId = deviceId });
+                var v1 = await ValidateV1Async(key, deviceId);
+                if (v1 is not null)
+                    return v1;
 
-                if (!response.IsSuccessStatusCode)
-                    return new LicenseApiResponse { IsValid = false, Message = "Server returned an error." };
-
-                return await response.Content.ReadFromJsonAsync<LicenseApiResponse>()
-                       ?? new LicenseApiResponse { IsValid = false };
+                var legacy = await ValidateLegacyAsync(key, deviceId);
+                return legacy ?? new LicenseApiResponse { IsValid = false, Message = "Validation response unavailable." };
             }
             catch (Exception ex) when (ex is HttpRequestException
                                            or TaskCanceledException
@@ -58,6 +57,70 @@ namespace EZPos.Infrastructure.Licensing
                 // Network unreachable, DNS failure, timeout, or server refused connection
                 return new LicenseApiResponse { IsValid = false, IsOffline = true, Message = ex.Message };
             }
+        }
+
+        /// <summary>
+        /// Calls V1 activate endpoint first. Falls back to validate flow if V1 activate is unavailable.
+        /// </summary>
+        public async Task<LicenseApiResponse> ActivateAsync(string key, string deviceId)
+        {
+            try
+            {
+                var response = await _http.PostAsJsonAsync(
+                    $"{_baseUrl}/api/v1/licensing/activate",
+                    new { licenseKey = key, product = "ezpos", deviceId });
+
+                if (response.StatusCode == HttpStatusCode.NotFound ||
+                    response.StatusCode == HttpStatusCode.MethodNotAllowed)
+                {
+                    // Old backend: no activation endpoint yet, use validate as compatibility path.
+                    return await ValidateAsync(key, deviceId);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                    return new LicenseApiResponse { IsValid = false, Message = "Server returned an error." };
+
+                var parsed = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+                return parsed?.Normalize() ?? new LicenseApiResponse { IsValid = false, Message = "Activation response unavailable." };
+            }
+            catch (Exception ex) when (ex is HttpRequestException
+                                           or TaskCanceledException
+                                           or OperationCanceledException)
+            {
+                return new LicenseApiResponse { IsValid = false, IsOffline = true, Message = ex.Message };
+            }
+        }
+
+        private async Task<LicenseApiResponse?> ValidateV1Async(string key, string deviceId)
+        {
+            var response = await _http.PostAsJsonAsync(
+                $"{_baseUrl}/api/v1/licensing/validate",
+                new { licenseKey = key, product = "ezpos", deviceId });
+
+            if (response.StatusCode == HttpStatusCode.NotFound ||
+                response.StatusCode == HttpStatusCode.MethodNotAllowed)
+            {
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+                return new LicenseApiResponse { IsValid = false, Message = "Server returned an error." };
+
+            var parsed = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+            return parsed?.Normalize() ?? new LicenseApiResponse { IsValid = false, Message = "Validation response unavailable." };
+        }
+
+        private async Task<LicenseApiResponse?> ValidateLegacyAsync(string key, string deviceId)
+        {
+            var response = await _http.PostAsJsonAsync(
+                $"{_baseUrl}/api/licenses/validate",
+                new { LicenseKey = key, DeviceId = deviceId, Product = "ezpos" });
+
+            if (!response.IsSuccessStatusCode)
+                return new LicenseApiResponse { IsValid = false, Message = "Server returned an error." };
+
+            var parsed = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
+            return parsed?.Normalize() ?? new LicenseApiResponse { IsValid = false, Message = "Legacy validation response unavailable." };
         }
     }
 
@@ -72,6 +135,31 @@ namespace EZPos.Infrastructure.Licensing
 
         /// <summary>Human-readable message from the server (or error description if offline).</summary>
         public string Message { get; set; } = string.Empty;
+
+        // V1 contract fields
+        public string Decision { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string ReasonCode { get; set; } = string.Empty;
+        public string ClientAction { get; set; } = string.Empty;
+        public string Product { get; set; } = string.Empty;
+        public string Plan { get; set; } = string.Empty;
+        public DateTime? ExpiresAt { get; set; }
+
+        public LicenseApiResponse Normalize()
+        {
+            if (!string.IsNullOrWhiteSpace(Status))
+            {
+                var s = Status.Trim().ToLowerInvariant();
+                IsValid = s == "valid" || Decision.Equals("allow", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (string.IsNullOrWhiteSpace(Message))
+            {
+                Message = IsValid ? "License is valid." : "License validation failed.";
+            }
+
+            return this;
+        }
     }
 }
 
