@@ -28,7 +28,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0">
                     <fa:IconBlock Icon="TriangleExclamation" FontSize="14"
                                   Foreground="{StaticResource ErrorBrush}" Margin="0,0,8,0" />
-                    <TextBlock Text="EZPos — Trial Period Ended"
+                    <TextBlock x:Name="TitleBarText" Text="EZPos — License Expired"
                                Foreground="{StaticResource TextPrimaryBrush}"
                                FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </StackPanel>
@@ -42,7 +42,7 @@
                     <fa:IconBlock Icon="HourglassEnd" FontSize="44"
                                   Foreground="{StaticResource ErrorBrush}"
                                   HorizontalAlignment="Center" Margin="0,0,0,12" />
-                    <TextBlock Text="Your Trial Has Expired"
+                    <TextBlock x:Name="HeadingText" Text="Your License Has Expired"
                                Foreground="{StaticResource TextPrimaryBrush}"
                                FontSize="18" FontWeight="Bold"
                                HorizontalAlignment="Center" />
@@ -55,7 +55,7 @@
                 <Separator Background="{StaticResource DividerBrush}" Margin="0,0,0,18" />
 
                 <!-- Message body -->
-                <TextBlock TextWrapping="Wrap" TextAlignment="Center"
+                <TextBlock x:Name="BodyText" TextWrapping="Wrap" TextAlignment="Center"
                            Foreground="{StaticResource TextSecondaryBrush}"
                            FontSize="12" LineHeight="20"
                            Text="Thank you for evaluating EZPos. To continue using the application, please contact the developer to purchase a full license." />

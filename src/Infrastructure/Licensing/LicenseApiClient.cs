@@ -136,6 +136,9 @@ namespace EZPos.Infrastructure.Licensing
         /// <summary>Human-readable message from the server (or error description if offline).</summary>
         public string Message { get; set; } = string.Empty;
 
+        /// <summary>Fallback error field returned by V1 responses.</summary>
+        public string Error { get; set; } = string.Empty;
+
         // V1 contract fields
         public string Decision { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
@@ -153,9 +156,23 @@ namespace EZPos.Infrastructure.Licensing
                 IsValid = s == "valid" || Decision.Equals("allow", StringComparison.OrdinalIgnoreCase);
             }
 
+            if (string.IsNullOrWhiteSpace(Message) && !string.IsNullOrWhiteSpace(Error))
+            {
+                Message = Error;
+            }
+
             if (string.IsNullOrWhiteSpace(Message))
             {
-                Message = IsValid ? "License is valid." : "License validation failed.";
+                Message = Status?.Trim().ToLowerInvariant() switch
+                {
+                    "device_mismatch" => "This key is already bound to another device. Request a transfer from support.",
+                    "seat_exceeded" => "Seat/device limit reached. Release another device or upgrade your plan.",
+                    "expired" => "This license key has expired. Please renew your subscription.",
+                    "revoked" => "This license has been revoked. Please contact support.",
+                    "product_mismatch" => "This key is for a different product. Please use an EZPos license key.",
+                    "not_found" => "License key not found. Please check your key and try again.",
+                    _ => IsValid ? "License is valid." : "License validation failed.",
+                };
             }
 
             return this;

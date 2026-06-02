@@ -21,15 +21,26 @@ namespace EZPos.UI.Licensing
         {
             InitializeComponent();
 
-            // Populate the expiry date label from the license metadata.
-            if (licenseInfo.ExpiryDate.HasValue)
+            bool isGraceExpired = licenseInfo.Status == LicenseStatus.Expired
+                && string.IsNullOrWhiteSpace(licenseInfo.ReasonCode) == false
+                    ? licenseInfo.ReasonCode.Contains("GRACE", System.StringComparison.OrdinalIgnoreCase)
+                    : licenseInfo.ApiMessage?.Contains("grace", System.StringComparison.OrdinalIgnoreCase) == true;
+
+            if (isGraceExpired)
+            {
+                TitleBarText.Text     = "EZPos — Offline Grace Expired";
+                HeadingText.Text      = "Offline Grace Period Expired";
+                ExpiryDateText.Text   = "Could not reach license server. Grace period has ended.";
+                BodyText.Text         = "EZPos could not contact the license server and the offline grace period has expired. Please connect to the internet and restart the application.";
+            }
+            else if (licenseInfo.ExpiryDate.HasValue)
             {
                 var local = licenseInfo.ExpiryDate.Value.ToLocalTime();
-                ExpiryDateText.Text = $"Trial expired on {local:dddd, d MMMM yyyy}";
+                ExpiryDateText.Text = $"License expired on {local:dddd, d MMMM yyyy}";
             }
             else
             {
-                ExpiryDateText.Text = "Trial period has ended.";
+                ExpiryDateText.Text = licenseInfo.ApiMessage ?? "License period has ended.";
             }
         }
 
