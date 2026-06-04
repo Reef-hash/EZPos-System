@@ -284,6 +284,113 @@
                 </StackPanel>
             </materialDesign:Card>
 
+            <!-- License Status -->
+            <materialDesign:Card x:Name="LicenseCard" Padding="22,18" Margin="0,0,0,16"
+                                 Background="{StaticResource DashboardSurfaceBrush}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <fa:IconBlock Icon="Key" FontSize="16"
+                                          Foreground="{StaticResource DashboardPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            <TextBlock Text="License" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource DashboardTextPrimaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <!-- Status badge -->
+                        <Border Grid.Column="1" x:Name="LicenseStatusBadge"
+                                CornerRadius="12" Padding="10,4" Background="#FF22C55E">
+                            <TextBlock x:Name="LicenseStatusBadgeText" Text="Active"
+                                       Foreground="White" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
+                    </Grid>
+
+                    <!-- License details grid -->
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="License Key"
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="LicenseKeyText"
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" FontSize="13" FontFamily="Consolas" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Plan"
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LicensePlanText"
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" FontSize="13" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="License Type"
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="LicenseExpiryText"
+                                   Foreground="{StaticResource DashboardTextPrimaryBrush}" FontSize="13" />
+
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Device ID"
+                                   Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="13" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="6" Grid.Column="1" x:Name="LicenseDeviceText"
+                                   Foreground="{StaticResource DashboardTextMutedBrush}" FontSize="11"
+                                   FontFamily="Consolas" TextWrapping="Wrap" />
+                    </Grid>
+
+                    <!-- Re-validate button -->
+                    <Button x:Name="RevalidateBtn" Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="14,8" MaxWidth="180" HorizontalAlignment="Left"
+                            Click="RevalidateBtn_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconBlock Icon="RotateRight" Margin="0,0,6,0" />
+                            <TextBlock Text="Re-validate Now" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock x:Name="RevalidateStatusText"
+                               Foreground="{StaticResource DashboardTextMutedBrush}"
+                               FontSize="11" Margin="0,6,0,0" Visibility="Collapsed" />
+
+                    <!-- Device mismatch — WhatsApp contact (shown only when device_mismatch) -->
+                    <Border x:Name="TransferContactPanel"
+                            Background="{StaticResource CardBackgroundBrush}"
+                            CornerRadius="8" Margin="0,16,0,0" Padding="16,12"
+                            Visibility="Collapsed">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <fa:IconBlock Icon="TriangleExclamation" FontSize="13"
+                                              Foreground="#FFFBBF24" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="This device is not bound to your license."
+                                           Foreground="{StaticResource DashboardTextPrimaryBrush}"
+                                           FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="To transfer your license to this device, contact support via WhatsApp."
+                                       Foreground="{StaticResource DashboardTextSecondaryBrush}"
+                                       FontSize="12" TextWrapping="Wrap" Margin="0,0,0,10" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Padding="14,8" MaxWidth="200" HorizontalAlignment="Left"
+                                    Click="WhatsAppTransfer_Click">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:IconBlock Icon="Whatsapp" FontSize="14"
+                                                  Foreground="#FF25D366" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="019-5778954" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="WhatsApp only  ·  Zarif El-Mansour  ·  Catalysm Inc"
+                                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                                       FontSize="10" Margin="0,5,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </materialDesign:Card>
+
             <!-- About -->
             <materialDesign:Card Padding="22,18" Margin="0,0,0,4"
                                  Background="{StaticResource DashboardSurfaceBrush}">

@@ -1,31 +1,22 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Threading;
+using System.Threading.Tasks;
 using EZPos.Core.Licensing;
+using EZPos.Infrastructure.Licensing;
 
 namespace EZPos.UI.Licensing
 {
-    /// <summary>
-    /// Blocking activation window shown when the license check on startup returns
-    /// anything other than LicenseStatus.Valid.
-    ///
-    /// Flow:
-    ///   1. User types a license key and clicks Activate.
-    ///   2. LicenseService.Activate(key) is called (currently mock — any key passes).
-    ///   3. On success, DialogResult = true → App.xaml.cs continues startup.
-    ///   4. On failure, an error message is shown inline.
-    ///
-    /// TODO (when real API is ready):
-    ///   - Show a loading spinner during the async API call.
-    ///   - Handle network timeout / offline gracefully with a retry option.
-    ///   - Display plan name and expiry date from LicenseInfo after activation.
-    /// </summary>
     public partial class LicenseRequiredWindow : Window
     {
         private readonly ILicenseService _licenseService;
+        private readonly LicenseApiClient? _apiClient;
+        private CancellationTokenSource? _wakeCts;
 
-        public LicenseRequiredWindow(ILicenseService licenseService)
+        public LicenseRequiredWindow(ILicenseService licenseService, LicenseApiClient? apiClient = null)
         {
             _licenseService = licenseService;
+            _apiClient = apiClient;
             InitializeComponent();
             Loaded += (_, _) => LicenseKeyBox.Focus();
         }
@@ -40,17 +31,17 @@ namespace EZPos.UI.Licensing
         private void LicenseKeyBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
-                TryActivate();
+                _ = TryActivateAsync();
         }
 
         private void ActivateBtn_Click(object sender, RoutedEventArgs e)
         {
-            TryActivate();
+            _ = TryActivateAsync();
         }
 
         // ── Core logic ────────────────────────────────────────────────────
 
-        private void TryActivate()
+        private async Task TryActivateAsync()
         {
             var key = LicenseKeyBox.Text.Trim();
 
@@ -60,36 +51,61 @@ namespace EZPos.UI.Licensing
                 return;
             }
 
-            // Disable controls while processing (future: show spinner here)
-            ActivateBtn.IsEnabled    = false;
-            LicenseKeyBox.IsEnabled  = false;
-            StatusText.Visibility    = Visibility.Collapsed;
+            ActivateBtn.IsEnabled   = false;
+            LicenseKeyBox.IsEnabled = false;
+            StatusText.Visibility   = System.Windows.Visibility.Collapsed;
 
-            // TODO: make this async when LicenseService.ActivateAsync() is introduced:
-            //   var info = await _licenseService.ActivateAsync(key);
+            // Wake up the backend if an API client was provided
+            if (_apiClient is not null)
+            {
+                _wakeCts = new CancellationTokenSource();
+                WakePanel.Visibility = System.Windows.Visibility.Visible;
+                WakeStatusText.Text  = "Connecting to server...";
+
+                var awake = await _apiClient.WakeUpAsync(
+                    elapsed =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            WakeStatusText.Text = elapsed < 10
+                                ? "Connecting to server..."
+                                : $"Starting server... ({elapsed}s)";
+                        });
+                    },
+                    _wakeCts.Token);
+
+                WakePanel.Visibility = System.Windows.Visibility.Collapsed;
+
+                if (!awake)
+                {
+                    ActivateBtn.IsEnabled   = true;
+                    LicenseKeyBox.IsEnabled = true;
+                    ShowError("Cannot reach license server. Please check your internet connection and try again.");
+                    return;
+                }
+            }
+
             var info = _licenseService.Activate(key);
 
             if (info.IsLicensed)
             {
-                DialogResult = true;
-                Close();
+                ShowSuccessPanel(info);
             }
             else
             {
-                // Re-enable controls so the user can correct their key
                 ActivateBtn.IsEnabled   = true;
                 LicenseKeyBox.IsEnabled = true;
 
                 var message = info.Status switch
                 {
-                    LicenseStatus.Expired     => "This license key has expired. Please renew your subscription.",
-                    LicenseStatus.Revoked     => "This license has been revoked. Please contact support.",
+                    LicenseStatus.Expired         => "This license is no longer valid. Please contact support.",
+                    LicenseStatus.Revoked         => "This license has been revoked. Please contact support.",
                     LicenseStatus.ProductMismatch => "This key is for a different product. Please use an EZPos license key.",
-                    LicenseStatus.DeviceMismatch => "This key is already bound to another device. Request a transfer from support.",
-                    LicenseStatus.SeatExceeded => "Seat/device limit reached. Release a device or upgrade your plan.",
-                    LicenseStatus.Invalid     => "Invalid license key. Please check the key and try again.",
-                    LicenseStatus.NotActivated => "Key found but not activated. Please contact support.",
-                    _                          => "Activation failed. Please try again or contact support."
+                    LicenseStatus.DeviceMismatch  => "This key is already bound to another device. Request a transfer from support.",
+                    LicenseStatus.SeatExceeded    => "Seat/device limit reached. Please contact support.",
+                    LicenseStatus.Invalid         => "Invalid license key. Please check the key and try again.",
+                    LicenseStatus.NotActivated    => "Key found but not activated. Please contact support.",
+                    _                             => "Activation failed. Please try again or contact support."
                 };
                 if (!string.IsNullOrWhiteSpace(info.ApiMessage))
                     message = info.ApiMessage;
@@ -97,10 +113,27 @@ namespace EZPos.UI.Licensing
             }
         }
 
+        private void ShowSuccessPanel(LicenseInfo info)
+        {
+            ActivationForm.Visibility = System.Windows.Visibility.Collapsed;
+
+            SuccessPlanText.Text   = string.IsNullOrWhiteSpace(info.PlanName) ? "Standard" : info.PlanName;
+            SuccessExpiryText.Text = "Lifetime (One-Time Purchase)";
+            SuccessCustomerText.Text = string.IsNullOrWhiteSpace(info.ApiMessage) ? "—" : info.ApiMessage;
+
+            SuccessPanel.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        private void ContinueBtn_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            DialogResult = true;
+            Close();
+        }
+
         private void ShowError(string message)
         {
             StatusText.Text       = message;
-            StatusText.Visibility = Visibility.Visible;
+            StatusText.Visibility = System.Windows.Visibility.Visible;
         }
     }
 }

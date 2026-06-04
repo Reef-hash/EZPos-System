@@ -93,6 +93,55 @@ Status: **CORE COMPLETE**
 
 ---
 
+## Barcode Management Module
+
+> Architecture: MVVM. Docs: [barcode-module.md](../features/barcodes/barcode-module.md)
+
+### Phase 1 — MVP
+- [ ] `ZXing.Net` NuGet package added
+- [ ] `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
+- [ ] `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
+- [ ] `LabelTemplate`, `LabelPrintJob` domain models
+- [ ] `BarcodeService.GenerateImage()` — Code128
+- [ ] `BarcodeService.GenerateInternalCode()` — `EZP` + zero-padded Id
+- [ ] `LabelTemplateRepository` — JSON persistence, four seeded defaults
+- [ ] `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
+- [ ] `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
+- [ ] `BarcodesPageViewModel` + `BarcodesPage.xaml/.cs`
+- [ ] `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml/.cs`
+- [ ] "Print Label..." button on `ProductsPage` toolbar
+- [ ] "Generate Barcode" button in `ProductDialog` (BarcodeBox row)
+- [ ] `"Barcodes"` route registered in `MainWindow.RegisterRoutes()`
+- [ ] Barcodes nav button in `MainWindow.xaml` sidebar
+
+Status: **PLANNED**
+
+### Phase 2 — Production Ready
+- [ ] `BarcodeLabels` table in `Database.Initialize()`
+- [ ] `BarcodeLabelRepository` + `BarcodeLabelRecord` model
+- [ ] Print job logging to `BarcodeLabels` after each print
+- [ ] Code39 + EAN-13 format support (EAN-13 shows internal-use warning)
+- [ ] PDF export via `PdfSharpCore` in `LabelPrintService`
+- [ ] Print preview window (`DocumentViewer`)
+- [ ] `LabelTemplateEditorDialog` + `LabelTemplateEditorViewModel`
+- [ ] Damaged label replacement (scanner → auto-select → quick print)
+- [ ] Stock receive → print labels hook in `StockAdjustDialog`
+- [ ] A4 sheet template (4×6 = 24 labels per page)
+- [ ] Reprint history sub-tab on BarcodesPage
+
+Status: **PLANNED**
+
+### Phase 3 — Advanced
+- [ ] QR Code support
+- [ ] Inventory count mode
+- [ ] Purchase order barcode receiving
+- [ ] Price change label trigger
+- [ ] Barcode CSV import/export
+
+Status: **BACKLOG**
+
+---
+
 ## Settings Module
 
 - [x] Store name, currency, receipt footer

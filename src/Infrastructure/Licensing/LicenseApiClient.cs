@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using EZPos.Core.Licensing;
 
@@ -25,6 +26,12 @@ namespace EZPos.Infrastructure.Licensing
         private static readonly HttpClient _http = new()
         {
             Timeout = TimeSpan.FromSeconds(8)
+        };
+
+        // Separate client with a longer timeout for the wake-up probe
+        private static readonly HttpClient _wakeHttp = new()
+        {
+            Timeout = TimeSpan.FromSeconds(75)
         };
 
         private readonly string _baseUrl;
@@ -121,6 +128,71 @@ namespace EZPos.Infrastructure.Licensing
 
             var parsed = await response.Content.ReadFromJsonAsync<LicenseApiResponse>();
             return parsed?.Normalize() ?? new LicenseApiResponse { IsValid = false, Message = "Legacy validation response unavailable." };
+        }
+
+        /// <summary>
+        /// Pings /health with a long timeout to wake up a cold Render free-tier backend.
+        /// Calls progressCallback(secondsElapsed) every second so the UI can update a spinner.
+        /// Returns true when the server responds, false if unreachable within the timeout.
+        /// Immediately returns false for "connection refused" errors (localhost/dead host) — no retry.
+        /// </summary>
+        public async Task<bool> WakeUpAsync(Action<int>? progressCallback = null, CancellationToken ct = default)
+        {
+            var url = $"{_baseUrl}/health";
+            var started = DateTime.UtcNow;
+            int lastReported = 0;
+            bool firstAttempt = true;
+
+            while (!ct.IsCancellationRequested)
+            {
+                var elapsed = (int)(DateTime.UtcNow - started).TotalSeconds;
+                if (elapsed > lastReported)
+                {
+                    progressCallback?.Invoke(elapsed);
+                    lastReported = elapsed;
+                }
+
+                if (elapsed >= 75)
+                    return false;
+
+                try
+                {
+                    using var probeCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    probeCts.CancelAfter(TimeSpan.FromSeconds(8));
+
+                    var resp = await _wakeHttp.GetAsync(url, probeCts.Token);
+                    if (resp.IsSuccessStatusCode)
+                        return true;
+
+                    // Non-success but server is reachable — keep retrying (e.g. 503 during cold start)
+                    firstAttempt = false;
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    // "Connection refused" or "Name not resolved" = host is dead/wrong URL, no point retrying
+                    var msg = httpEx.Message;
+                    bool isConnectionRefused =
+                        msg.Contains("Connection refused", StringComparison.OrdinalIgnoreCase) ||
+                        msg.Contains("actively refused", StringComparison.OrdinalIgnoreCase) ||
+                        msg.Contains("No connection could be made", StringComparison.OrdinalIgnoreCase) ||
+                        msg.Contains("Name or service not known", StringComparison.OrdinalIgnoreCase) ||
+                        httpEx.StatusCode == HttpStatusCode.ServiceUnavailable && firstAttempt;
+
+                    if (isConnectionRefused && firstAttempt)
+                        return false;
+
+                    firstAttempt = false;
+                }
+                catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+                {
+                    // Timeout — server is sleeping, keep retrying
+                    firstAttempt = false;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(2), ct).ContinueWith(_ => { });
+            }
+
+            return false;
         }
     }
 

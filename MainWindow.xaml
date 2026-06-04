@@ -59,6 +59,21 @@
                     <Button x:Name="SalesNavBtn" Style="{StaticResource NavButtonStyle}" Content="Sales" Tag="Sales" Click="NavButton_Click" />
                     <Button x:Name="ProductsNavBtn" Style="{StaticResource NavButtonStyle}" Content="Products" Tag="Products" Click="NavButton_Click" />
                     <Button x:Name="StockNavBtn" Style="{StaticResource NavButtonStyle}" Content="Stock" Tag="Stock" Click="NavButton_Click" />
+                    <Button x:Name="BarcodesNavBtn" Style="{StaticResource NavButtonStyle}" Tag="Barcodes" Click="NavButton_Click">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Barcodes" VerticalAlignment="Center" />
+                            <Border Background="{StaticResource DashboardPrimaryBrush}"
+                                    CornerRadius="4"
+                                    Margin="8,0,0,0"
+                                    Padding="5,2">
+                                <TextBlock Text="BETA"
+                                           FontSize="9"
+                                           FontWeight="Bold"
+                                           Foreground="#111014"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+                    </Button>
                     <Button x:Name="ReportsNavBtn" Style="{StaticResource NavButtonStyle}" Content="Reports" Tag="Reports" Click="NavButton_Click" />
                     <Button x:Name="CashDrawerNavBtn" Style="{StaticResource NavButtonStyle}" Content="Cash Drawer" Tag="CashDrawer" Click="NavButton_Click" />
                 </StackPanel>

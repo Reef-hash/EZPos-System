@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Printing;
@@ -6,9 +7,12 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Data.SQLite;
 using EZPos.Business.Services;
+using EZPos.Core.Licensing;
 using EZPos.DataAccess.Repositories;
+using EZPos.Infrastructure.Licensing;
 using EZPos.UI.Dialogs;
 using EZPos.UI.State;
 
@@ -17,11 +21,13 @@ namespace EZPos.UI.Pages
     public partial class SettingsPage : UserControl
     {
         private readonly PosStateStore _stateStore;
+        private readonly ILicenseService? _licenseService;
 
-        public SettingsPage(PosStateStore stateStore)
+        public SettingsPage(PosStateStore stateStore, ILicenseService? licenseService = null)
         {
             InitializeComponent();
             _stateStore = stateStore;
+            _licenseService = licenseService;
             Loaded += SettingsPage_Loaded;
         }
 
@@ -52,6 +58,111 @@ namespace EZPos.UI.Pages
                 if (item.Tag?.ToString() == savedMode)
                 { TaxModeCombo.SelectedItem = item; break; }
             if (TaxModeCombo.SelectedItem is null) TaxModeCombo.SelectedIndex = 0;
+
+            PopulateLicenseCard();
+        }
+
+        // ── License card ──────────────────────────────────────────────────────────
+
+        private void PopulateLicenseCard()
+        {
+            if (_licenseService is null)
+            {
+                LicenseCard.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            var info = _licenseService.Current;
+            var deviceId = DeviceFingerprint.GetDeviceId();
+
+            // Masked key: show last segment only (e.g. EZP-STA-****-****-FDA4BC9F)
+            LicenseKeyText.Text = MaskLicenseKey(info.Key);
+
+            LicensePlanText.Text = string.IsNullOrWhiteSpace(info.PlanName) ? "—" : info.PlanName;
+
+            LicenseDeviceText.Text = string.IsNullOrWhiteSpace(deviceId) ? "Unavailable" : deviceId;
+
+            // EZPos is lifetime — never show expiry countdown
+            LicenseExpiryText.Text = "Lifetime (One-Time Purchase)";
+
+            // Status badge
+            switch (info.Status)
+            {
+                case LicenseStatus.Valid:
+                    LicenseStatusBadgeText.Text       = "Active";
+                    LicenseStatusBadge.Background     = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF22C55E"));
+                    TransferContactPanel.Visibility   = Visibility.Collapsed;
+                    break;
+                case LicenseStatus.DeviceMismatch:
+                    LicenseStatusBadgeText.Text       = "Device Mismatch";
+                    LicenseStatusBadge.Background     = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFBBF24"));
+                    TransferContactPanel.Visibility   = Visibility.Visible;
+                    break;
+                case LicenseStatus.Expired:
+                    LicenseStatusBadgeText.Text       = "Expired";
+                    LicenseStatusBadge.Background     = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFEF4444"));
+                    TransferContactPanel.Visibility   = Visibility.Collapsed;
+                    break;
+                default:
+                    LicenseStatusBadgeText.Text       = info.Status.ToString();
+                    LicenseStatusBadge.Background     = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF6B7280"));
+                    TransferContactPanel.Visibility   = Visibility.Collapsed;
+                    break;
+            }
+        }
+
+        private static string MaskLicenseKey(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return "—";
+            var parts = key.Split('-');
+            if (parts.Length <= 2) return key;
+            // Keep first 2 segments visible, mask middle, keep last
+            var masked = new System.Text.StringBuilder();
+            masked.Append(parts[0]).Append('-').Append(parts[1]);
+            for (int i = 2; i < parts.Length - 1; i++)
+                masked.Append("-****");
+            masked.Append('-').Append(parts[^1]);
+            return masked.ToString();
+        }
+
+        private void RevalidateBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_licenseService is null) return;
+
+            RevalidateBtn.IsEnabled        = false;
+            RevalidateStatusText.Text      = "Validating...";
+            RevalidateStatusText.Foreground = (Brush)FindResource("DashboardTextMutedBrush");
+            RevalidateStatusText.Visibility = Visibility.Visible;
+
+            try
+            {
+                _licenseService.LoadAndValidate();
+                PopulateLicenseCard();
+                RevalidateStatusText.Text      = "Validation successful.";
+                RevalidateStatusText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF22C55E"));
+            }
+            catch
+            {
+                RevalidateStatusText.Text      = "Could not reach license server. Grace period is active.";
+                RevalidateStatusText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFBBF24"));
+            }
+            finally
+            {
+                RevalidateBtn.IsEnabled = true;
+            }
+        }
+
+        private void WhatsAppTransfer_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName        = "https://wa.me/60195778954",
+                    UseShellExecute = true,
+                });
+            }
+            catch { /* WhatsApp not installed or browser unavailable — silent fail */ }
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)

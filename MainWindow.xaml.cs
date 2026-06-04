@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using EZPos.Business.Services;
+using EZPos.Core.Licensing;
 using EZPos.DataAccess.Repositories;
 using EZPos.UI.Dialogs;
 using EZPos.UI.Navigation;
@@ -24,9 +25,10 @@ namespace EZPos.UI
         private readonly StockService stockService;
         private readonly ReportService reportService;
         private readonly CategoryService categoryService;
+        private readonly ILicenseService? licenseService;
         private string currentPage = DefaultRoute;
 
-        public MainWindow(PosStateStore stateStore, ProductService productService, SaleService saleService, StockService stockService, ReportService reportService, CategoryService categoryService)
+        public MainWindow(PosStateStore stateStore, ProductService productService, SaleService saleService, StockService stockService, ReportService reportService, CategoryService categoryService, ILicenseService? licenseService = null)
         {
             InitializeComponent();
 
@@ -36,6 +38,7 @@ namespace EZPos.UI
             this.stockService    = stockService;
             this.reportService   = reportService;
             this.categoryService = categoryService;
+            this.licenseService  = licenseService;
 
             navigationService = new NavigationService();
             RegisterRoutes();
@@ -154,8 +157,9 @@ namespace EZPos.UI
             navigationService.Register("Sales",      () => new UI.Pages.SalesPage(stateStore, saleService, categoryService));
             navigationService.Register("Products",   () => new UI.Pages.ProductsPage(stateStore, productService, categoryService));
             navigationService.Register("Stock",      () => new UI.Pages.StockPage(stateStore, stockService, categoryService));
+            navigationService.Register("Barcodes",   () => new UI.Pages.BarcodesPage());
             navigationService.Register("Reports",    () => new UI.Pages.ReportsPage());
-            navigationService.Register("Settings",   () => new UI.Pages.SettingsPage(stateStore));
+            navigationService.Register("Settings",   () => new UI.Pages.SettingsPage(stateStore, licenseService));
             navigationService.Register("CashDrawer", () => new UI.Pages.CashDrawerPage());
         }
 
@@ -210,6 +214,7 @@ namespace EZPos.UI
             ApplyNavState(SalesNavBtn,       pageName == "Sales",      activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(ProductsNavBtn,    pageName == "Products",   activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(StockNavBtn,       pageName == "Stock",      activeBackground, inactiveBackground, activeForeground, inactiveForeground);
+            ApplyNavState(BarcodesNavBtn,    pageName == "Barcodes",   activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(ReportsNavBtn,     pageName == "Reports",    activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(CashDrawerNavBtn,  pageName == "CashDrawer", activeBackground, inactiveBackground, activeForeground, inactiveForeground);
             ApplyNavState(SettingsNavBtn,    pageName == "Settings",   activeBackground, inactiveBackground, activeForeground, inactiveForeground);

@@ -198,9 +198,59 @@ begin
   SaveStringsToFile(TrialFile, Lines, False);
 end;
 
+// ── License API URL migration ─────────────────────────────────────────────────
+//
+// Rewrites App:LicenseApiUrl in config.ini to the production URL on every install/update.
+// This corrects the localhost:5122 value that was shipped in early builds.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+procedure EnsureLicenseApiUrl();
+var
+  ConfigFile : String;
+  Lines      : TArrayOfString;
+  NewLines   : TArrayOfString;
+  I          : Integer;
+  Found      : Boolean;
+  ProductionUrl : String;
+begin
+  ProductionUrl := 'https://ezpos-landing.onrender.com';
+  ConfigFile    := ExpandConstant('{commonappdata}\EZPos\config.ini');
+
+  // If config doesn't exist yet, let the [Files] seed handle it on first install.
+  if not FileExists(ConfigFile) then
+    Exit;
+
+  if not LoadStringsFromFile(ConfigFile, Lines) then
+    Exit;
+
+  Found := False;
+  SetArrayLength(NewLines, GetArrayLength(Lines));
+  for I := 0 to GetArrayLength(Lines) - 1 do
+  begin
+    if Pos('App:LicenseApiUrl=', Lines[I]) = 1 then
+    begin
+      NewLines[I] := 'App:LicenseApiUrl=' + ProductionUrl;
+      Found := True;
+    end else
+      NewLines[I] := Lines[I];
+  end;
+
+  // Key not present at all — append it
+  if not Found then
+  begin
+    SetArrayLength(NewLines, GetArrayLength(Lines) + 1);
+    NewLines[GetArrayLength(NewLines) - 1] := 'App:LicenseApiUrl=' + ProductionUrl;
+  end;
+
+  SaveStringsToFile(ConfigFile, NewLines, False);
+end;
+
 // Called by Inno Setup after all files have been installed successfully.
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
+  begin
     InitializeTrialIfNeeded();
+    EnsureLicenseApiUrl();
+  end;
 end;

@@ -127,6 +127,89 @@ The single in-memory state for the running app. All UI binds to or reads from th
 
 ---
 
+## MVVM Pattern (New Modules)
+
+The Barcode Management module is the **first MVVM module** in EZPos. All new modules going forward use this pattern. Existing pages are not converted — no regression risk.
+
+### Layer Mapping
+
+```
+┌─────────────────────────────────────────────────┐
+│  PRESENTATION LAYER — BarcodesPage.xaml         │
+│  Binds to ViewModel properties and commands     │
+│  Code-behind: DataContext only, zero logic      │
+├─────────────────────────────────────────────────┤
+│  VIEWMODEL LAYER — src/UI/ViewModels/           │
+│  INotifyPropertyChanged + ICommand              │
+│  Owns all UI state, filter logic, commands      │
+│  Calls Services — never Repositories directly  │
+├─────────────────────────────────────────────────┤
+│  BUSINESS LOGIC LAYER — unchanged               │
+│  BarcodeService, LabelPrintService              │
+├─────────────────────────────────────────────────┤
+│  DATA ACCESS LAYER — unchanged                  │
+│  LabelTemplateRepository, BarcodeLabelRepository│
+└─────────────────────────────────────────────────┘
+```
+
+### RelayCommand
+
+Shared utility at `src/UI/ViewModels/RelayCommand.cs`. Do not add a third-party MVVM framework.
+
+```csharp
+public sealed class RelayCommand : ICommand
+{
+    private readonly Action      _execute;
+    private readonly Func<bool>? _canExecute;
+
+    public RelayCommand(Action execute, Func<bool>? canExecute = null)
+    {
+        _execute    = execute;
+        _canExecute = canExecute;
+    }
+
+    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
+    public void Execute(object? parameter)    => _execute();
+
+    public event EventHandler? CanExecuteChanged;
+    public void RaiseCanExecuteChanged() =>
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+}
+```
+
+For commands that take a parameter, add a generic `RelayCommand<T>` alongside it.
+
+### ViewModel Rules
+
+- ✅ Implements `INotifyPropertyChanged` — use `[CallerMemberName]` pattern
+- ✅ Exposes `ICommand` properties (never event handlers from code-behind)
+- ✅ Calls Services to perform actions
+- ✅ Reads from `PosStateStore` for display state
+- ❌ Never imports `System.Windows.Controls` or WPF-specific types
+- ❌ Never calls Repositories directly — always through a Service
+- ❌ No `MessageBox.Show` in ViewModels — surface errors via observable properties bound to UI
+
+### Code-Behind Rule (MVVM pages)
+
+The `.xaml.cs` file must only:
+1. Call `InitializeComponent()`
+2. Assign `DataContext = viewModel`
+3. Wire events that cannot be expressed in XAML (e.g. `PreviewKeyDown` for scanner passthrough)
+
+No business logic, no service calls, no state in code-behind.
+
+### ViewModels Location
+
+```
+src/UI/ViewModels/
+    RelayCommand.cs
+    BarcodesPageViewModel.cs
+    QuickPrintDialogViewModel.cs
+    LabelTemplateEditorViewModel.cs
+```
+
+---
+
 ## Startup Sequence
 
 ```

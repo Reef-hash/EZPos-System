@@ -1,0 +1,56 @@
+<UserControl x:Class="EZPos.UI.Pages.BarcodesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp">
+
+    <Grid Background="{StaticResource DashboardBackgroundBrush}">
+
+        <!-- ── Under Development banner ── -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+            <!-- Barcode icon -->
+            <fa:IconBlock Icon="Barcode"
+                          FontSize="80"
+                          HorizontalAlignment="Center"
+                          Foreground="{StaticResource DashboardTextMutedBrush}"
+                          Margin="0,0,0,24" />
+
+            <!-- Main heading -->
+            <TextBlock Text="Under Development"
+                       FontSize="36"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource DashboardTextPrimaryBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,12" />
+
+            <!-- Sub line -->
+            <TextBlock Text="Barcode Management is coming in a future update."
+                       FontSize="14"
+                       Foreground="{StaticResource DashboardTextMutedBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,32" />
+
+            <!-- BETA badge -->
+            <Border HorizontalAlignment="Center"
+                    Background="#1AF59E0B"
+                    BorderBrush="{StaticResource DashboardPrimaryBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="18,8">
+                <StackPanel Orientation="Horizontal">
+                    <fa:IconBlock Icon="TriangleExclamation"
+                                  FontSize="13"
+                                  Foreground="{StaticResource DashboardPrimaryBrush}"
+                                  VerticalAlignment="Center"
+                                  Margin="0,0,8,0" />
+                    <TextBlock Text="This feature is in BETA — design and planning phase only."
+                               FontSize="12"
+                               Foreground="{StaticResource DashboardPrimaryBrush}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+
+    </Grid>
+</UserControl>

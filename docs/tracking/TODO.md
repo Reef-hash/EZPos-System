@@ -12,6 +12,28 @@ _Nothing in progress currently._
 
 ## Next Up
 
+### Barcode Management Module — Phase 1 (MVP)
+- **Plan doc:** [barcode-module.md](../features/barcodes/barcode-module.md)
+- **Branch:** `feature/barcode-management` (create before starting)
+- **Architecture:** MVVM — all new files use ViewModels. Do not add code-behind logic.
+
+**Step-by-step order:**
+1. `dotnet add package ZXing.Net` — add to `EZPos.csproj`
+2. Create `src/Models/Domain/BarcodeFormat.cs` — enum
+3. Create `src/Models/Domain/LabelTemplate.cs` + `LabelPrintJob.cs`
+4. Add `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
+5. Create `src/Business/Services/BarcodeService.cs`
+6. Create `src/DataAccess/Repositories/LabelTemplateRepository.cs` (JSON file)
+7. Create `src/UI/ViewModels/RelayCommand.cs`
+8. Create `src/Business/Services/LabelPrintService.cs`
+9. Create `src/UI/ViewModels/BarcodesPageViewModel.cs`
+10. Create `src/UI/Pages/BarcodesPage.xaml` + `.cs`
+11. Create `src/UI/ViewModels/QuickPrintDialogViewModel.cs`
+12. Create `src/UI/Dialogs/QuickPrintDialog.xaml` + `.cs`
+13. Add "Print Label..." button to `ProductsPage.xaml` toolbar
+14. Add "Generate Barcode" wand button to `ProductDialog.xaml` (BarcodeBox row)
+15. Register `"Barcodes"` in `MainWindow.RegisterRoutes()` + add sidebar nav button
+
 ### UI Modernization — MahApps + MaterialDesign
 - **Plan doc:** [ui-modernization.md](../planning/ui-modernization.md)
 - **Branch:** `feature/ui-modernization` (create before starting)

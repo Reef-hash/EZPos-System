@@ -44,7 +44,7 @@ namespace EZPos
                 //    Mode: ONLINE (LicenseService → LicenseApiClient → /api/licenses/validate)
                 //    API base URL read from config.ini: App:LicenseApiUrl
                 //    Falls back to 7-day grace period cache when API is unreachable.
-                var apiUrl    = ConfigHelper.Get("App:LicenseApiUrl", "http://localhost:5122");
+                var apiUrl    = ConfigHelper.Get("App:LicenseApiUrl", "https://ezpos-landing.onrender.com");
                 var apiClient = new LicenseApiClient(apiUrl);
                 ILicenseService licenseService = new LicenseService(new FileLicenseStorage(), apiClient);
                 licenseService.LoadAndValidate();
@@ -57,7 +57,7 @@ namespace EZPos
                     case LicenseStatus.Missing:
                     case LicenseStatus.Invalid:
                     case LicenseStatus.NotActivated:
-                        var activationWindow = new LicenseRequiredWindow(licenseService);
+                        var activationWindow = new LicenseRequiredWindow(licenseService, apiClient);
                         if (activationWindow.ShowDialog() != true)
                         {
                             Shutdown(0);
@@ -89,7 +89,7 @@ namespace EZPos
                 var categoryService  = new CategoryService();
 
                 // 6. Launch main window with all services injected
-                MainWindow = new MainWindow(stateStore, productService, saleService, stockService, reportService, categoryService);
+                MainWindow = new MainWindow(stateStore, productService, saleService, stockService, reportService, categoryService, licenseService);
                 MainWindow.Show();
             }
             catch (Exception ex)
