@@ -66,15 +66,18 @@ namespace EZPos
                         break;
 
                     case LicenseStatus.Expired:
-                        // Grace period has lapsed — cannot start without internet or a valid cache.
-                        new TrialExpiredWindow(licenseService.Current).ShowDialog();
-                        Shutdown(1);
-                        return;
-
                     default:
-                        new TrialExpiredWindow(licenseService.Current).ShowDialog();
-                        Shutdown(1);
-                        return;
+                        // Grace period has lapsed (or license was rejected outright).
+                        // TrialExpiredWindow offers a manual "Check Connection & Retry"
+                        // button — DialogResult is only true if a fresh online validation
+                        // inside that window came back Valid, so the app is safe to continue.
+                        var expiredWindow = new TrialExpiredWindow(licenseService.Current, licenseService, apiClient);
+                        if (expiredWindow.ShowDialog() != true)
+                        {
+                            Shutdown(1);
+                            return;
+                        }
+                        break;
                 }
 
                 // 3. Create shared state store and load products from DB
