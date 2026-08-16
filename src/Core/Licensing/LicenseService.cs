@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using System.Threading.Tasks;
 using EZPos.Infrastructure.Licensing;
 
@@ -55,6 +57,22 @@ namespace EZPos.Core.Licensing
             // Run async API call on thread pool — prevents WPF UI-thread deadlock
             var deviceId = DeviceFingerprint.GetDeviceId();
             var api = Task.Run(() => _apiClient.ValidateAsync(key, deviceId)).GetAwaiter().GetResult();
+
+            if (api.IsOffline)
+            {
+                // A sleeping free-tier backend looks identical to "no internet" to the 8s
+                // validate timeout. Give it a bounded window to wake up and retry once
+                // before falling back to the grace-period cache — otherwise a client with
+                // a perfectly fine connection can get wrongly blocked when the cache has
+                // already lapsed (each restart only ever waited 8s and never actually
+                // reached the server).
+                using var wakeCts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+                var awake = Task.Run(() => _apiClient.WakeUpAsync(ct: wakeCts.Token)).GetAwaiter().GetResult();
+                if (awake)
+                {
+                    api = Task.Run(() => _apiClient.ValidateAsync(key, deviceId)).GetAwaiter().GetResult();
+                }
+            }
 
             if (api.IsOffline)
             {
