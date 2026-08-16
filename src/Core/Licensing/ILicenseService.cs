@@ -1,3 +1,5 @@
+using System.Threading;
+
 namespace EZPos.Core.Licensing
 {
     /// <summary>
@@ -33,5 +35,14 @@ namespace EZPos.Core.Licensing
 
         /// <summary>Convenience shorthand: true when Current.Status == Valid.</summary>
         bool IsLicensed { get; }
+
+        /// <summary>
+        /// If Current is running on the offline grace-period cache, keeps quietly
+        /// retrying the API in the background for as long as the app is open,
+        /// stopping as soon as it gets one definitive answer (valid or rejected)
+        /// and refreshing the grace-period cache on success. No-op otherwise.
+        /// Cancel the token when the app closes.
+        /// </summary>
+        void StartBackgroundRevalidation(CancellationToken ct);
     }
 }

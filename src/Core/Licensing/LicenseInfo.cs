@@ -52,5 +52,12 @@ namespace EZPos.Core.Licensing
 
         /// <summary>True when the status allows the app to operate normally.</summary>
         public bool IsLicensed => Status == LicenseStatus.Valid;
+
+        /// <summary>
+        /// True when this Valid result came from the offline grace-period cache rather
+        /// than a fresh online validation. Used to decide whether a background
+        /// revalidation should keep trying to reach the API and refresh the cache.
+        /// </summary>
+        public bool IsFromGraceCache { get; set; }
     }
 }
