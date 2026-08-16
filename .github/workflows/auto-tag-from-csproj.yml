@@ -74,7 +74,18 @@ jobs:
       - name: Download Inno Setup
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "https://jrsoftware.org/download.php/is.exe" -OutFile "is.exe"
+          # The redirect-based /download.php/is.exe link has started returning a
+          # non-executable response to scripted requests (no browser User-Agent),
+          # which silently produced a corrupt is.exe and failed Start-Process.
+          # Pin to a specific stable release on the direct file host instead, with
+          # a browser User-Agent, and verify it's a real PE binary before running it.
+          Invoke-WebRequest -Uri "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe" -OutFile "is.exe" -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+
+          $header = Get-Content -Path is.exe -TotalCount 2 -AsByteStream
+          if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
+            throw "Downloaded is.exe is not a valid Windows executable (missing MZ header) - download likely failed or was blocked."
+          }
+
           Start-Process -Wait -FilePath .\is.exe -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR="C:\innosetup"'
 
       - name: Add Inno Setup to PATH
