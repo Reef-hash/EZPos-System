@@ -74,12 +74,12 @@ jobs:
       - name: Download Inno Setup
         shell: pwsh
         run: |
-          # The redirect-based /download.php/is.exe link has started returning a
-          # non-executable response to scripted requests (no browser User-Agent),
-          # which silently produced a corrupt is.exe and failed Start-Process.
-          # Pin to a specific stable release on the direct file host instead, with
-          # a browser User-Agent, and verify it's a real PE binary before running it.
-          Invoke-WebRequest -Uri "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe" -OutFile "is.exe" -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+          # /download.php/is.exe now 302-redirects to isdl.php, an HTML landing
+          # page (not the binary), which silently produced a corrupt is.exe and
+          # failed Start-Process. jrsoftware now publishes releases directly on
+          # GitHub, so pin to a specific stable release there instead - a direct,
+          # versioned binary link - and verify it's a real PE binary before running it.
+          Invoke-WebRequest -Uri "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe" -OutFile "is.exe" -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
           $header = Get-Content -Path is.exe -TotalCount 2 -AsByteStream
           if ($header[0] -ne 0x4D -or $header[1] -ne 0x5A) {
