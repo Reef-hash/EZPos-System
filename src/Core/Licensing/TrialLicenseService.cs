@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 
 namespace EZPos.Core.Licensing
 {
@@ -83,6 +84,12 @@ namespace EZPos.Core.Licensing
         /// Returns the current trial status unchanged. Required by ILicenseService.
         /// </summary>
         public LicenseInfo Activate(string key) => _current;
+
+        /// <summary>
+        /// Not applicable in trial mode — there is no API to reach, so there is
+        /// nothing to retry in the background. No-op, required by ILicenseService.
+        /// </summary>
+        public void StartBackgroundRevalidation(CancellationToken ct) { }
 
         // ── Internal file helpers ──────────────────────────────────────────────
 
