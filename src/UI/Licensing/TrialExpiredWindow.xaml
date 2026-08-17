@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
         Title="EZPos — Trial Period Ended"
-        Width="460" Height="430"
-        MinWidth="400" MinHeight="380"
+        Width="460" Height="520"
+        MinWidth="400" MinHeight="480"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
@@ -35,7 +35,7 @@
             </Grid>
 
             <!-- ── Content ── -->
-            <StackPanel Grid.Row="1" Margin="36,24,36,24" VerticalAlignment="Center">
+            <StackPanel Grid.Row="1" Margin="36,24,36,24" VerticalAlignment="Top">
 
                 <!-- Icon + heading -->
                 <StackPanel HorizontalAlignment="Center" Margin="0,0,0,18">
@@ -49,6 +49,42 @@
                     <TextBlock x:Name="ExpiryDateText"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,0" />
+
+                    <!-- Retry progress indicator (hidden until Retry is clicked) -->
+                    <StackPanel x:Name="RetryPanel" Orientation="Horizontal"
+                                HorizontalAlignment="Center" Margin="0,10,0,0"
+                                Visibility="Collapsed">
+                        <fa:IconBlock Icon="CircleNotch" FontSize="12"
+                                      Foreground="{StaticResource PrimaryBrush}"
+                                      VerticalAlignment="Center" Margin="0,0,6,0">
+                            <fa:IconBlock.RenderTransform>
+                                <RotateTransform x:Name="RetrySpinnerRotate" CenterX="6" CenterY="6" />
+                            </fa:IconBlock.RenderTransform>
+                            <fa:IconBlock.Triggers>
+                                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetName="RetrySpinnerRotate"
+                                                             Storyboard.TargetProperty="Angle"
+                                                             From="0" To="360"
+                                                             Duration="0:0:1" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </fa:IconBlock.Triggers>
+                        </fa:IconBlock>
+                        <TextBlock x:Name="RetryStatusText"
+                                   Text="Connecting to server..."
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   FontSize="11" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Retry result (hidden until a check completes) -->
+                    <TextBlock x:Name="RetryResultText"
+                               TextWrapping="Wrap" TextAlignment="Center"
+                               FontSize="12" FontWeight="SemiBold"
+                               Margin="0,10,0,0"
+                               Visibility="Collapsed" />
                 </StackPanel>
 
                 <!-- Divider -->
@@ -96,12 +132,20 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Retry button -->
+                <Button x:Name="RetryBtn"
+                        Content="Check Connection &amp; Retry"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Height="40" Margin="0,22,0,0"
+                        FontSize="13"
+                        Click="RetryBtn_Click" />
+
                 <!-- Close button -->
                 <Button x:Name="CloseBtn"
                         Content="Close Application"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Background="{StaticResource ErrorBrush}"
-                        Height="40" Margin="0,22,0,0"
+                        Height="40" Margin="0,10,0,0"
                         FontSize="13"
                         Click="CloseBtn_Click" />
 

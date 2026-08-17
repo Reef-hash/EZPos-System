@@ -81,7 +81,8 @@ namespace EZPos.Core.Licensing
                         Key = key,
                         Status = LicenseStatus.Valid,
                         PlanName = "Professional",
-                        ApiMessage = "Offline validation in grace period."
+                        ApiMessage = "Offline validation in grace period.",
+                        IsFromGraceCache = true,
                     }
                     : new LicenseInfo {
                         Key = key,
@@ -162,6 +163,66 @@ namespace EZPos.Core.Licensing
                 ApiMessage = api.Message,
             };
             return _current;
+        }
+
+        /// <summary>
+        /// If the app is currently running on the offline grace-period cache, keeps
+        /// quietly retrying the API for as long as the app stays open — a burst of
+        /// wake-up pings (every ~2s, up to 75s, matching WakeUpAsync's own cadence)
+        /// followed by a 2-minute cooldown before trying again. Stops as soon as it
+        /// gets one definitive answer (valid or a real rejection); a rejection isn't
+        /// retried further this session — that needs support, not more pings.
+        /// Never throws; this is a best-effort background task.
+        /// </summary>
+        public void StartBackgroundRevalidation(CancellationToken ct)
+        {
+            if (_current.Status != LicenseStatus.Valid || !_current.IsFromGraceCache || string.IsNullOrWhiteSpace(_current.Key))
+                return;
+
+            var key      = _current.Key;
+            var deviceId = DeviceFingerprint.GetDeviceId();
+
+            _ = Task.Run(async () =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    try
+                    {
+                        using var wakeCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                        wakeCts.CancelAfter(TimeSpan.FromSeconds(75));
+
+                        var awake = await _apiClient.WakeUpAsync(ct: wakeCts.Token);
+                        if (awake)
+                        {
+                            var api = await _apiClient.ValidateAsync(key, deviceId);
+                            if (!api.IsOffline)
+                            {
+                                if (api.IsValid)
+                                {
+                                    LicenseValidationCache.SaveValid(key);
+                                    _current.IsFromGraceCache = false;
+                                    _current.PlanName    = string.IsNullOrWhiteSpace(api.Plan) ? _current.PlanName : api.Plan;
+                                    _current.ExpiryDate  = api.ExpiresAt;
+                                    _current.ReasonCode  = api.ReasonCode;
+                                    _current.ClientAction = api.ClientAction;
+                                    _current.ApiMessage  = api.Message;
+                                }
+                                return; // definitive answer received - stop retrying this session
+                            }
+                        }
+                    }
+                    catch { /* best-effort - a background retry failure must never crash the app */ }
+
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(2), ct);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+                }
+            }, ct);
         }
 
         private static LicenseInfo BuildFailureInfo(string key, LicenseApiResponse api)
