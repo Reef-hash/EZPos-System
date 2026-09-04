@@ -157,13 +157,14 @@ namespace EZPos.UI
             navigationService.Register("Dashboard",  () => new UI.Pages.DashboardPage(reportService));
             navigationService.Register("Sales",      () => new UI.Pages.SalesPage(stateStore, saleService, categoryService));
             navigationService.Register("Products",   () => new UI.Pages.ProductsPage(stateStore, productService, categoryService));
-            navigationService.Register("Stock",      () => new UI.Pages.StockPage(stateStore, stockService, categoryService));
+            navigationService.Register("Stock",      () => new UI.Pages.StockPage(stateStore, stockService, categoryService, productService));
             navigationService.Register("Barcodes",   () =>
             {
                 var barcodeService = new BarcodeService();
                 var printService = new LabelPrintService();
                 var templateRepo = new LabelTemplateRepository();
-                var vm = new BarcodesPageViewModel(stateStore, barcodeService, printService, templateRepo, categoryService);
+                var historyRepo = new BarcodeLabelRepository();
+                var vm = new BarcodesPageViewModel(stateStore, barcodeService, printService, templateRepo, categoryService, historyRepo, productService);
                 return new UI.Pages.BarcodesPage(vm);
             });
             navigationService.Register("Reports",    () => new UI.Pages.ReportsPage());

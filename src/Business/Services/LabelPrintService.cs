@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +9,8 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using EZPos.DataAccess.Repositories;
 using EZPos.Models.Domain;
+using PdfSharpCore.Drawing;
+using PdfSharpCore.Pdf;
 
 namespace EZPos.Business.Services
 {
@@ -20,6 +23,7 @@ namespace EZPos.Business.Services
     {
         private const double MmPerInch = 25.4;
         private const double PxPerInch = 96.0;
+        private const double PtPerMm = 2.835;
 
         private readonly BarcodeService _barcodeService = new();
 
@@ -90,6 +94,46 @@ namespace EZPos.Business.Services
             }
 
             printDialog.PrintDocument(document.DocumentPaginator, "EZPos Labels");
+        }
+
+        /// <summary>Lays out every job (expanded by its Quantity) into a PDF, one page per LabelsPerRow x LabelsPerColumn sheet.</summary>
+        public void ExportToPdf(IEnumerable<LabelPrintJob> jobs, LabelTemplate template, string filePath)
+        {
+            var labelWidthPt = MmToPt(template.LabelWidthMm);
+            var labelHeightPt = MmToPt(template.LabelHeightMm);
+            var labelsPerRow = Math.Max(1, template.LabelsPerRow);
+            var labelsPerColumn = Math.Max(1, template.LabelsPerColumn);
+            var labelsPerPage = labelsPerRow * labelsPerColumn;
+
+            var expandedLabels = jobs
+                .SelectMany(job => Enumerable.Repeat(job, Math.Max(1, job.Quantity)))
+                .ToList();
+
+            if (expandedLabels.Count == 0)
+                return;
+
+            using var document = new PdfDocument();
+            document.Info.Title = "EZPos Labels";
+
+            for (var pageStart = 0; pageStart < expandedLabels.Count; pageStart += labelsPerPage)
+            {
+                var pageLabels = expandedLabels.Skip(pageStart).Take(labelsPerPage).ToList();
+
+                var page = document.AddPage();
+                page.Width = labelWidthPt * labelsPerRow;
+                page.Height = labelHeightPt * labelsPerColumn;
+
+                using var gfx = XGraphics.FromPdfPage(page);
+
+                for (var i = 0; i < pageLabels.Count; i++)
+                {
+                    var row = i / labelsPerRow;
+                    var col = i % labelsPerRow;
+                    DrawLabelPdf(gfx, pageLabels[i], template, col * labelWidthPt, row * labelHeightPt, labelWidthPt, labelHeightPt);
+                }
+            }
+
+            document.Save(filePath);
         }
 
         /// <summary>Names of all Windows printers currently installed on this machine.</summary>
@@ -177,6 +221,54 @@ namespace EZPos.Business.Services
             y += fontSize + 2;
         }
 
+        private void DrawLabelPdf(XGraphics gfx, LabelPrintJob job, LabelTemplate template, double xPt, double yPt, double widthPt, double heightPt)
+        {
+            var centerFormat = new XStringFormat { Alignment = XStringAlignment.Center, LineAlignment = XLineAlignment.Near };
+            var nameFont = new XFont("Arial", template.FontSizeName, XFontStyle.Regular);
+            var priceFont = new XFont("Arial", template.FontSizePrice, XFontStyle.Bold);
+            var categoryFont = new XFont("Arial", template.FontSizeName * 0.9, XFontStyle.Regular);
+
+            double y = yPt + 2;
+
+            if (template.ShowStoreName)
+            {
+                var storeName = ConfigHelper.Get("StoreName", string.Empty);
+                if (!string.IsNullOrWhiteSpace(storeName))
+                {
+                    gfx.DrawString(storeName, nameFont, XBrushes.Black, new XRect(xPt, y, widthPt, template.FontSizeName + 2), centerFormat);
+                    y += template.FontSizeName + 2;
+                }
+            }
+
+            if (template.ShowBarcode)
+            {
+                var barcodeHeightPt = heightPt * template.BarcodeHeightPct;
+                var bytes = _barcodeService.GenerateImageBytes(job.Barcode, job.Format, 600, 300);
+                using var stream = new MemoryStream(bytes);
+                using var image = XImage.FromStream(() => stream);
+                gfx.DrawImage(image, xPt + 2, y, Math.Max(0, widthPt - 4), barcodeHeightPt);
+                y += barcodeHeightPt + 2;
+            }
+
+            if (template.ShowName)
+            {
+                gfx.DrawString(job.ProductName, nameFont, XBrushes.Black, new XRect(xPt, y, widthPt, template.FontSizeName + 2), centerFormat);
+                y += template.FontSizeName + 2;
+            }
+
+            if (template.ShowCategory)
+            {
+                gfx.DrawString(job.Category, categoryFont, XBrushes.Black, new XRect(xPt, y, widthPt, template.FontSizeName + 2), centerFormat);
+                y += template.FontSizeName + 2;
+            }
+
+            if (template.ShowPrice)
+            {
+                gfx.DrawString($"RM {job.Price:F2}", priceFont, XBrushes.Black, new XRect(xPt, y, widthPt, template.FontSizePrice + 2), centerFormat);
+            }
+        }
+
         private static double MmToPx(double mm) => mm / MmPerInch * PxPerInch;
+        private static double MmToPt(double mm) => mm * PtPerMm;
     }
 }

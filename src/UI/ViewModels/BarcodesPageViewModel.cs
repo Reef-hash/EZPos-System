@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Media.Imaging;
 using EZPos.Business.Services;
 using EZPos.DataAccess.Repositories;
@@ -13,6 +15,16 @@ using EZPos.UI.State;
 
 namespace EZPos.UI.ViewModels
 {
+    /// <summary>Read-only projection of a BarcodeLabelRecord for display in the History panel.</summary>
+    public sealed class BarcodeLabelHistoryRow
+    {
+        public string ProductName { get; init; } = string.Empty;
+        public int Quantity { get; init; }
+        public string TemplateName { get; init; } = string.Empty;
+        public BarcodeFormat Format { get; init; }
+        public DateTime PrintedAt { get; init; }
+    }
+
     /// <summary>One product row shown on the Barcodes page, with a page-local selection flag.</summary>
     public sealed class BarcodeProductRow : ObservableEntity
     {
@@ -42,9 +54,13 @@ namespace EZPos.UI.ViewModels
         private readonly LabelPrintService _printService;
         private readonly LabelTemplateRepository _templateRepo;
         private readonly CategoryService _categoryService;
+        private readonly BarcodeLabelRepository _historyRepo;
+        private readonly ProductService _productService;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event Action<string>? StatusMessage;
+        /// <summary>Raised when a scanned barcode matches a product — code-behind opens QuickPrintDialog.</summary>
+        public event Action<Product>? OpenQuickPrintRequested;
 
         public ObservableCollection<BarcodeProductRow> Products { get; } = new();
         public ICollectionView FilteredProducts { get; }
@@ -54,6 +70,7 @@ namespace EZPos.UI.ViewModels
         public Array AvailableFormats { get; } = Enum.GetValues(typeof(BarcodeFormat));
         public ObservableCollection<string> Categories { get; } = new();
         public ObservableCollection<string> Printers { get; } = new();
+        public ObservableCollection<BarcodeLabelHistoryRow> History { get; } = new();
 
         private LabelTemplate? selectedTemplate;
         public LabelTemplate? SelectedTemplate
@@ -122,13 +139,17 @@ namespace EZPos.UI.ViewModels
             BarcodeService barcodeService,
             LabelPrintService printService,
             LabelTemplateRepository templateRepo,
-            CategoryService categoryService)
+            CategoryService categoryService,
+            BarcodeLabelRepository historyRepo,
+            ProductService productService)
         {
             _stateStore = stateStore;
             _barcodeService = barcodeService;
             _printService = printService;
             _templateRepo = templateRepo;
             _categoryService = categoryService;
+            _historyRepo = historyRepo;
+            _productService = productService;
 
             FilteredProducts = CollectionViewSource.GetDefaultView(Products);
             FilteredProducts.Filter = FilterProduct;
@@ -145,7 +166,11 @@ namespace EZPos.UI.ViewModels
             LoadCategories();
             LoadPrinters();
             BuildProductRows();
+            LoadHistory();
         }
+
+        /// <summary>Reloads the template list from disk — call after the template editor dialog closes.</summary>
+        public void ReloadTemplates() => LoadTemplates();
 
         private void LoadTemplates()
         {
@@ -153,8 +178,93 @@ namespace EZPos.UI.ViewModels
             foreach (var t in _templateRepo.GetAll())
                 Templates.Add(t);
 
-            selectedTemplate = Templates.FirstOrDefault(t => t.IsDefault) ?? Templates.FirstOrDefault();
-            OnPropertyChanged(nameof(SelectedTemplate));
+            var stillSelected = selectedTemplate != null && Templates.Any(t => t.Id == selectedTemplate.Id);
+            if (!stillSelected)
+            {
+                selectedTemplate = Templates.FirstOrDefault(t => t.IsDefault) ?? Templates.FirstOrDefault();
+                OnPropertyChanged(nameof(SelectedTemplate));
+            }
+        }
+
+        private void LoadHistory()
+        {
+            History.Clear();
+            foreach (var record in _historyRepo.GetRecent(100))
+            {
+                var productName = Products.FirstOrDefault(p => p.Id == record.ProductId)?.Name
+                    ?? _stateStore.Products.FirstOrDefault(p => p.Id == record.ProductId)?.Name
+                    ?? $"Product #{record.ProductId}";
+
+                History.Add(new BarcodeLabelHistoryRow
+                {
+                    ProductName = productName,
+                    Quantity = record.Quantity,
+                    TemplateName = record.TemplateName,
+                    Format = record.BarcodeFormat,
+                    PrintedAt = record.PrintedAt
+                });
+            }
+        }
+
+        private void LogPrintJobs(IEnumerable<LabelPrintJob> jobs, string templateName)
+        {
+            foreach (var job in jobs)
+            {
+                try
+                {
+                    _historyRepo.Insert(new BarcodeLabelRecord
+                    {
+                        ProductId = job.ProductId,
+                        PrintedAt = DateTime.Now,
+                        Quantity = Math.Max(1, job.Quantity),
+                        TemplateName = templateName,
+                        BarcodeFormat = job.Format
+                    });
+                }
+                catch
+                {
+                    // History logging must never block a print/export that already succeeded
+                }
+            }
+
+            LoadHistory();
+        }
+
+        /// <summary>Looks up a scanned barcode and asks the view to open QuickPrintDialog for it (damaged-label replacement).</summary>
+        public void HandleBarcodeScanned(string barcode)
+        {
+            var record = _stateStore.Products.FirstOrDefault(p => string.Equals(p.Barcode, barcode, StringComparison.OrdinalIgnoreCase));
+            if (record == null)
+            {
+                StatusMessage?.Invoke($"Barcode not registered: {barcode}");
+                return;
+            }
+
+            var product = new Product
+            {
+                Id = record.Id,
+                Barcode = record.Barcode,
+                Name = record.Name,
+                Category = record.Category,
+                Price = record.Price,
+                CostPrice = record.CostPrice,
+                Stock = record.Stock,
+                ReorderLevel = record.ReorderLevel,
+                MaxStock = record.MaxStock,
+                LastUpdated = record.LastUpdated,
+                UnitType = record.UnitType,
+                ConversionRate = record.ConversionRate,
+                ParentProductId = record.ParentProductId,
+                BarcodeFormat = record.BarcodeFormat
+            };
+
+            OpenQuickPrintRequested?.Invoke(product);
+        }
+
+        /// <summary>Builds a QuickPrintDialogViewModel sharing this page's services — used for the damaged-label flow.</summary>
+        public QuickPrintDialogViewModel CreateQuickPrintViewModel(Product product)
+        {
+            return new QuickPrintDialogViewModel(product, _productService, _printService, _templateRepo, _historyRepo);
         }
 
         private void LoadCategories()
@@ -308,13 +418,63 @@ namespace EZPos.UI.ViewModels
 
             try
             {
-                _printService.PrintLabels(PrintJobs.ToList(), template, SelectedPrinter);
-                StatusMessage?.Invoke($"Sent {PrintJobs.Sum(j => Math.Max(1, j.Quantity))} label(s) to print.");
+                var jobs = PrintJobs.ToList();
+                WarnAboutInvalidEan13(jobs);
+                _printService.PrintLabels(jobs, template, SelectedPrinter);
+                LogPrintJobs(jobs, template.Name);
+                StatusMessage?.Invoke($"Sent {jobs.Sum(j => Math.Max(1, j.Quantity))} label(s) to print.");
             }
             catch (Exception ex)
             {
                 StatusMessage?.Invoke($"Print failed: {ex.Message}");
             }
+        }
+
+        /// <summary>EAN-13 requires exactly 13 digits with a valid check digit — warn (non-blocking) when a job's barcode doesn't qualify.</summary>
+        private void WarnAboutInvalidEan13(List<LabelPrintJob> jobs)
+        {
+            var invalidNames = jobs
+                .Where(j => j.Format == BarcodeFormat.EAN13 && !_barcodeService.ValidateEan13(j.Barcode))
+                .Select(j => j.ProductName)
+                .Distinct()
+                .ToList();
+
+            if (invalidNames.Count > 0)
+            {
+                StatusMessage?.Invoke(
+                    $"Warning: not a valid 13-digit EAN-13 barcode for: {string.Join(", ", invalidNames)}. The label may not scan correctly.");
+            }
+        }
+
+        /// <summary>Exports the current print jobs to a PDF file at the given path (chosen by the view via SaveFileDialog).</summary>
+        public void ExportPdf(string filePath)
+        {
+            var template = SelectedTemplate;
+            if (PrintJobs.Count == 0 || template == null)
+                return;
+
+            try
+            {
+                var jobs = PrintJobs.ToList();
+                WarnAboutInvalidEan13(jobs);
+                _printService.ExportToPdf(jobs, template, filePath);
+                LogPrintJobs(jobs, template.Name);
+                StatusMessage?.Invoke($"Exported {jobs.Sum(j => Math.Max(1, j.Quantity))} label(s) to PDF.");
+            }
+            catch (Exception ex)
+            {
+                StatusMessage?.Invoke($"PDF export failed: {ex.Message}");
+            }
+        }
+
+        /// <summary>Builds the print-ready FixedDocument for the preview window, or null if there is nothing to preview.</summary>
+        public FixedDocument? BuildPreviewDocument()
+        {
+            var template = SelectedTemplate;
+            if (PrintJobs.Count == 0 || template == null)
+                return null;
+
+            return _printService.BuildFixedDocument(PrintJobs.ToList(), template);
         }
 
         private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)

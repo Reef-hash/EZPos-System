@@ -417,24 +417,26 @@ Goal: generate and print a barcode label for any product without leaving EZPos.
 - [x] Register `"Barcodes"` route in `MainWindow.RegisterRoutes()`
 - [x] Add Barcodes nav button in `MainWindow.xaml` sidebar
 
-Note: PDF export (`ExportToPdf`) is intentionally deferred to Phase 2 as originally scoped — Phase 1 ships direct printing only.
+Note: PDF export (`ExportToPdf`) was originally deferred to Phase 2 — now implemented, see below.
 
-### Phase 2 — Production Ready
+### Phase 2 — Production Ready ✅ Done (pending Windows build/test verification)
 
 Goal: complete label management with history, multiple formats, and PDF export.
 
-- [ ] Create `BarcodeLabels` table in `Database.Initialize()`
-- [ ] Implement `BarcodeLabelRepository` + `BarcodeLabelRecord` model
-- [ ] Log all print jobs to `BarcodeLabels` after each print
-- [ ] Code39 and EAN-13 format support (EAN-13 shows internal-use warning)
-- [ ] PDF export via `PdfSharpCore` in `LabelPrintService.ExportToPdf()`
-- [ ] Print preview window using `DocumentViewer`
-- [ ] `LabelTemplateEditorDialog` — edit dimensions, field toggles, font sizes
-- [ ] `LabelTemplateEditorViewModel`
-- [ ] Damaged label replacement flow (scanner → auto-select → quick print)
-- [ ] "Print labels after stock receive" hook in `StockAdjustDialog`
-- [ ] A4 sheet template (4×6 = 24 labels per page)
-- [ ] Reprint history sub-tab on BarcodesPage showing `BarcodeLabels` records
+- [x] Create `BarcodeLabels` table in `Database.Initialize()`
+- [x] Implement `BarcodeLabelRepository` + `BarcodeLabelRecord` model
+- [x] Log all print jobs to `BarcodeLabels` after each print (and each PDF export)
+- [x] Code39 and EAN-13 format support (EAN-13 shows a non-blocking invalid-checkdigit warning via `BarcodeService.ValidateEan13()`)
+- [x] PDF export via `PdfSharpCore` in `LabelPrintService.ExportToPdf()` — "Export PDF" button on BarcodesPage (SaveFileDialog in code-behind)
+- [x] Print preview window using `DocumentViewer` — `src/UI/Dialogs/PrintPreviewWindow.xaml`, "Preview" button on BarcodesPage
+- [x] `LabelTemplateEditorDialog` — list + form to create/edit/delete templates (dimensions, field toggles, font sizes, default flag)
+- [x] `LabelTemplateEditorViewModel`
+- [x] Damaged label replacement flow (scanner on BarcodesPage → `BarcodesPageViewModel.HandleBarcodeScanned()` → auto-lookup → QuickPrintDialog; not-found shows a status message)
+- [x] "Print labels after stock receive" hook — implemented in `StockPage.StockIn_Click` (prompts after a successful Stock In; `StockAdjustDialog` itself stays adjustment-only)
+- [x] A4 sheet template (4×6 = 24 labels per page) — was already seeded in Phase 1's `LabelTemplateRepository`
+- [x] Reprint history sub-tab on BarcodesPage — collapsible "Print History" `Expander` panel showing `BarcodeLabels` records
+
+**Not yet verified on a real Windows build** — see [BARCODE_LOCAL_TESTING.md](../testing/BARCODE_LOCAL_TESTING.md) before treating Phase 2 as shippable.
 
 ### Phase 3 — Advanced Features
 

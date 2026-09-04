@@ -17,6 +17,23 @@ namespace EZPos.Business.Services
         /// <summary>Renders a barcode value to a WPF-displayable image.</summary>
         public BitmapImage GenerateImage(string data, DomainBarcodeFormat format, int widthPx = 300, int heightPx = 150)
         {
+            var bytes = GenerateImageBytes(data, format, widthPx, heightPx);
+
+            var image = new BitmapImage();
+            using (var stream = new MemoryStream(bytes))
+            {
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = stream;
+                image.EndInit();
+            }
+            image.Freeze();
+            return image;
+        }
+
+        /// <summary>Renders a barcode value to raw PNG bytes — used by LabelPrintService for both WPF and PDF output.</summary>
+        public byte[] GenerateImageBytes(string data, DomainBarcodeFormat format, int widthPx = 300, int heightPx = 150)
+        {
             var writer = new BarcodeWriter
             {
                 Format = MapFormat(format),
@@ -32,15 +49,7 @@ namespace EZPos.Business.Services
             using var bitmap = writer.Write(data);
             using var stream = new MemoryStream();
             bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
-            stream.Position = 0;
-
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.StreamSource = stream;
-            image.EndInit();
-            image.Freeze();
-            return image;
+            return stream.ToArray();
         }
 
         /// <summary>

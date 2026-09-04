@@ -12,19 +12,13 @@ _Nothing in progress currently._
 
 ## Next Up
 
-### Barcode Management Module — Phase 2 (Production Ready)
-- **Plan doc:** [barcode-module.md](../features/barcodes/barcode-module.md)
-- **Branch:** `feature/barcode-management-phase2` (create before starting)
-- **Architecture:** MVVM — all new files use ViewModels. Do not add code-behind logic.
-- Phase 1 (MVP) is done — see Recently Completed below. Remaining work:
-  1. `BarcodeLabels` table in `Database.Initialize()` + `BarcodeLabelRepository` + `BarcodeLabelRecord` model
-  2. Log each print job to `BarcodeLabels` after `LabelPrintService.PrintLabels()` succeeds
-  3. PDF export — `LabelPrintService.ExportToPdf()` via `PdfSharpCore` + "Export PDF" button on BarcodesPage
-  4. Print preview window (`DocumentViewer`) before sending to printer
-  5. `LabelTemplateEditorDialog` + `LabelTemplateEditorViewModel` — create/edit templates from the UI (currently seeded defaults are edit-in-place field toggles only, no way to add new templates or change dimensions)
-  6. Damaged label replacement flow — scanner on BarcodesPage → auto-select product → open QuickPrintDialog
-  7. "Print labels after stock receive" hook in `StockAdjustDialog`
-  8. Reprint history sub-tab on BarcodesPage showing `BarcodeLabels` records
+### Barcode Management Module — verify on Windows
+- **Handoff doc:** [BARCODE_LOCAL_TESTING.md](../testing/BARCODE_LOCAL_TESTING.md)
+- Phase 1 (MVP) and Phase 2 (Production Ready) are both implemented — see Recently Completed below.
+- **This code has never been compiled or run** — it was written in a Linux sandbox with no `dotnet`/Windows available. Before trusting it:
+  1. `dotnet restore` + `dotnet build` on a real Windows machine, fix any compile errors (see the doc's "Known risk areas" section for the likely trouble spots: `ZXing.Net.Bindings.Windows.Compatibility` API shape, FontAwesome icon names, PdfSharpCore custom-page-size + `XImage.FromStream` API)
+  2. Walk the manual test checklist in the handoff doc (generate/print/export/preview/history/template editor/damaged-label/stock-receive flows)
+  3. Fix whatever breaks, then move Phase 2 from "implemented" to "verified" in FEATURE_STATUS.md
 
 ### UI Modernization — MahApps + MaterialDesign
 - **Plan doc:** [ui-modernization.md](../planning/ui-modernization.md)
@@ -72,6 +66,7 @@ _Nothing in progress currently._
 
 ## Recently Completed
 
+- [x] **Barcode Management Module — Phase 2 (Production Ready)**: `BarcodeLabels` history table + `BarcodeLabelRepository`, print-history logging after every print/PDF export, "Print History" panel on BarcodesPage, PDF export (`PdfSharpCore`) with an "Export PDF" button, print preview window (`DocumentViewer`), `LabelTemplateEditorDialog` (create/edit/delete templates), damaged-label replacement (scanner on BarcodesPage → auto-lookup → QuickPrintDialog), "print after stock receive" prompt in StockPage, non-blocking EAN-13 check-digit warning. **Not yet build-tested on Windows** — see [BARCODE_LOCAL_TESTING.md](../testing/BARCODE_LOCAL_TESTING.md) (Sep 2026)
 - [x] **Barcode Management Module — Phase 1 (MVP)**: ZXing.Net-backed barcode image generation (Code128/Code39/EAN-13/QR), `EZP`-prefixed internal code generator, JSON-backed label template repository (4 seeded templates), WPF `FixedDocument` label printing engine, BarcodesPage (MVVM — product selection, template config, live preview, bulk print), QuickPrintDialog (single-product print from ProductsPage), "Generate Barcode" wand button in ProductDialog (Sep 2026)
 - [x] Cost Price field on Product (optional/nullable) — DB migration via `TryAddColumn` (May 2026)
 - [x] Live profit calculator in ProductDialog — profit/unit, margin %, markup %, colour-coded status (May 2026)

@@ -15,6 +15,8 @@ namespace EZPos.UI.ViewModels
         private readonly Product _product;
         private readonly ProductService _productService;
         private readonly LabelPrintService _printService;
+        private readonly BarcodeLabelRepository _historyRepo;
+        private readonly BarcodeService _barcodeService = new();
 
         public event PropertyChangedEventHandler? PropertyChanged;
         /// <summary>Raised after a successful print — the dialog's code-behind closes on this.</summary>
@@ -62,11 +64,13 @@ namespace EZPos.UI.ViewModels
             Product product,
             ProductService productService,
             LabelPrintService printService,
-            LabelTemplateRepository templateRepo)
+            LabelTemplateRepository templateRepo,
+            BarcodeLabelRepository historyRepo)
         {
             _product = product;
             _productService = productService;
             _printService = printService;
+            _historyRepo = historyRepo;
 
             foreach (var t in templateRepo.GetAll())
                 Templates.Add(t);
@@ -108,9 +112,31 @@ namespace EZPos.UI.ViewModels
                 Quantity = Quantity
             };
 
+            if (SelectedFormat == BarcodeFormat.EAN13 && !_barcodeService.ValidateEan13(job.Barcode))
+            {
+                StatusMessage?.Invoke("Warning: not a valid 13-digit EAN-13 barcode. The label may not scan correctly.");
+            }
+
             try
             {
                 _printService.PrintLabels(new[] { job }, template, SelectedPrinter);
+
+                try
+                {
+                    _historyRepo.Insert(new BarcodeLabelRecord
+                    {
+                        ProductId = job.ProductId,
+                        PrintedAt = DateTime.Now,
+                        Quantity = Math.Max(1, job.Quantity),
+                        TemplateName = template.Name,
+                        BarcodeFormat = job.Format
+                    });
+                }
+                catch
+                {
+                    // History logging must never block a print that already succeeded
+                }
+
                 PrintCompleted?.Invoke();
             }
             catch (Exception ex)

@@ -331,7 +331,7 @@ namespace EZPos.UI.Pages
                 BarcodeFormat   = selected.BarcodeFormat
             };
 
-            var vm = new QuickPrintDialogViewModel(domainProduct, productService, new LabelPrintService(), new LabelTemplateRepository());
+            var vm = new QuickPrintDialogViewModel(domainProduct, productService, new LabelPrintService(), new LabelTemplateRepository(), new BarcodeLabelRepository());
             var view = new QuickPrintDialog(vm);
             var result = await DialogHost.Show(view, "RootDialog");
             if (result is true)

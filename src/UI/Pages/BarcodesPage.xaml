@@ -94,7 +94,16 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Template" Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="12" Margin="0,0,0,4" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Template" Foreground="{StaticResource DashboardTextSecondaryBrush}" FontSize="12" Margin="0,0,0,4" />
+                                <Button Grid.Column="1" Content="Edit Templates..." Padding="0" Margin="0,0,0,4"
+                                        Background="Transparent" BorderThickness="0" Foreground="{StaticResource DashboardAccentBrush}"
+                                        FontSize="11" Cursor="Hand" Click="EditTemplates_Click" />
+                            </Grid>
                             <ComboBox Height="34" ItemsSource="{Binding Templates}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedTemplate}" />
                         </StackPanel>
 
@@ -160,13 +169,67 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Print -->
-                    <Button Style="{StaticResource DashboardRaisedButton}" Height="42" Command="{Binding PrintCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <fa:IconBlock Icon="Print" FontSize="14" Margin="0,0,8,0" />
-                            <TextBlock Text="Print Labels" />
-                        </StackPanel>
-                    </Button>
+                    <!-- Preview / Export / Print -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" Style="{StaticResource SecondaryButtonStyle}" Height="42" Padding="14,0" Click="Preview_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:IconBlock Icon="MagnifyingGlass" FontSize="13" Margin="0,0,8,0" />
+                                <TextBlock Text="Preview" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}" Height="42" Padding="14,0" Click="ExportPdf_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:IconBlock Icon="FilePdf" FontSize="13" Margin="0,0,8,0" />
+                                <TextBlock Text="Export PDF" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="4" Style="{StaticResource DashboardRaisedButton}" Height="42" Command="{Binding PrintCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:IconBlock Icon="Print" FontSize="14" Margin="0,0,8,0" />
+                                <TextBlock Text="Print Labels" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Print History -->
+                    <Expander Header="Print History" Margin="0,16,0,0" Foreground="{StaticResource DashboardTextSecondaryBrush}">
+                        <Border BorderBrush="{StaticResource DashboardBorderBrush}" BorderThickness="1" CornerRadius="4" MaxHeight="200" Margin="0,8,0,0">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding History}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="10,6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="40" />
+                                                    <ColumnDefinition Width="90" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="{Binding ProductName}"
+                                                           Foreground="{StaticResource DashboardTextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Quantity, StringFormat='x{0}'}"
+                                                           Foreground="{StaticResource DashboardTextSecondaryBrush}"
+                                                           HorizontalAlignment="Right" />
+                                                <TextBlock Grid.Column="2" Text="{Binding PrintedAt, StringFormat='dd/MM HH:mm'}"
+                                                           Foreground="{StaticResource DashboardTextSecondaryBrush}"
+                                                           FontSize="11" HorizontalAlignment="Right" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Expander>
 
                 </StackPanel>
                 </ScrollViewer>

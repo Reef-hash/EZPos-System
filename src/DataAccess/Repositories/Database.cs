@@ -98,6 +98,17 @@ namespace EZPos.DataAccess.Repositories
                     Notes             TEXT    NULL
                 );
                 CREATE INDEX IF NOT EXISTS idx_cashsessions_status ON CashSessions(Status);
+                CREATE TABLE IF NOT EXISTS BarcodeLabels (
+                    Id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ProductId     INTEGER NOT NULL,
+                    PrintedAt     TEXT    NOT NULL,
+                    Quantity      INTEGER NOT NULL DEFAULT 1,
+                    TemplateName  TEXT    NOT NULL DEFAULT 'Standard',
+                    BarcodeFormat TEXT    NOT NULL DEFAULT 'Code128',
+                    FOREIGN KEY(ProductId) REFERENCES Products(Id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_barcodelabels_product ON BarcodeLabels(ProductId);
+                CREATE INDEX IF NOT EXISTS idx_barcodelabels_date    ON BarcodeLabels(PrintedAt);
                 ";
                 cmd.ExecuteNonQuery();
 
