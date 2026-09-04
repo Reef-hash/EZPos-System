@@ -12,27 +12,19 @@ _Nothing in progress currently._
 
 ## Next Up
 
-### Barcode Management Module — Phase 1 (MVP)
+### Barcode Management Module — Phase 2 (Production Ready)
 - **Plan doc:** [barcode-module.md](../features/barcodes/barcode-module.md)
-- **Branch:** `feature/barcode-management` (create before starting)
+- **Branch:** `feature/barcode-management-phase2` (create before starting)
 - **Architecture:** MVVM — all new files use ViewModels. Do not add code-behind logic.
-
-**Step-by-step order:**
-1. `dotnet add package ZXing.Net` — add to `EZPos.csproj`
-2. Create `src/Models/Domain/BarcodeFormat.cs` — enum
-3. Create `src/Models/Domain/LabelTemplate.cs` + `LabelPrintJob.cs`
-4. Add `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
-5. Create `src/Business/Services/BarcodeService.cs`
-6. Create `src/DataAccess/Repositories/LabelTemplateRepository.cs` (JSON file)
-7. Create `src/UI/ViewModels/RelayCommand.cs`
-8. Create `src/Business/Services/LabelPrintService.cs`
-9. Create `src/UI/ViewModels/BarcodesPageViewModel.cs`
-10. Create `src/UI/Pages/BarcodesPage.xaml` + `.cs`
-11. Create `src/UI/ViewModels/QuickPrintDialogViewModel.cs`
-12. Create `src/UI/Dialogs/QuickPrintDialog.xaml` + `.cs`
-13. Add "Print Label..." button to `ProductsPage.xaml` toolbar
-14. Add "Generate Barcode" wand button to `ProductDialog.xaml` (BarcodeBox row)
-15. Register `"Barcodes"` in `MainWindow.RegisterRoutes()` + add sidebar nav button
+- Phase 1 (MVP) is done — see Recently Completed below. Remaining work:
+  1. `BarcodeLabels` table in `Database.Initialize()` + `BarcodeLabelRepository` + `BarcodeLabelRecord` model
+  2. Log each print job to `BarcodeLabels` after `LabelPrintService.PrintLabels()` succeeds
+  3. PDF export — `LabelPrintService.ExportToPdf()` via `PdfSharpCore` + "Export PDF" button on BarcodesPage
+  4. Print preview window (`DocumentViewer`) before sending to printer
+  5. `LabelTemplateEditorDialog` + `LabelTemplateEditorViewModel` — create/edit templates from the UI (currently seeded defaults are edit-in-place field toggles only, no way to add new templates or change dimensions)
+  6. Damaged label replacement flow — scanner on BarcodesPage → auto-select product → open QuickPrintDialog
+  7. "Print labels after stock receive" hook in `StockAdjustDialog`
+  8. Reprint history sub-tab on BarcodesPage showing `BarcodeLabels` records
 
 ### UI Modernization — MahApps + MaterialDesign
 - **Plan doc:** [ui-modernization.md](../planning/ui-modernization.md)
@@ -80,6 +72,7 @@ _Nothing in progress currently._
 
 ## Recently Completed
 
+- [x] **Barcode Management Module — Phase 1 (MVP)**: ZXing.Net-backed barcode image generation (Code128/Code39/EAN-13/QR), `EZP`-prefixed internal code generator, JSON-backed label template repository (4 seeded templates), WPF `FixedDocument` label printing engine, BarcodesPage (MVVM — product selection, template config, live preview, bulk print), QuickPrintDialog (single-product print from ProductsPage), "Generate Barcode" wand button in ProductDialog (Sep 2026)
 - [x] Cost Price field on Product (optional/nullable) — DB migration via `TryAddColumn` (May 2026)
 - [x] Live profit calculator in ProductDialog — profit/unit, margin %, markup %, colour-coded status (May 2026)
 - [x] Show/Hide Cost Price column toggle on ProductsPage grid (May 2026)

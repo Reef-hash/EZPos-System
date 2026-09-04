@@ -11,6 +11,7 @@ using EZPos.DataAccess.Repositories;
 using EZPos.UI.Dialogs;
 using EZPos.UI.Navigation;
 using EZPos.UI.State;
+using EZPos.UI.ViewModels;
 using MahApps.Metro.Controls;
 
 namespace EZPos.UI
@@ -157,7 +158,14 @@ namespace EZPos.UI
             navigationService.Register("Sales",      () => new UI.Pages.SalesPage(stateStore, saleService, categoryService));
             navigationService.Register("Products",   () => new UI.Pages.ProductsPage(stateStore, productService, categoryService));
             navigationService.Register("Stock",      () => new UI.Pages.StockPage(stateStore, stockService, categoryService));
-            navigationService.Register("Barcodes",   () => new UI.Pages.BarcodesPage());
+            navigationService.Register("Barcodes",   () =>
+            {
+                var barcodeService = new BarcodeService();
+                var printService = new LabelPrintService();
+                var templateRepo = new LabelTemplateRepository();
+                var vm = new BarcodesPageViewModel(stateStore, barcodeService, printService, templateRepo, categoryService);
+                return new UI.Pages.BarcodesPage(vm);
+            });
             navigationService.Register("Reports",    () => new UI.Pages.ReportsPage());
             navigationService.Register("Settings",   () => new UI.Pages.SettingsPage(stateStore, licenseService));
             navigationService.Register("CashDrawer", () => new UI.Pages.CashDrawerPage());

@@ -297,7 +297,7 @@ No changes to `SalesKeyboardInputService`. Existing 150ms scan threshold is unch
 
 | Package | Purpose | Status |
 |---|---|---|
-| `ZXing.Net` | Barcode image generation (Code128, Code39, EAN-13, QR) | **To add** |
+| `ZXing.Net` + `ZXing.Net.Bindings.Windows.Compatibility` | Barcode image generation (Code128, Code39, EAN-13, QR) | Added |
 | `PdfSharpCore` | PDF export of label sheets | Already installed (v1.3.67) |
 | `MaterialDesignThemes` | Dialog host, controls styling | Already installed |
 | `FontAwesome.Sharp` | Barcode + wand icons for toolbar | Already installed |
@@ -396,26 +396,28 @@ Icon: `FontAwesome.Sharp.IconChar.Barcode`.
 
 ## Implementation Roadmap
 
-### Phase 1 — MVP
+### Phase 1 — MVP ✅ Done
 
 Goal: generate and print a barcode label for any product without leaving EZPos.
 
-- [ ] Add `ZXing.Net` NuGet package
-- [ ] Add `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
-- [ ] Add `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
-- [ ] Add `LabelTemplate`, `LabelPrintJob` models
-- [ ] Implement `BarcodeService.GenerateImage()` — Code128 only
-- [ ] Implement `BarcodeService.GenerateInternalCode()`
-- [ ] Implement `LabelTemplateRepository` with four seeded defaults
-- [ ] Add `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
-- [ ] Implement `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
-- [ ] Build `BarcodesPageViewModel` (product list, print jobs, print command)
-- [ ] Build `BarcodesPage.xaml` (two-panel layout as designed above)
-- [ ] Build `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml`
-- [ ] Add "Print Label..." button to `ProductsPage` toolbar
-- [ ] Add "Generate Barcode" wand button to `ProductDialog` (BarcodeBox row)
-- [ ] Register `"Barcodes"` route in `MainWindow.RegisterRoutes()`
-- [ ] Add Barcodes nav button in `MainWindow.xaml` sidebar
+- [x] Add `ZXing.Net` NuGet package (+ `ZXing.Net.Bindings.Windows.Compatibility` for `System.Drawing.Bitmap` rendering under net6.0-windows)
+- [x] Add `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
+- [x] Add `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
+- [x] Add `LabelTemplate`, `LabelPrintJob` models
+- [x] Implement `BarcodeService.GenerateImage()` — Code128, Code39, EAN-13, QR
+- [x] Implement `BarcodeService.GenerateInternalCode()`
+- [x] Implement `LabelTemplateRepository` with four seeded defaults
+- [x] Add `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
+- [x] Implement `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
+- [x] Build `BarcodesPageViewModel` (product list, print jobs, print command)
+- [x] Build `BarcodesPage.xaml` (two-panel layout as designed above)
+- [x] Build `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml`
+- [x] Add "Print Label..." button to `ProductsPage` toolbar
+- [x] Add "Generate Barcode" wand button to `ProductDialog` (BarcodeBox row)
+- [x] Register `"Barcodes"` route in `MainWindow.RegisterRoutes()`
+- [x] Add Barcodes nav button in `MainWindow.xaml` sidebar
+
+Note: PDF export (`ExportToPdf`) is intentionally deferred to Phase 2 as originally scoped — Phase 1 ships direct printing only.
 
 ### Phase 2 — Production Ready
 

@@ -67,6 +67,7 @@ namespace EZPos.UI.Dialogs
 
             BarcodeBox.Text       = scannedBarcode;
             BarcodeBox.IsReadOnly = true;
+            GenerateBarcodeButton.IsEnabled = false;
             UnitTypeCombo.SelectedIndex = 0;
 
             Loaded += (_, _) =>
@@ -236,6 +237,25 @@ namespace EZPos.UI.Dialogs
             }
 
             ParentProductCombo.SelectedIndex = 0;
+        }
+
+        // ── Generate internal barcode ───────────────────────────────────────────
+        private void GenerateBarcode_Click(object sender, RoutedEventArgs e)
+        {
+            var barcodeService = new BarcodeService();
+
+            int idForCode;
+            if (_editingProduct != null)
+            {
+                idForCode = _editingProduct.Id;
+            }
+            else
+            {
+                var existingIds = _productService.GetAll().Select(p => p.Id).ToList();
+                idForCode = existingIds.Count > 0 ? existingIds.Max() + 1 : 1;
+            }
+
+            BarcodeBox.Text = barcodeService.GenerateInternalCode(idForCode);
         }
 
         // ── Save ──────────────────────────────────────────────────────────────

@@ -7,9 +7,11 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using EZPos.Business.Services;
+using EZPos.DataAccess.Repositories;
 using EZPos.Models.Domain;
 using EZPos.UI.Dialogs;
 using EZPos.UI.State;
+using EZPos.UI.ViewModels;
 using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Pages
@@ -260,7 +262,8 @@ namespace EZPos.UI.Pages
                 LastUpdated     = selected.LastUpdated,
                 UnitType        = selected.UnitType,
                 ConversionRate  = selected.ConversionRate,
-                ParentProductId = selected.ParentProductId
+                ParentProductId = selected.ParentProductId,
+                BarcodeFormat   = selected.BarcodeFormat
             };
 
             var view = new ProductDialog(productService, categoryService, domainProduct);
@@ -299,6 +302,41 @@ namespace EZPos.UI.Pages
             {
                 MessageBox.Show($"Could not delete product:\n{ex.Message}",
                     "Delete Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void PrintLabel_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProductsGrid.SelectedItem is not ProductRecord selected)
+            {
+                MessageBox.Show("Select a product to print a label for.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var domainProduct = new Product
+            {
+                Id              = selected.Id,
+                Barcode         = selected.Barcode,
+                Name            = selected.Name,
+                Category        = selected.Category,
+                Price           = selected.Price,
+                CostPrice       = selected.CostPrice,
+                Stock           = selected.Stock,
+                ReorderLevel    = selected.ReorderLevel,
+                MaxStock        = selected.MaxStock,
+                LastUpdated     = selected.LastUpdated,
+                UnitType        = selected.UnitType,
+                ConversionRate  = selected.ConversionRate,
+                ParentProductId = selected.ParentProductId,
+                BarcodeFormat   = selected.BarcodeFormat
+            };
+
+            var vm = new QuickPrintDialogViewModel(domainProduct, productService, new LabelPrintService(), new LabelTemplateRepository());
+            var view = new QuickPrintDialog(vm);
+            var result = await DialogHost.Show(view, "RootDialog");
+            if (result is true)
+            {
+                productsView?.Refresh();
             }
         }
 

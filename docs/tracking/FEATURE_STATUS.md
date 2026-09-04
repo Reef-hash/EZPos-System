@@ -98,23 +98,23 @@ Status: **CORE COMPLETE**
 > Architecture: MVVM. Docs: [barcode-module.md](../features/barcodes/barcode-module.md)
 
 ### Phase 1 — MVP
-- [ ] `ZXing.Net` NuGet package added
-- [ ] `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
-- [ ] `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
-- [ ] `LabelTemplate`, `LabelPrintJob` domain models
-- [ ] `BarcodeService.GenerateImage()` — Code128
-- [ ] `BarcodeService.GenerateInternalCode()` — `EZP` + zero-padded Id
-- [ ] `LabelTemplateRepository` — JSON persistence, four seeded defaults
-- [ ] `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
-- [ ] `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
-- [ ] `BarcodesPageViewModel` + `BarcodesPage.xaml/.cs`
-- [ ] `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml/.cs`
-- [ ] "Print Label..." button on `ProductsPage` toolbar
-- [ ] "Generate Barcode" button in `ProductDialog` (BarcodeBox row)
-- [ ] `"Barcodes"` route registered in `MainWindow.RegisterRoutes()`
-- [ ] Barcodes nav button in `MainWindow.xaml` sidebar
+- [x] `ZXing.Net` NuGet package added
+- [x] `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
+- [x] `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
+- [x] `LabelTemplate`, `LabelPrintJob` domain models
+- [x] `BarcodeService.GenerateImage()` — Code128, Code39, EAN-13, QR
+- [x] `BarcodeService.GenerateInternalCode()` — `EZP` + zero-padded Id
+- [x] `LabelTemplateRepository` — JSON persistence, four seeded defaults
+- [x] `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
+- [x] `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
+- [x] `BarcodesPageViewModel` + `BarcodesPage.xaml/.cs`
+- [x] `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml/.cs`
+- [x] "Print Label..." button on `ProductsPage` toolbar
+- [x] "Generate Barcode" button in `ProductDialog` (BarcodeBox row)
+- [x] `"Barcodes"` route registered in `MainWindow.RegisterRoutes()`
+- [x] Barcodes nav button in `MainWindow.xaml` sidebar
 
-Status: **PLANNED**
+Status: **CORE COMPLETE** (BETA — see Phase 2 for print history, PDF export, template editor)
 
 ### Phase 2 — Production Ready
 - [ ] `BarcodeLabels` table in `Database.Initialize()`

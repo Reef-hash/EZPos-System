@@ -137,6 +137,9 @@ namespace EZPos.DataAccess.Repositories
 
             // v3: optional cost price for profit tracking
             TryAddColumn(conn, "Products", "CostPrice", "REAL NULL DEFAULT NULL");
+
+            // v4: barcode symbology used for label rendering/printing
+            TryAddColumn(conn, "Products", "BarcodeFormat", "TEXT NOT NULL DEFAULT 'Code128'");
         }
 
         private static void TryAddColumn(SQLiteConnection conn, string table, string column, string definition)
