@@ -60,7 +60,20 @@
             <!-- Barcode -->
             <StackPanel Style="{StaticResource FieldGroup}">
                 <TextBlock Text="Barcode *" Style="{StaticResource FieldLabel}" />
-                <TextBox x:Name="BarcodeBox" Height="36" FontFamily="{StaticResource MonoFont}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="BarcodeBox" Grid.Column="0" Height="36" FontFamily="{StaticResource MonoFont}" />
+                    <Button x:Name="GenerateBarcodeButton" Grid.Column="2" Width="36" Height="36" Padding="0"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            ToolTip="Generate internal barcode"
+                            Click="GenerateBarcode_Click">
+                        <fa:IconBlock Icon="WandMagicSparkles" FontSize="13" />
+                    </Button>
+                </Grid>
                 <TextBlock x:Name="BarcodeError" Text="Barcode is required."
                            Style="{StaticResource ErrorLabel}" />
             </StackPanel>

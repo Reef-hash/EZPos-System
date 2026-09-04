@@ -297,7 +297,7 @@ No changes to `SalesKeyboardInputService`. Existing 150ms scan threshold is unch
 
 | Package | Purpose | Status |
 |---|---|---|
-| `ZXing.Net` | Barcode image generation (Code128, Code39, EAN-13, QR) | **To add** |
+| `ZXing.Net` + `ZXing.Net.Bindings.Windows.Compatibility` | Barcode image generation (Code128, Code39, EAN-13, QR) | Added |
 | `PdfSharpCore` | PDF export of label sheets | Already installed (v1.3.67) |
 | `MaterialDesignThemes` | Dialog host, controls styling | Already installed |
 | `FontAwesome.Sharp` | Barcode + wand icons for toolbar | Already installed |
@@ -396,43 +396,47 @@ Icon: `FontAwesome.Sharp.IconChar.Barcode`.
 
 ## Implementation Roadmap
 
-### Phase 1 — MVP
+### Phase 1 — MVP ✅ Done
 
 Goal: generate and print a barcode label for any product without leaving EZPos.
 
-- [ ] Add `ZXing.Net` NuGet package
-- [ ] Add `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
-- [ ] Add `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
-- [ ] Add `LabelTemplate`, `LabelPrintJob` models
-- [ ] Implement `BarcodeService.GenerateImage()` — Code128 only
-- [ ] Implement `BarcodeService.GenerateInternalCode()`
-- [ ] Implement `LabelTemplateRepository` with four seeded defaults
-- [ ] Add `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
-- [ ] Implement `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
-- [ ] Build `BarcodesPageViewModel` (product list, print jobs, print command)
-- [ ] Build `BarcodesPage.xaml` (two-panel layout as designed above)
-- [ ] Build `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml`
-- [ ] Add "Print Label..." button to `ProductsPage` toolbar
-- [ ] Add "Generate Barcode" wand button to `ProductDialog` (BarcodeBox row)
-- [ ] Register `"Barcodes"` route in `MainWindow.RegisterRoutes()`
-- [ ] Add Barcodes nav button in `MainWindow.xaml` sidebar
+- [x] Add `ZXing.Net` NuGet package (+ `ZXing.Net.Bindings.Windows.Compatibility` for `System.Drawing.Bitmap` rendering under net6.0-windows)
+- [x] Add `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
+- [x] Add `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
+- [x] Add `LabelTemplate`, `LabelPrintJob` models
+- [x] Implement `BarcodeService.GenerateImage()` — Code128, Code39, EAN-13, QR
+- [x] Implement `BarcodeService.GenerateInternalCode()`
+- [x] Implement `LabelTemplateRepository` with four seeded defaults
+- [x] Add `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
+- [x] Implement `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
+- [x] Build `BarcodesPageViewModel` (product list, print jobs, print command)
+- [x] Build `BarcodesPage.xaml` (two-panel layout as designed above)
+- [x] Build `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml`
+- [x] Add "Print Label..." button to `ProductsPage` toolbar
+- [x] Add "Generate Barcode" wand button to `ProductDialog` (BarcodeBox row)
+- [x] Register `"Barcodes"` route in `MainWindow.RegisterRoutes()`
+- [x] Add Barcodes nav button in `MainWindow.xaml` sidebar
 
-### Phase 2 — Production Ready
+Note: PDF export (`ExportToPdf`) was originally deferred to Phase 2 — now implemented, see below.
+
+### Phase 2 — Production Ready ✅ Done (pending Windows build/test verification)
 
 Goal: complete label management with history, multiple formats, and PDF export.
 
-- [ ] Create `BarcodeLabels` table in `Database.Initialize()`
-- [ ] Implement `BarcodeLabelRepository` + `BarcodeLabelRecord` model
-- [ ] Log all print jobs to `BarcodeLabels` after each print
-- [ ] Code39 and EAN-13 format support (EAN-13 shows internal-use warning)
-- [ ] PDF export via `PdfSharpCore` in `LabelPrintService.ExportToPdf()`
-- [ ] Print preview window using `DocumentViewer`
-- [ ] `LabelTemplateEditorDialog` — edit dimensions, field toggles, font sizes
-- [ ] `LabelTemplateEditorViewModel`
-- [ ] Damaged label replacement flow (scanner → auto-select → quick print)
-- [ ] "Print labels after stock receive" hook in `StockAdjustDialog`
-- [ ] A4 sheet template (4×6 = 24 labels per page)
-- [ ] Reprint history sub-tab on BarcodesPage showing `BarcodeLabels` records
+- [x] Create `BarcodeLabels` table in `Database.Initialize()`
+- [x] Implement `BarcodeLabelRepository` + `BarcodeLabelRecord` model
+- [x] Log all print jobs to `BarcodeLabels` after each print (and each PDF export)
+- [x] Code39 and EAN-13 format support (EAN-13 shows a non-blocking invalid-checkdigit warning via `BarcodeService.ValidateEan13()`)
+- [x] PDF export via `PdfSharpCore` in `LabelPrintService.ExportToPdf()` — "Export PDF" button on BarcodesPage (SaveFileDialog in code-behind)
+- [x] Print preview window using `DocumentViewer` — `src/UI/Dialogs/PrintPreviewWindow.xaml`, "Preview" button on BarcodesPage
+- [x] `LabelTemplateEditorDialog` — list + form to create/edit/delete templates (dimensions, field toggles, font sizes, default flag)
+- [x] `LabelTemplateEditorViewModel`
+- [x] Damaged label replacement flow (scanner on BarcodesPage → `BarcodesPageViewModel.HandleBarcodeScanned()` → auto-lookup → QuickPrintDialog; not-found shows a status message)
+- [x] "Print labels after stock receive" hook — implemented in `StockPage.StockIn_Click` (prompts after a successful Stock In; `StockAdjustDialog` itself stays adjustment-only)
+- [x] A4 sheet template (4×6 = 24 labels per page) — was already seeded in Phase 1's `LabelTemplateRepository`
+- [x] Reprint history sub-tab on BarcodesPage — collapsible "Print History" `Expander` panel showing `BarcodeLabels` records
+
+**Not yet verified on a real Windows build** — see [BARCODE_LOCAL_TESTING.md](../testing/BARCODE_LOCAL_TESTING.md) before treating Phase 2 as shippable.
 
 ### Phase 3 — Advanced Features
 
