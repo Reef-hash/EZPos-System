@@ -1,13 +1,17 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 using EZPos.Business.Services;
+using EZPos.DataAccess.Repositories;
+using EZPos.Models.Domain;
 using EZPos.UI.Dialogs;
 using EZPos.UI.State;
+using EZPos.UI.ViewModels;
 using MaterialDesignThemes.Wpf;
 
 namespace EZPos.UI.Pages
@@ -42,16 +46,18 @@ namespace EZPos.UI.Pages
         private readonly PosStateStore stateStore;
         private readonly StockService stockService;
         private readonly CategoryService categoryService;
+        private readonly ProductService productService;
         private ICollectionView? stockView;
         private bool isInitialized;
 
-        public StockPage(PosStateStore stateStore, StockService stockService, CategoryService categoryService)
+        public StockPage(PosStateStore stateStore, StockService stockService, CategoryService categoryService, ProductService productService)
         {
             InitializeComponent();
 
             this.stateStore      = stateStore;
             this.stockService    = stockService;
             this.categoryService = categoryService;
+            this.productService  = productService;
             // Independent view per page — never share the default view across pages
             stockView = new ListCollectionView(this.stateStore.Products);
 
@@ -173,7 +179,41 @@ namespace EZPos.UI.Pages
             {
                 stockView?.Refresh();
                 UpdateSummary();
+                await OfferPrintLabelsAsync(selected);
             }
+        }
+
+        /// <summary>After stock is received, offer to print label(s) for the product right away.</summary>
+        private async Task OfferPrintLabelsAsync(ProductRecord product)
+        {
+            var promptResult = MessageBox.Show(
+                $"Stock received for '{product.Name}'. Print label(s) now?",
+                "Print Labels", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (promptResult != MessageBoxResult.Yes)
+                return;
+
+            var domainProduct = new Product
+            {
+                Id              = product.Id,
+                Barcode         = product.Barcode,
+                Name            = product.Name,
+                Category        = product.Category,
+                Price           = product.Price,
+                CostPrice       = product.CostPrice,
+                Stock           = product.Stock,
+                ReorderLevel    = product.ReorderLevel,
+                MaxStock        = product.MaxStock,
+                LastUpdated     = product.LastUpdated,
+                UnitType        = product.UnitType,
+                ConversionRate  = product.ConversionRate,
+                ParentProductId = product.ParentProductId,
+                BarcodeFormat   = product.BarcodeFormat
+            };
+
+            var vm = new QuickPrintDialogViewModel(domainProduct, productService, new LabelPrintService(), new LabelTemplateRepository(), new BarcodeLabelRepository());
+            var view = new QuickPrintDialog(vm);
+            await DialogHost.Show(view, "RootDialog");
         }
 
         private async void StockOut_Click(object sender, RoutedEventArgs e)

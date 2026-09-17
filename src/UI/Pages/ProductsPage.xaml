@@ -94,6 +94,12 @@
 
                     <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="EditProduct_Click">Edit</Button>
                     <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="DeleteProduct_Click">Delete</Button>
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="PrintLabel_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconBlock Icon="Barcode" FontSize="12" Margin="0,0,6,0" />
+                            <TextBlock Text="Print Label..." />
+                        </StackPanel>
+                    </Button>
                     <Button Style="{StaticResource SecondaryButtonStyle}" Padding="12,8" Margin="0,0,8,8" Click="ManageCategories_Click">
                         <StackPanel Orientation="Horizontal">
                             <fa:IconBlock Icon="Tag" FontSize="12" Margin="0,0,6,0" />

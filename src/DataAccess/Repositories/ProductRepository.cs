@@ -17,6 +17,10 @@ namespace EZPos.DataAccess.Repositories
             var parentIdOrdinal = reader.GetOrdinal("ParentProductId");
             int? parentProductId = reader.IsDBNull(parentIdOrdinal) ? (int?)null : reader.GetInt32(parentIdOrdinal);
 
+            var barcodeFormatOrdinal = reader.GetOrdinal("BarcodeFormat");
+            var barcodeFormatStr = reader.IsDBNull(barcodeFormatOrdinal) ? "Code128" : reader.GetString(barcodeFormatOrdinal);
+            var barcodeFormat = Enum.TryParse<EZPos.Models.Domain.BarcodeFormat>(barcodeFormatStr, out var bf) ? bf : EZPos.Models.Domain.BarcodeFormat.Code128;
+
             return new Product
             {
                 Id             = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -36,7 +40,8 @@ namespace EZPos.DataAccess.Repositories
                 ParentProductId = parentProductId,
                 CostPrice = reader.IsDBNull(reader.GetOrdinal("CostPrice"))
                                 ? (decimal?)null
-                                : (decimal)reader.GetDouble(reader.GetOrdinal("CostPrice"))
+                                : (decimal)reader.GetDouble(reader.GetOrdinal("CostPrice")),
+                BarcodeFormat = barcodeFormat
             };
         }
 
@@ -82,9 +87,9 @@ namespace EZPos.DataAccess.Repositories
                 var cmd = conn.CreateCommand();
                 cmd.CommandText = @"
                     INSERT INTO Products (Barcode, Name, Price, Stock, Category, ReorderLevel, MaxStock, LastUpdated,
-                                         UnitType, ConversionRate, ParentProductId, CostPrice)
+                                         UnitType, ConversionRate, ParentProductId, CostPrice, BarcodeFormat)
                     VALUES (@barcode, @name, @price, @stock, @category, @reorderLevel, @maxStock, @lastUpdated,
-                            @unitType, @conversionRate, @parentProductId, @costPrice);
+                            @unitType, @conversionRate, @parentProductId, @costPrice, @barcodeFormat);
                     SELECT last_insert_rowid();";
                 cmd.Parameters.AddWithValue("@barcode",         product.Barcode);
                 cmd.Parameters.AddWithValue("@name",            product.Name);
@@ -98,6 +103,7 @@ namespace EZPos.DataAccess.Repositories
                 cmd.Parameters.AddWithValue("@conversionRate",  (double)product.ConversionRate);
                 cmd.Parameters.AddWithValue("@parentProductId", (object?)product.ParentProductId ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@costPrice",       product.CostPrice.HasValue ? (object)(double)product.CostPrice.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@barcodeFormat",   product.BarcodeFormat.ToString());
                 return Convert.ToInt32(cmd.ExecuteScalar());
             }
         }
@@ -114,7 +120,8 @@ namespace EZPos.DataAccess.Repositories
                         Category = @category, ReorderLevel = @reorderLevel,
                         MaxStock = @maxStock, LastUpdated = @lastUpdated,
                         UnitType = @unitType, ConversionRate = @conversionRate,
-                        ParentProductId = @parentProductId, CostPrice = @costPrice
+                        ParentProductId = @parentProductId, CostPrice = @costPrice,
+                        BarcodeFormat = @barcodeFormat
                     WHERE Id = @id";
                 cmd.Parameters.AddWithValue("@id",             product.Id);
                 cmd.Parameters.AddWithValue("@barcode",        product.Barcode);
@@ -129,6 +136,7 @@ namespace EZPos.DataAccess.Repositories
                 cmd.Parameters.AddWithValue("@conversionRate", (double)product.ConversionRate);
                 cmd.Parameters.AddWithValue("@parentProductId", (object?)product.ParentProductId ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@costPrice",       product.CostPrice.HasValue ? (object)(double)product.CostPrice.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@barcodeFormat",  product.BarcodeFormat.ToString());
                 cmd.ExecuteNonQuery();
             }
         }

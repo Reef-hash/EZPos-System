@@ -12,27 +12,13 @@ _Nothing in progress currently._
 
 ## Next Up
 
-### Barcode Management Module — Phase 1 (MVP)
-- **Plan doc:** [barcode-module.md](../features/barcodes/barcode-module.md)
-- **Branch:** `feature/barcode-management` (create before starting)
-- **Architecture:** MVVM — all new files use ViewModels. Do not add code-behind logic.
-
-**Step-by-step order:**
-1. `dotnet add package ZXing.Net` — add to `EZPos.csproj`
-2. Create `src/Models/Domain/BarcodeFormat.cs` — enum
-3. Create `src/Models/Domain/LabelTemplate.cs` + `LabelPrintJob.cs`
-4. Add `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
-5. Create `src/Business/Services/BarcodeService.cs`
-6. Create `src/DataAccess/Repositories/LabelTemplateRepository.cs` (JSON file)
-7. Create `src/UI/ViewModels/RelayCommand.cs`
-8. Create `src/Business/Services/LabelPrintService.cs`
-9. Create `src/UI/ViewModels/BarcodesPageViewModel.cs`
-10. Create `src/UI/Pages/BarcodesPage.xaml` + `.cs`
-11. Create `src/UI/ViewModels/QuickPrintDialogViewModel.cs`
-12. Create `src/UI/Dialogs/QuickPrintDialog.xaml` + `.cs`
-13. Add "Print Label..." button to `ProductsPage.xaml` toolbar
-14. Add "Generate Barcode" wand button to `ProductDialog.xaml` (BarcodeBox row)
-15. Register `"Barcodes"` in `MainWindow.RegisterRoutes()` + add sidebar nav button
+### Barcode Management Module — verify on Windows
+- **Handoff doc:** [BARCODE_LOCAL_TESTING.md](../testing/BARCODE_LOCAL_TESTING.md)
+- Phase 1 (MVP) and Phase 2 (Production Ready) are both implemented — see Recently Completed below.
+- **This code has never been compiled or run** — it was written in a Linux sandbox with no `dotnet`/Windows available. Before trusting it:
+  1. `dotnet restore` + `dotnet build` on a real Windows machine, fix any compile errors (see the doc's "Known risk areas" section for the likely trouble spots: `ZXing.Net.Bindings.Windows.Compatibility` API shape, FontAwesome icon names, PdfSharpCore custom-page-size + `XImage.FromStream` API)
+  2. Walk the manual test checklist in the handoff doc (generate/print/export/preview/history/template editor/damaged-label/stock-receive flows)
+  3. Fix whatever breaks, then move Phase 2 from "implemented" to "verified" in FEATURE_STATUS.md
 
 ### UI Modernization — MahApps + MaterialDesign
 - **Plan doc:** [ui-modernization.md](../planning/ui-modernization.md)
@@ -80,6 +66,8 @@ _Nothing in progress currently._
 
 ## Recently Completed
 
+- [x] **Barcode Management Module — Phase 2 (Production Ready)**: `BarcodeLabels` history table + `BarcodeLabelRepository`, print-history logging after every print/PDF export, "Print History" panel on BarcodesPage, PDF export (`PdfSharpCore`) with an "Export PDF" button, print preview window (`DocumentViewer`), `LabelTemplateEditorDialog` (create/edit/delete templates), damaged-label replacement (scanner on BarcodesPage → auto-lookup → QuickPrintDialog), "print after stock receive" prompt in StockPage, non-blocking EAN-13 check-digit warning. **Not yet build-tested on Windows** — see [BARCODE_LOCAL_TESTING.md](../testing/BARCODE_LOCAL_TESTING.md) (Sep 2026)
+- [x] **Barcode Management Module — Phase 1 (MVP)**: ZXing.Net-backed barcode image generation (Code128/Code39/EAN-13/QR), `EZP`-prefixed internal code generator, JSON-backed label template repository (4 seeded templates), WPF `FixedDocument` label printing engine, BarcodesPage (MVVM — product selection, template config, live preview, bulk print), QuickPrintDialog (single-product print from ProductsPage), "Generate Barcode" wand button in ProductDialog (Sep 2026)
 - [x] Cost Price field on Product (optional/nullable) — DB migration via `TryAddColumn` (May 2026)
 - [x] Live profit calculator in ProductDialog — profit/unit, margin %, markup %, colour-coded status (May 2026)
 - [x] Show/Hide Cost Price column toggle on ProductsPage grid (May 2026)

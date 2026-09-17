@@ -39,5 +39,8 @@ namespace EZPos.Models.Domain
         /// Null means the owner has not entered a cost price — profit calculations are skipped.
         /// </summary>
         public decimal? CostPrice { get; set; }
+
+        /// <summary>Barcode symbology to use when rendering/printing this product's label.</summary>
+        public BarcodeFormat BarcodeFormat { get; set; } = BarcodeFormat.Code128;
     }
 }

@@ -74,7 +74,8 @@ namespace EZPos.UI.State
                     LastUpdated     = p.LastUpdated,
                     UnitType        = p.UnitType,
                     ConversionRate  = p.ConversionRate,
-                    ParentProductId = p.ParentProductId
+                    ParentProductId = p.ParentProductId,
+                    BarcodeFormat   = p.BarcodeFormat
                 });
             }
 
@@ -100,7 +101,8 @@ namespace EZPos.UI.State
                 LastUpdated     = p.LastUpdated,
                 UnitType        = p.UnitType,
                 ConversionRate  = p.ConversionRate,
-                ParentProductId = p.ParentProductId
+                ParentProductId = p.ParentProductId,
+                BarcodeFormat   = p.BarcodeFormat
             });
         }
 
@@ -121,6 +123,7 @@ namespace EZPos.UI.State
             existing.UnitType        = p.UnitType;
             existing.ConversionRate  = p.ConversionRate;
             existing.ParentProductId = p.ParentProductId;
+            existing.BarcodeFormat   = p.BarcodeFormat;
         }
 
         /// <summary>Removes a product from the state store by Id.</summary>
@@ -365,6 +368,7 @@ namespace EZPos.UI.State
         private EZPos.Models.Domain.UnitType unitType;
         private decimal conversionRate = 1m;
         private int? parentProductId;
+        private EZPos.Models.Domain.BarcodeFormat barcodeFormat;
 
         public int Id { get; set; }
 
@@ -460,6 +464,13 @@ namespace EZPos.UI.State
         {
             get => parentProductId;
             set => SetProperty(ref parentProductId, value);
+        }
+
+        /// <summary>Barcode symbology to use when rendering/printing this product's label.</summary>
+        public EZPos.Models.Domain.BarcodeFormat BarcodeFormat
+        {
+            get => barcodeFormat;
+            set => SetProperty(ref barcodeFormat, value);
         }
 
         public string StockStatus => Stock <= 0 ? "Out of Stock" : Stock <= ReorderLevel ? "Low Stock" : "In Stock";

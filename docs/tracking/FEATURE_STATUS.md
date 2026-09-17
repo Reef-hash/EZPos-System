@@ -98,38 +98,38 @@ Status: **CORE COMPLETE**
 > Architecture: MVVM. Docs: [barcode-module.md](../features/barcodes/barcode-module.md)
 
 ### Phase 1 — MVP
-- [ ] `ZXing.Net` NuGet package added
-- [ ] `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
-- [ ] `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
-- [ ] `LabelTemplate`, `LabelPrintJob` domain models
-- [ ] `BarcodeService.GenerateImage()` — Code128
-- [ ] `BarcodeService.GenerateInternalCode()` — `EZP` + zero-padded Id
-- [ ] `LabelTemplateRepository` — JSON persistence, four seeded defaults
-- [ ] `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
-- [ ] `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
-- [ ] `BarcodesPageViewModel` + `BarcodesPage.xaml/.cs`
-- [ ] `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml/.cs`
-- [ ] "Print Label..." button on `ProductsPage` toolbar
-- [ ] "Generate Barcode" button in `ProductDialog` (BarcodeBox row)
-- [ ] `"Barcodes"` route registered in `MainWindow.RegisterRoutes()`
-- [ ] Barcodes nav button in `MainWindow.xaml` sidebar
+- [x] `ZXing.Net` NuGet package added
+- [x] `BarcodeFormat` enum (`src/Models/Domain/BarcodeFormat.cs`)
+- [x] `BarcodeFormat` column migration in `Database.MigrateProductsTable()`
+- [x] `LabelTemplate`, `LabelPrintJob` domain models
+- [x] `BarcodeService.GenerateImage()` — Code128, Code39, EAN-13, QR
+- [x] `BarcodeService.GenerateInternalCode()` — `EZP` + zero-padded Id
+- [x] `LabelTemplateRepository` — JSON persistence, four seeded defaults
+- [x] `RelayCommand` utility (`src/UI/ViewModels/RelayCommand.cs`)
+- [x] `LabelPrintService.BuildFixedDocument()` + `PrintLabels()`
+- [x] `BarcodesPageViewModel` + `BarcodesPage.xaml/.cs`
+- [x] `QuickPrintDialogViewModel` + `QuickPrintDialog.xaml/.cs`
+- [x] "Print Label..." button on `ProductsPage` toolbar
+- [x] "Generate Barcode" button in `ProductDialog` (BarcodeBox row)
+- [x] `"Barcodes"` route registered in `MainWindow.RegisterRoutes()`
+- [x] Barcodes nav button in `MainWindow.xaml` sidebar
 
-Status: **PLANNED**
+Status: **CORE COMPLETE** (BETA — see Phase 3 for remaining backlog)
 
 ### Phase 2 — Production Ready
-- [ ] `BarcodeLabels` table in `Database.Initialize()`
-- [ ] `BarcodeLabelRepository` + `BarcodeLabelRecord` model
-- [ ] Print job logging to `BarcodeLabels` after each print
-- [ ] Code39 + EAN-13 format support (EAN-13 shows internal-use warning)
-- [ ] PDF export via `PdfSharpCore` in `LabelPrintService`
-- [ ] Print preview window (`DocumentViewer`)
-- [ ] `LabelTemplateEditorDialog` + `LabelTemplateEditorViewModel`
-- [ ] Damaged label replacement (scanner → auto-select → quick print)
-- [ ] Stock receive → print labels hook in `StockAdjustDialog`
-- [ ] A4 sheet template (4×6 = 24 labels per page)
-- [ ] Reprint history sub-tab on BarcodesPage
+- [x] `BarcodeLabels` table in `Database.Initialize()`
+- [x] `BarcodeLabelRepository` + `BarcodeLabelRecord` model
+- [x] Print job logging to `BarcodeLabels` after each print/PDF export
+- [x] Code39 + EAN-13 format support (EAN-13 shows a non-blocking invalid-checkdigit warning)
+- [x] PDF export via `PdfSharpCore` in `LabelPrintService` (`ExportToPdf()` + "Export PDF" button)
+- [x] Print preview window (`DocumentViewer`) — "Preview" button on BarcodesPage
+- [x] `LabelTemplateEditorDialog` + `LabelTemplateEditorViewModel` — "Edit Templates..." link on BarcodesPage
+- [x] Damaged label replacement (scanner on BarcodesPage → auto-lookup → QuickPrintDialog; not-found shows a status message)
+- [x] Stock receive → print labels hook (`StockPage.StockIn_Click` prompts to print after a successful Stock In)
+- [x] A4 sheet template (4×6 = 24 labels per page) — seeded since Phase 1
+- [x] Reprint history sub-tab (Expander panel) on BarcodesPage
 
-Status: **PLANNED**
+Status: **CORE COMPLETE** (BETA — needs a Windows build/test pass, see [BARCODE_LOCAL_TESTING.md](../testing/BARCODE_LOCAL_TESTING.md))
 
 ### Phase 3 — Advanced
 - [ ] QR Code support
