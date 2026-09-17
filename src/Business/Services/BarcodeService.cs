@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
 using EZPos.DataAccess.Repositories;
 using ZXing.Common;
@@ -88,6 +90,49 @@ namespace EZPos.Business.Services
 
             int checkDigit = (10 - (sum % 10)) % 10;
             return checkDigit == digits[12];
+        }
+
+        private static readonly Regex Code39Pattern = new("^[A-Z0-9\\-. $/+%]+$", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Checks whether <paramref name="data"/> can be encoded in <paramref name="format"/> without the
+        /// underlying ZXing writer throwing (e.g. wrong digit count for EAN-13, unsupported characters for
+        /// Code39). Callers should skip/placeholder a label rather than let one bad product abort a whole batch.
+        /// </summary>
+        public bool CanEncode(string data, DomainBarcodeFormat format, out string? reason)
+        {
+            if (string.IsNullOrWhiteSpace(data))
+            {
+                reason = "Barcode value is empty";
+                return false;
+            }
+
+            switch (format)
+            {
+                case DomainBarcodeFormat.EAN13:
+                    if (data.Length is not (12 or 13) || !data.All(char.IsDigit))
+                    {
+                        reason = "EAN-13 requires 12 or 13 digits";
+                        return false;
+                    }
+                    if (data.Length == 13 && !ValidateEan13(data))
+                    {
+                        reason = "EAN-13 check digit is invalid";
+                        return false;
+                    }
+                    break;
+
+                case DomainBarcodeFormat.Code39:
+                    if (!Code39Pattern.IsMatch(data))
+                    {
+                        reason = "Code39 only supports A-Z, 0-9, space, and - . $ / + %";
+                        return false;
+                    }
+                    break;
+            }
+
+            reason = null;
+            return true;
         }
 
         private static ZXing.BarcodeFormat MapFormat(DomainBarcodeFormat format) => format switch

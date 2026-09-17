@@ -112,14 +112,14 @@ namespace EZPos.UI.ViewModels
                 Quantity = Quantity
             };
 
-            if (SelectedFormat == BarcodeFormat.EAN13 && !_barcodeService.ValidateEan13(job.Barcode))
+            if (!_barcodeService.CanEncode(job.Barcode, job.Format, out var reason))
             {
-                StatusMessage?.Invoke("Warning: not a valid 13-digit EAN-13 barcode. The label may not scan correctly.");
+                StatusMessage?.Invoke($"Warning: {reason}. The label will print without a scannable barcode.");
             }
 
             try
             {
-                _printService.PrintLabels(new[] { job }, template, SelectedPrinter);
+                _printService.PrintLabels(new[] { job }, template, SelectedPrinter, out _);
 
                 try
                 {

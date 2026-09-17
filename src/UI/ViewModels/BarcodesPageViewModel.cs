@@ -419,10 +419,9 @@ namespace EZPos.UI.ViewModels
             try
             {
                 var jobs = PrintJobs.ToList();
-                WarnAboutInvalidEan13(jobs);
-                _printService.PrintLabels(jobs, template, SelectedPrinter);
+                _printService.PrintLabels(jobs, template, SelectedPrinter, out var failedJobs);
                 LogPrintJobs(jobs, template.Name);
-                StatusMessage?.Invoke($"Sent {jobs.Sum(j => Math.Max(1, j.Quantity))} label(s) to print.");
+                StatusMessage?.Invoke(BuildOutcomeMessage(jobs, failedJobs, "Sent", "label(s) to print"));
             }
             catch (Exception ex)
             {
@@ -430,20 +429,23 @@ namespace EZPos.UI.ViewModels
             }
         }
 
-        /// <summary>EAN-13 requires exactly 13 digits with a valid check digit — warn (non-blocking) when a job's barcode doesn't qualify.</summary>
-        private void WarnAboutInvalidEan13(List<LabelPrintJob> jobs)
+        /// <summary>
+        /// Reports how many labels went through and, if any jobs had barcode data that couldn't be encoded in
+        /// their selected format (e.g. non-numeric EAN-13, unsupported Code39 characters), which products were
+        /// skipped — those printed with a placeholder instead of aborting the whole batch.
+        /// </summary>
+        private static string BuildOutcomeMessage(List<LabelPrintJob> jobs, List<LabelPrintJob> failedJobs, string verb, string noun)
         {
-            var invalidNames = jobs
-                .Where(j => j.Format == BarcodeFormat.EAN13 && !_barcodeService.ValidateEan13(j.Barcode))
-                .Select(j => j.ProductName)
-                .Distinct()
-                .ToList();
+            var totalCount = jobs.Sum(j => Math.Max(1, j.Quantity));
+            var message = $"{verb} {totalCount} {noun}.";
 
-            if (invalidNames.Count > 0)
+            if (failedJobs.Count > 0)
             {
-                StatusMessage?.Invoke(
-                    $"Warning: not a valid 13-digit EAN-13 barcode for: {string.Join(", ", invalidNames)}. The label may not scan correctly.");
+                var names = failedJobs.Select(j => $"{j.ProductName} ({j.Format})").Distinct();
+                message += $" Warning: invalid barcode data for {string.Join(", ", names)} — those labels printed without a scannable barcode.";
             }
+
+            return message;
         }
 
         /// <summary>Exports the current print jobs to a PDF file at the given path (chosen by the view via SaveFileDialog).</summary>
@@ -456,10 +458,9 @@ namespace EZPos.UI.ViewModels
             try
             {
                 var jobs = PrintJobs.ToList();
-                WarnAboutInvalidEan13(jobs);
-                _printService.ExportToPdf(jobs, template, filePath);
+                _printService.ExportToPdf(jobs, template, filePath, out var failedJobs);
                 LogPrintJobs(jobs, template.Name);
-                StatusMessage?.Invoke($"Exported {jobs.Sum(j => Math.Max(1, j.Quantity))} label(s) to PDF.");
+                StatusMessage?.Invoke(BuildOutcomeMessage(jobs, failedJobs, "Exported", "label(s) to PDF"));
             }
             catch (Exception ex)
             {

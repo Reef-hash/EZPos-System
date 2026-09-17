@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using EZPos.DataAccess.Repositories;
 using EZPos.Models.Domain;
 using PdfSharpCore.Drawing;
@@ -29,8 +30,17 @@ namespace EZPos.Business.Services
 
         /// <summary>Lays out every job (expanded by its Quantity) into pages of LabelsPerRow x LabelsPerColumn.</summary>
         public FixedDocument BuildFixedDocument(IEnumerable<LabelPrintJob> jobs, LabelTemplate template)
+            => BuildFixedDocument(jobs, template, out _);
+
+        /// <summary>
+        /// Same as <see cref="BuildFixedDocument(IEnumerable{LabelPrintJob}, LabelTemplate)"/>, but also reports
+        /// which jobs had barcode data that couldn't be encoded in their selected format — those labels render
+        /// with a placeholder instead of aborting the whole document.
+        /// </summary>
+        public FixedDocument BuildFixedDocument(IEnumerable<LabelPrintJob> jobs, LabelTemplate template, out List<LabelPrintJob> failedJobs)
         {
             var document = new FixedDocument();
+            failedJobs = new List<LabelPrintJob>();
 
             var labelWidthPx = MmToPx(template.LabelWidthMm);
             var labelHeightPx = MmToPx(template.LabelHeightMm);
@@ -60,7 +70,7 @@ namespace EZPos.Business.Services
                     var row = i / labelsPerRow;
                     var col = i % labelsPerRow;
 
-                    var labelCanvas = BuildLabelCanvas(pageLabels[i], template, labelWidthPx, labelHeightPx);
+                    var labelCanvas = BuildLabelCanvas(pageLabels[i], template, labelWidthPx, labelHeightPx, failedJobs);
                     FixedPage.SetLeft(labelCanvas, col * labelWidthPx);
                     FixedPage.SetTop(labelCanvas, row * labelHeightPx);
                     fixedPage.Children.Add(labelCanvas);
@@ -76,8 +86,15 @@ namespace EZPos.Business.Services
 
         /// <summary>Builds the document and sends it to the named printer (or the system default if not found).</summary>
         public void PrintLabels(IEnumerable<LabelPrintJob> jobs, LabelTemplate template, string? printerName)
+            => PrintLabels(jobs, template, printerName, out _);
+
+        /// <summary>
+        /// Same as <see cref="PrintLabels(IEnumerable{LabelPrintJob}, LabelTemplate, string?)"/>, but also reports
+        /// which jobs had unencodable barcode data (rendered as a placeholder instead of blocking the print job).
+        /// </summary>
+        public void PrintLabels(IEnumerable<LabelPrintJob> jobs, LabelTemplate template, string? printerName, out List<LabelPrintJob> failedJobs)
         {
-            var document = BuildFixedDocument(jobs, template);
+            var document = BuildFixedDocument(jobs, template, out failedJobs);
             var printDialog = new PrintDialog();
 
             if (!string.IsNullOrWhiteSpace(printerName))
@@ -98,7 +115,15 @@ namespace EZPos.Business.Services
 
         /// <summary>Lays out every job (expanded by its Quantity) into a PDF, one page per LabelsPerRow x LabelsPerColumn sheet.</summary>
         public void ExportToPdf(IEnumerable<LabelPrintJob> jobs, LabelTemplate template, string filePath)
+            => ExportToPdf(jobs, template, filePath, out _);
+
+        /// <summary>
+        /// Same as <see cref="ExportToPdf(IEnumerable{LabelPrintJob}, LabelTemplate, string)"/>, but also reports
+        /// which jobs had unencodable barcode data (rendered as a placeholder instead of blocking the export).
+        /// </summary>
+        public void ExportToPdf(IEnumerable<LabelPrintJob> jobs, LabelTemplate template, string filePath, out List<LabelPrintJob> failedJobs)
         {
+            failedJobs = new List<LabelPrintJob>();
             var labelWidthPt = MmToPt(template.LabelWidthMm);
             var labelHeightPt = MmToPt(template.LabelHeightMm);
             var labelsPerRow = Math.Max(1, template.LabelsPerRow);
@@ -129,7 +154,7 @@ namespace EZPos.Business.Services
                 {
                     var row = i / labelsPerRow;
                     var col = i % labelsPerRow;
-                    DrawLabelPdf(gfx, pageLabels[i], template, col * labelWidthPt, row * labelHeightPt, labelWidthPt, labelHeightPt);
+                    DrawLabelPdf(gfx, pageLabels[i], template, col * labelWidthPt, row * labelHeightPt, labelWidthPt, labelHeightPt, failedJobs);
                 }
             }
 
@@ -145,7 +170,7 @@ namespace EZPos.Business.Services
             return printers;
         }
 
-        private Canvas BuildLabelCanvas(LabelPrintJob job, LabelTemplate template, double widthPx, double heightPx)
+        private Canvas BuildLabelCanvas(LabelPrintJob job, LabelTemplate template, double widthPx, double heightPx, List<LabelPrintJob> failedJobs)
         {
             var canvas = new Canvas
             {
@@ -168,16 +193,27 @@ namespace EZPos.Business.Services
             if (template.ShowBarcode)
             {
                 var barcodeHeightPx = heightPx * template.BarcodeHeightPct;
-                var image = new Image
+
+                if (_barcodeService.CanEncode(job.Barcode, job.Format, out _))
                 {
-                    Source = _barcodeService.GenerateImage(job.Barcode, job.Format, (int)(widthPx * 3), (int)(barcodeHeightPx * 3)),
-                    Width = Math.Max(0, widthPx - 4),
-                    Height = barcodeHeightPx,
-                    Stretch = Stretch.Fill
-                };
-                Canvas.SetLeft(image, 2);
-                Canvas.SetTop(image, y);
-                canvas.Children.Add(image);
+                    var image = new Image
+                    {
+                        Source = _barcodeService.GenerateImage(job.Barcode, job.Format, (int)(widthPx * 3), (int)(barcodeHeightPx * 3)),
+                        Width = Math.Max(0, widthPx - 4),
+                        Height = barcodeHeightPx,
+                        Stretch = Stretch.Fill
+                    };
+                    Canvas.SetLeft(image, 2);
+                    Canvas.SetTop(image, y);
+                    canvas.Children.Add(image);
+                }
+                else
+                {
+                    if (!failedJobs.Contains(job))
+                        failedJobs.Add(job);
+                    AddInvalidBarcodePlaceholder(canvas, widthPx, barcodeHeightPx, y);
+                }
+
                 y += barcodeHeightPx + 2;
             }
 
@@ -204,6 +240,33 @@ namespace EZPos.Business.Services
             return canvas;
         }
 
+        private static void AddInvalidBarcodePlaceholder(Canvas canvas, double widthPx, double heightPx, double y)
+        {
+            var box = new Rectangle
+            {
+                Width = Math.Max(0, widthPx - 4),
+                Height = heightPx,
+                Stroke = Brushes.Red,
+                StrokeThickness = 1,
+                StrokeDashArray = new DoubleCollection { 2, 2 }
+            };
+            Canvas.SetLeft(box, 2);
+            Canvas.SetTop(box, y);
+            canvas.Children.Add(box);
+
+            var text = new TextBlock
+            {
+                Text = "Invalid barcode",
+                FontSize = 8,
+                Foreground = Brushes.Red,
+                TextAlignment = TextAlignment.Center,
+                Width = widthPx
+            };
+            Canvas.SetLeft(text, 0);
+            Canvas.SetTop(text, y + Math.Max(0, heightPx / 2 - 6));
+            canvas.Children.Add(text);
+        }
+
         private static void AddCenteredText(Canvas canvas, string text, double widthPx, ref double y, double fontSize, FontWeight weight)
         {
             var textBlock = new TextBlock
@@ -221,7 +284,7 @@ namespace EZPos.Business.Services
             y += fontSize + 2;
         }
 
-        private void DrawLabelPdf(XGraphics gfx, LabelPrintJob job, LabelTemplate template, double xPt, double yPt, double widthPt, double heightPt)
+        private void DrawLabelPdf(XGraphics gfx, LabelPrintJob job, LabelTemplate template, double xPt, double yPt, double widthPt, double heightPt, List<LabelPrintJob> failedJobs)
         {
             var centerFormat = new XStringFormat { Alignment = XStringAlignment.Center, LineAlignment = XLineAlignment.Near };
             var nameFont = new XFont("Arial", template.FontSizeName, XFontStyle.Regular);
@@ -243,10 +306,24 @@ namespace EZPos.Business.Services
             if (template.ShowBarcode)
             {
                 var barcodeHeightPt = heightPt * template.BarcodeHeightPct;
-                var bytes = _barcodeService.GenerateImageBytes(job.Barcode, job.Format, 600, 300);
-                using var stream = new MemoryStream(bytes);
-                using var image = XImage.FromStream(() => stream);
-                gfx.DrawImage(image, xPt + 2, y, Math.Max(0, widthPt - 4), barcodeHeightPt);
+
+                if (_barcodeService.CanEncode(job.Barcode, job.Format, out _))
+                {
+                    var bytes = _barcodeService.GenerateImageBytes(job.Barcode, job.Format, 600, 300);
+                    using var stream = new MemoryStream(bytes);
+                    using var image = XImage.FromStream(() => stream);
+                    gfx.DrawImage(image, xPt + 2, y, Math.Max(0, widthPt - 4), barcodeHeightPt);
+                }
+                else
+                {
+                    if (!failedJobs.Contains(job))
+                        failedJobs.Add(job);
+
+                    var pen = new XPen(XColors.Red, 1) { DashStyle = XDashStyle.Dash };
+                    gfx.DrawRectangle(pen, xPt + 2, y, Math.Max(0, widthPt - 4), barcodeHeightPt);
+                    gfx.DrawString("Invalid barcode", nameFont, XBrushes.Red, new XRect(xPt, y, widthPt, barcodeHeightPt), centerFormat);
+                }
+
                 y += barcodeHeightPt + 2;
             }
 
