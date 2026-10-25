@@ -40,6 +40,7 @@ namespace EZPos.UI.Pages
             {
                 _viewModel.StatusMessage -= OnStatusMessage;
                 _viewModel.OpenQuickPrintRequested -= OnOpenQuickPrintRequested;
+                _viewModel.Detach();
             };
         }
 

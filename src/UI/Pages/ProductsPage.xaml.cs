@@ -10,6 +10,7 @@ using EZPos.Business.Services;
 using EZPos.DataAccess.Repositories;
 using EZPos.Models.Domain;
 using EZPos.UI.Dialogs;
+using EZPos.UI.Input;
 using EZPos.UI.State;
 using EZPos.UI.ViewModels;
 using MaterialDesignThemes.Wpf;
@@ -50,8 +51,10 @@ namespace EZPos.UI.Pages
         private bool isInitialized;
         private bool _costColumnVisible;
 
-        // Barcode scanner detection — same 150 ms threshold as SalesPage
-        private DateTime _firstKeyTime = DateTime.MinValue;
+        // Barcode scanner detection — same burst/inter-key thresholds as SalesPage.
+        // Fed only from real keystrokes (PreviewTextInput), so programmatic SearchBox.Text
+        // changes can never leave a stale timestamp that makes the next scan look like typing.
+        private readonly SalesKeyboardInputService _barcodeScanner = new();
 
         public ProductsPage(PosStateStore stateStore, ProductService productService, CategoryService categoryService)
         {
@@ -63,6 +66,10 @@ namespace EZPos.UI.Pages
             // Independent view per page — never share the default view across pages
             productsView = new ListCollectionView(this.stateStore.Products);
             this.stateStore.PropertyChanged += StateStore_PropertyChanged;
+
+            _barcodeScanner.BarcodeCompleted += HandleScannedBarcode;
+            // Manual Enter (not a scan) — just refresh the filter
+            _barcodeScanner.RegisterCheckoutShortcut(Key.Enter, () => productsView?.Refresh());
 
             Loaded += ProductsPage_Loaded;
         }
@@ -127,33 +134,29 @@ namespace EZPos.UI.Pages
                 return;
             }
 
-            if (_firstKeyTime == DateTime.MinValue)
-                _firstKeyTime = DateTime.Now;
-
             productsView.Refresh();
             UpdateCounters();
         }
 
-        private async void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        private void SearchBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            _barcodeScanner.RegisterTextInput(e.Text);
+        }
+
+        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Enter || !isInitialized)
                 return;
 
-            var input = SearchBox.Text.Trim();
+            _barcodeScanner.TryHandleKeyDown(e.Key);
+            e.Handled = true;
+        }
+
+        private async void HandleScannedBarcode(string barcode)
+        {
+            var input = barcode.Trim();
             if (string.IsNullOrWhiteSpace(input))
                 return;
-
-            bool isScan = _firstKeyTime != DateTime.MinValue
-                          && (DateTime.Now - _firstKeyTime).TotalMilliseconds < 150;
-            _firstKeyTime = DateTime.MinValue;
-
-            if (!isScan)
-            {
-                // Manual Enter — just refresh filter
-                productsView?.Refresh();
-                e.Handled = true;
-                return;
-            }
 
             // Scanner path — look up by exact barcode
             var existing = System.Linq.Enumerable.FirstOrDefault(
@@ -161,12 +164,11 @@ namespace EZPos.UI.Pages
 
             if (existing is not null)
             {
-                // Product already registered — highlight it in the grid
-                SearchBox.Text = string.Empty;
-                productsView?.Refresh();
-                // Show all and select the matched row
+                // Product already registered — show all and highlight it in the grid
                 FilterCombo.SelectedIndex = 0;
                 SearchBox.Text = existing.Barcode;
+                // Select the text so the next scan replaces it instead of being appended to it
+                SearchBox.SelectAll();
                 productsView?.Refresh();
                 ProductsGrid.SelectedItem = existing;
                 ProductsGrid.ScrollIntoView(existing);
@@ -186,8 +188,6 @@ namespace EZPos.UI.Pages
                     UpdateCounters();
                 }
             }
-
-            e.Handled = true;
         }
 
         private void FilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)

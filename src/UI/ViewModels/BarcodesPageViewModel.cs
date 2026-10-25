@@ -169,6 +169,15 @@ namespace EZPos.UI.ViewModels
             LoadHistory();
         }
 
+        /// <summary>
+        /// Unsubscribes from the shared PosStateStore — call when the page unloads. Without this, every
+        /// visit to the Barcodes page leaves a VM behind that rebuilds its rows on every product add.
+        /// </summary>
+        public void Detach()
+        {
+            _stateStore.Products.CollectionChanged -= StateStoreProducts_CollectionChanged;
+        }
+
         /// <summary>Reloads the template list from disk — call after the template editor dialog closes.</summary>
         public void ReloadTemplates() => LoadTemplates();
 
