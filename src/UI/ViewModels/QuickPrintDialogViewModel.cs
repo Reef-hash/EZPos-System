@@ -78,7 +78,7 @@ namespace EZPos.UI.ViewModels
 
             foreach (var p in printService.GetInstalledPrinters())
                 Printers.Add(p);
-            selectedPrinter = Printers.FirstOrDefault();
+            selectedPrinter = printService.GetPreferredPrinter(Printers);
 
             selectedFormat = product.BarcodeFormat;
 

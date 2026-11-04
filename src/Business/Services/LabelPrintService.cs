@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -76,6 +77,11 @@ namespace EZPos.Business.Services
                     fixedPage.Children.Add(labelCanvas);
                 }
 
+                var pageSize = new Size(fixedPage.Width, fixedPage.Height);
+                fixedPage.Measure(pageSize);
+                fixedPage.Arrange(new Rect(pageSize));
+                fixedPage.UpdateLayout();
+
                 var pageContent = new PageContent();
                 ((IAddChild)pageContent).AddChild(fixedPage);
                 document.Pages.Add(pageContent);
@@ -95,22 +101,88 @@ namespace EZPos.Business.Services
         public void PrintLabels(IEnumerable<LabelPrintJob> jobs, LabelTemplate template, string? printerName, out List<LabelPrintJob> failedJobs)
         {
             var document = BuildFixedDocument(jobs, template, out failedJobs);
-            var printDialog = new PrintDialog();
+            if (document.Pages.Count == 0)
+                throw new InvalidOperationException("Nothing to print.");
 
-            if (!string.IsNullOrWhiteSpace(printerName))
+            // Resolve the exact queue the user picked. Never silently fall back to another printer —
+            // that used to send labels to the Windows default (often "Microsoft Print to PDF") while
+            // the UI still reported success.
+            var queue = ResolvePrintQueue(printerName);
+
+            queue.Refresh();
+            var problem = DescribeQueueProblem(queue);
+            if (problem != null)
+                throw new InvalidOperationException($"Printer '{queue.FullName}' is {problem}. Check the printer and Windows print queue, then try again.");
+
+            // Ask the driver for a page that matches the label sheet instead of its default (A4/Letter),
+            // otherwise label printers may hold the job waiting for the "right" media.
+            var ticket = BuildPrintTicket(queue, template);
+
+            queue.CurrentJobSettings.Description = "EZPos Labels";
+            var writer = PrintQueue.CreateXpsDocumentWriter(queue);
+            writer.Write(document.DocumentPaginator, ticket);
+
+            // The spooler accepted the job — surface an obvious post-submit problem rather than reporting success.
+            queue.Refresh();
+            problem = DescribeQueueProblem(queue);
+            if (problem != null)
+                throw new InvalidOperationException($"Job was queued but printer '{queue.FullName}' is {problem}. Check the Windows print queue.");
+        }
+
+        /// <summary>Finds the print queue by name among local and connected (network/shared) printers; null/empty = system default.</summary>
+        private static PrintQueue ResolvePrintQueue(string? printerName)
+        {
+            if (string.IsNullOrWhiteSpace(printerName))
+                return LocalPrintServer.GetDefaultPrintQueue();
+
+            var server = new LocalPrintServer();
+            var queues = server.GetPrintQueues(new[] { EnumeratedPrintQueueTypes.Local, EnumeratedPrintQueueTypes.Connections });
+
+            var match = queues.FirstOrDefault(q => string.Equals(q.FullName, printerName, StringComparison.OrdinalIgnoreCase))
+                        ?? queues.FirstOrDefault(q => string.Equals(q.Name, printerName, StringComparison.OrdinalIgnoreCase));
+
+            if (match == null)
+                throw new InvalidOperationException($"Printer '{printerName}' was not found. Make sure it is installed and connected.");
+
+            return match;
+        }
+
+        private static PrintTicket BuildPrintTicket(PrintQueue queue, LabelTemplate template)
+        {
+            var labelsPerRow = Math.Max(1, template.LabelsPerRow);
+            var labelsPerColumn = Math.Max(1, template.LabelsPerColumn);
+            var widthPx = MmToPx(template.LabelWidthMm) * labelsPerRow;
+            var heightPx = MmToPx(template.LabelHeightMm) * labelsPerColumn;
+
+            var baseTicket = queue.UserPrintTicket ?? queue.DefaultPrintTicket ?? new PrintTicket();
+            var requested = baseTicket.Clone();
+            requested.PageMediaSize = new PageMediaSize(widthPx, heightPx);
+            requested.CopyCount = 1;
+
+            try
             {
-                try
-                {
-                    var printServer = new System.Printing.LocalPrintServer();
-                    printDialog.PrintQueue = printServer.GetPrintQueue(printerName);
-                }
-                catch
-                {
-                    // Named printer not resolvable — fall back to the dialog's default queue
-                }
+                var result = queue.MergeAndValidatePrintTicket(baseTicket, requested);
+                return result.ValidatedPrintTicket ?? requested;
             }
+            catch
+            {
+                // Some drivers reject custom sizes — print with their own settings rather than failing
+                return baseTicket;
+            }
+        }
 
-            printDialog.PrintDocument(document.DocumentPaginator, "EZPos Labels");
+        /// <summary>Human-readable reason the queue cannot print right now, or null if it looks ready.</summary>
+        private static string? DescribeQueueProblem(PrintQueue queue)
+        {
+            if (queue.IsOffline) return "offline (turn it on / reconnect the cable, and untick \"Use Printer Offline\" in Windows)";
+            if (queue.IsPaused) return "paused in Windows";
+            if (queue.IsNotAvailable) return "not available";
+            if (queue.IsPaperJammed) return "jammed";
+            if (queue.IsOutOfPaper) return "out of paper / labels";
+            if (queue.IsDoorOpened) return "open (cover/door)";
+            if (queue.IsInError) return "in an error state";
+            if (queue.NeedUserIntervention) return "waiting for user attention";
+            return null;
         }
 
         /// <summary>Lays out every job (expanded by its Quantity) into a PDF, one page per LabelsPerRow x LabelsPerColumn sheet.</summary>
@@ -162,6 +234,28 @@ namespace EZPos.Business.Services
         }
 
         /// <summary>Names of all Windows printers currently installed on this machine.</summary>
+        /// <summary>Windows default printer name, or null if none is set.</summary>
+        public string? GetDefaultPrinterName()
+        {
+            try
+            {
+                var name = new System.Drawing.Printing.PrinterSettings().PrinterName;
+                return string.IsNullOrWhiteSpace(name) ? null : name;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>Picks the default printer if installed, otherwise the first one — avoids defaulting to "Fax" etc.</summary>
+        public string? GetPreferredPrinter(IList<string> printers)
+        {
+            var def = GetDefaultPrinterName();
+            return printers.FirstOrDefault(p => string.Equals(p, def, StringComparison.OrdinalIgnoreCase))
+                   ?? printers.FirstOrDefault();
+        }
+
         public List<string> GetInstalledPrinters()
         {
             var printers = new List<string>();

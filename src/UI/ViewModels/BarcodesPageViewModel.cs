@@ -290,7 +290,7 @@ namespace EZPos.UI.ViewModels
             foreach (var p in _printService.GetInstalledPrinters())
                 Printers.Add(p);
 
-            selectedPrinter = Printers.FirstOrDefault();
+            selectedPrinter = _printService.GetPreferredPrinter(Printers);
             OnPropertyChanged(nameof(SelectedPrinter));
         }
 
