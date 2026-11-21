@@ -33,6 +33,7 @@ docs/
 - [Sales Module](features/sales/sales-module.md)
 - [Inventory Module](features/inventory/inventory-module.md)
 - [Reporting Module](features/reporting/reporting-module.md)
+- [Setup Printer Barcode (Xprinter XP-365B)](features/barcodes/setup-for-barcode.md)
 
 ### Standards
 - [Project Structure Rules](standards/PROJECT_STRUCTURE.md)
