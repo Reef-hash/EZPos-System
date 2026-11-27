@@ -43,7 +43,8 @@ docs/
 ### Planning
 - [Near-Term Features](planning/future-features.md)
 - [SaaS & Long-Term Roadmap](planning/saas-roadmap.md)
-- [UI Modernization Plan — MahApps + MaterialDesign](planning/ui-modernization.md)
+- [Electron Rewrite Plan](planning/electron-rewrite.md) — **active**
+- [UI Modernization Plan — MahApps + MaterialDesign](planning/ui-modernization.md) — superseded by Electron rewrite
 
 ### Tracking
 - [Feature Status](tracking/FEATURE_STATUS.md)

@@ -1,6 +1,6 @@
 # UI Modernization Plan — MahApps.Metro + MaterialDesign + Graphite Amber
 
-> **Status:** POC COMPLETE — Dashboard approved, full migration in progress  
+> **Status:** SUPERSEDED (2026-11-28) by [electron-rewrite.md](electron-rewrite.md). Kept for history.  
 > **Target:** Migrate all pages and dialogs from custom WPF styles to MahApps.Metro + MaterialDesignInXamlToolkit  
 > **Theme:** Graphite + Amber Dark (`#111014` bg, `#F59E0B` primary, `#FCD34D` accent)  
 > **Approach:** Dashboard serves as POC and style reference — all other pages must follow the same pattern
